@@ -122,6 +122,15 @@ export const StopReasonSchema = z.enum([
 ]);
 export type StopReason = z.infer<typeof StopReasonSchema>;
 
+/** Stop reasons "Expand further" may continue from. */
+export const EXPANDABLE_REASONS: ReadonlySet<StopReason> = new Set<StopReason>([
+  "max_depth",
+  "max_edges",
+  "timeout",
+  "cancelled",
+  "entity",
+]);
+
 const usdSchema = z.number().nullable();
 
 export const TraceEdgeSchema = z.object({

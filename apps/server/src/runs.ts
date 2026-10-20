@@ -1,6 +1,7 @@
 import {
   type AnalysisResult,
   BUNDLED_LABEL_FILES,
+  EXPANDABLE_REASONS,
   FixtureTransport,
   isFotError,
   LabelRegistry,
@@ -8,7 +9,6 @@ import {
   RunController,
   type RunEvent,
   type RunParams,
-  type StopReason,
   type TraceEdge,
 } from "@fot/core";
 import { chainHealth } from "./config.ts";
@@ -34,15 +34,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-/** Stop reasons "Expand further" may continue from. */
-export const EXPANDABLE_REASONS: ReadonlySet<StopReason> = new Set([
-  "max_depth",
-  "max_edges",
-  "timeout",
-  "cancelled",
-  "entity",
-]);
 
 export const DEFAULT_EXPAND_DEPTH = 3;
 

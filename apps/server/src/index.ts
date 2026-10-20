@@ -37,7 +37,6 @@ export {
   ApiError,
   type ControlStatus,
   DEFAULT_EXPAND_DEPTH,
-  EXPANDABLE_REASONS,
   type RunDetail,
   type RunEventListener,
   RunManager,
