@@ -1,0 +1,24 @@
+{
+  "name": "fund-origin-tracer",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun scripts/dev.ts",
+    "start": "bun apps/cli/src/main.ts serve",
+    "build": "bun run --cwd apps/web build",
+    "check": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/core/test && tsc --noEmit -p apps/server && tsc --noEmit -p apps/cli && tsc --noEmit -p apps/web",
+    "test": "bun test",
+    "fixtures:record": "bun apps/cli/src/main.ts fixtures record"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/bun": "1.4.3",
+    "typescript": "7.0.2"
+  }
+}

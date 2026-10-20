@@ -1,0 +1,13 @@
+{
+  "name": "@fot/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "fot": "src/main.ts"
+  },
+  "dependencies": {
+    "@fot/core": "workspace:*",
+    "@fot/server": "workspace:*"
+  }
+}
