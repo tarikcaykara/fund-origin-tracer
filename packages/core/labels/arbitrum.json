@@ -1,0 +1,188 @@
+{
+  "chain": "arbitrum",
+  "entries": [
+    {
+      "address": "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+      "name": "USDT0 (USD₮0) Token",
+      "category": "token",
+      "entity": "Tether",
+      "source": "https://docs.usdt0.to/technical-documentation/deployments",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "name": "USDC (native)",
+      "category": "token",
+      "entity": "Circle",
+      "source": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+      "name": "USDC.e (bridged)",
+      "category": "token",
+      "entity": "Circle",
+      "source": "https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+      "name": "DAI",
+      "category": "token",
+      "entity": "Sky",
+      "source": "https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+      "name": "Wrapped Ether (WETH)",
+      "category": "token",
+      "source": "https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe592427a0aece92de3edee1f18e0157c05861564",
+      "name": "Uniswap V3 SwapRouter",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://docs.uniswap.org/contracts/v3/reference/deployments/arbitrum-deployments",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+      "name": "Uniswap V3 SwapRouter02",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://docs.uniswap.org/contracts/v3/reference/deployments/arbitrum-deployments",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x4c60051384bd2d3c01bfc845cf5f4b44bcbe9de5",
+      "name": "Uniswap Universal Router V1",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://raw.githubusercontent.com/Uniswap/universal-router/main/deploy-addresses/arbitrum.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5e325eda8064b456f4781070c0738d849c824258",
+      "name": "Uniswap Universal Router V1.2 (V2 support)",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://raw.githubusercontent.com/Uniswap/universal-router/main/deploy-addresses/arbitrum.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa51afafe0263b40edaef0df8781ea9aa03e381a3",
+      "name": "Uniswap Universal Router V2",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://raw.githubusercontent.com/Uniswap/universal-router/main/deploy-addresses/arbitrum.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+      "name": "0x Exchange Proxy",
+      "category": "dex",
+      "entity": "0x",
+      "source": "https://raw.githubusercontent.com/0xProject/protocol/development/docs/basics/addresses.rst",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6a000f20005980200259b80c5102003040001068",
+      "name": "Velora (ParaSwap) Augustus V6",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://raw.githubusercontent.com/VeloraDEX/paraswap-dex-lib/master/src/config.ts",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+      "name": "Velora (ParaSwap) Augustus Swapper V5",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://raw.githubusercontent.com/VeloraDEX/paraswap-dex-lib/master/src/config.ts",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe35e9842fceaca96570b734083f4a58e8f7c5f2a",
+      "name": "Across SpokePool",
+      "category": "bridge",
+      "entity": "Across",
+      "source": "https://docs.across.to/reference/contract-addresses/arbitrum-chain-id-42161",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1619de6b6b20ed217a58d00f37b9d47c7663feca",
+      "name": "Celer cBridge",
+      "category": "bridge",
+      "entity": "Celer",
+      "source": "https://cbridge-docs.celer.network/reference/contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3749c4f034022c39ecaffaba182555d4508caccc",
+      "name": "Hop Protocol ETH Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://raw.githubusercontent.com/hop-protocol/hop/develop/packages/sdk/src/addresses/mainnet.ts",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5288c571fd7ad117bea99bf60fe0846c4e84f933",
+      "name": "Arbitrum L2 Gateway Router",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x09e9222e96e7b4ae2a407b98d48e330053351eee",
+      "name": "Arbitrum L2 ERC20 Gateway",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x096760f208390250649e3e8763348e783aef5562",
+      "name": "Arbitrum L2 Arb-Custom Gateway",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x84443cfd09a48af6ef360c6976c5392ac5023a1f",
+      "name": "Tornado Cash 0.1 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://raw.githubusercontent.com/tornadocash/tornado-cli/master/config.js",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd47438c816c9e7f2e2888e060936a499af9582b3",
+      "name": "Tornado Cash 1 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://raw.githubusercontent.com/tornadocash/tornado-cli/master/config.js",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x330bdfade01ee9bf63c209ee33102dd334618e0a",
+      "name": "Tornado Cash 10 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://raw.githubusercontent.com/tornadocash/tornado-cli/master/config.js",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1e34a77868e19a6647b1f2f47b51ed72dede95dd",
+      "name": "Tornado Cash 100 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://raw.githubusercontent.com/tornadocash/tornado-cli/master/config.js",
+      "verifiedAt": "2026-10-20"
+    }
+  ]
+}

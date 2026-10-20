@@ -94,15 +94,19 @@ export interface CanonicalToken {
   symbol: string;
   contract: string;
   decimals: number;
+  /** Priced 1:1 with USD without a price lookup. */
   stable: boolean;
+  /** Other symbols the contract reports on-chain; spoof detection folds these too. */
+  aliases: readonly string[];
 }
 
-const t = (symbol: string, contract: string, decimals: number, stable = false): CanonicalToken => ({
-  symbol,
-  contract,
-  decimals,
-  stable,
-});
+const t = (
+  symbol: string,
+  contract: string,
+  decimals: number,
+  stable = false,
+  aliases: readonly string[] = [],
+): CanonicalToken => ({ symbol, contract, decimals, stable, aliases });
 
 export const CANONICAL_TOKENS: Record<ChainId, readonly CanonicalToken[]> = {
   ethereum: [
@@ -113,7 +117,8 @@ export const CANONICAL_TOKENS: Record<ChainId, readonly CanonicalToken[]> = {
     t("WETH", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 18),
   ],
   polygon: [
-    t("USDT", "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", 6, true),
+    // Upgraded to USDT0; the contract now reports symbol "USDT0".
+    t("USDT", "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", 6, true, ["USDT0"]),
     t("USDC", "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", 6, true),
     t("USDC.e", "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", 6, true),
     t("DAI", "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", 18, true),
@@ -121,7 +126,8 @@ export const CANONICAL_TOKENS: Record<ChainId, readonly CanonicalToken[]> = {
     t("WPOL", "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270", 18),
   ],
   arbitrum: [
-    t("USDT", "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9", 6, true),
+    // Upgraded to USDT0; the contract now reports symbol "USD₮0".
+    t("USDT", "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9", 6, true, ["USD₮0", "USDT0"]),
     t("USDC", "0xaf88d065e77c8cc2239327c5edb3a432268e5831", 6, true),
     t("USDC.e", "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8", 6, true),
     t("DAI", "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1", 18, true),
@@ -129,7 +135,10 @@ export const CANONICAL_TOKENS: Record<ChainId, readonly CanonicalToken[]> = {
   ],
   tron: [
     t("USDT", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", 6, true),
-    t("USDC", "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8", 6, true),
+    // Deprecated Circle USDC ("USD Coin Old"): kept for spoof detection, priced by lookup.
+    t("USDC", "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8", 6, false, ["USDCOLD"]),
+    // Has traded below peg historically, so it is priced by lookup rather than 1:1.
+    t("USDD", "TXDk8mbtRbXeYuMNS83CfKPaYYT8XWv9Hz", 18),
     t("WTRX", "TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR", 6),
   ],
 };

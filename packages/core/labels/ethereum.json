@@ -1,0 +1,972 @@
+{
+  "chain": "ethereum",
+  "entries": [
+    {
+      "address": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "name": "Binance 14",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x28c6c06298d514db089934071355e5743bf21d60",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x21a31ee1afc51d94c2efccaa2092ad1028285549",
+      "name": "Binance 15",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x21a31ee1afc51d94c2efccaa2092ad1028285549",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdfd5293d8e347dfe59e90efd55b2956a1343963d",
+      "name": "Binance 16",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0xdfd5293d8e347dfe59e90efd55b2956a1343963d",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x56eddb7aa87536c09ccc2793473599fd21a8b17f",
+      "name": "Binance 17",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x56eddb7aa87536c09ccc2793473599fd21a8b17f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x9696f59e4d72e237be84ffd425dcad154bf96976",
+      "name": "Binance 18",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x9696f59e4d72e237be84ffd425dcad154bf96976",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x85b931a32a0725be14285b66f1a22178c672d69b",
+      "name": "Binance 10",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x85b931a32a0725be14285b66f1a22178c672d69b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x708396f17127c42383e3b9014072679b2f60b82f",
+      "name": "Binance 11",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x708396f17127c42383e3b9014072679b2f60b82f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe0f0cfde7ee664943906f17f7f14342e76a5cec7",
+      "name": "Binance 12",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0xe0f0cfde7ee664943906f17f7f14342e76a5cec7",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8f22f2063d253846b53609231ed80fa571bc0c8f",
+      "name": "Binance 13",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x8f22f2063d253846b53609231ed80fa571bc0c8f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xf977814e90da44bfa03b6295a0616a897441acec",
+      "name": "Binance: Hot Wallet 20",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0xf977814e90da44bfa03b6295a0616a897441acec",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xbe0eb53f46cd790cd13851d5eff43d12404d33e8",
+      "name": "Binance 7",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0xbe0eb53f46cd790cd13851d5eff43d12404d33e8",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5a52e96bacdabb82fd05763e25335261b270efcb",
+      "name": "Binance 28",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0x5a52e96bacdabb82fd05763e25335261b270efcb",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd551234ae421e3bcba99a0da6d736074f22192ff",
+      "name": "Binance 2",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://etherscan.io/address/0xd551234ae421e3bcba99a0da6d736074f22192ff",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x71660c4005ba85c37ccec55d0c4493e66fe775d3",
+      "name": "Coinbase 1",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0x71660c4005ba85c37ccec55d0c4493e66fe775d3",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x503828976d22510aad0201ac7ec88293211d23da",
+      "name": "Coinbase 12",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0x503828976d22510aad0201ac7ec88293211d23da",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740",
+      "name": "Coinbase 23",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xb5d85cbf7cb3ee0d56b3bb207d5fc4b82f43f511",
+      "name": "Coinbase 44",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0xb5d85cbf7cb3ee0d56b3bb207d5fc4b82f43f511",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xeb2629a2734e272bcc07bda959863f316f4bd4cf",
+      "name": "Coinbase 54",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0xeb2629a2734e272bcc07bda959863f316f4bd4cf",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd688aea8f7d450909ade10c47faa95707b0682d9",
+      "name": "Coinbase 55",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0xd688aea8f7d450909ade10c47faa95707b0682d9",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x02466e547bfdab679fc49e96bbfc62b9747d997c",
+      "name": "Coinbase 56",
+      "category": "exchange",
+      "entity": "Coinbase",
+      "source": "https://etherscan.io/address/0x02466e547bfdab679fc49e96bbfc62b9747d997c",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x2910543af39aba0cd09dbb2d50200b3e800a63d2",
+      "name": "Kraken 1",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0x2910543af39aba0cd09dbb2d50200b3e800a63d2",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x0a869d79a7052c7f1b55a8ebabbea3420f0d1e13",
+      "name": "Kraken 2",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0x0a869d79a7052c7f1b55a8ebabbea3420f0d1e13",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe853c56864a2ebe4576a807d26fdc4a0ada51919",
+      "name": "Kraken 3",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0xe853c56864a2ebe4576a807d26fdc4a0ada51919",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0",
+      "name": "Kraken 4",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6cc5f688a315f3dc28a7781717a9a798a59fda7b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x6cc5f688a315f3dc28a7781717a9a798a59fda7b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x236f9f97e0e62388479bf9e5ba4889e46b0273c3",
+      "name": "OKX 2",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x236f9f97e0e62388479bf9e5ba4889e46b0273c3",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa7efae728d2936e78bda97dc267687568dd593f3",
+      "name": "OKX 3",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0xa7efae728d2936e78bda97dc267687568dd593f3",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x2c8fbb630289363ac80705a1a61273f76fd5a161",
+      "name": "OKX 4",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x2c8fbb630289363ac80705a1a61273f76fd5a161",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xf89d7b9c864f589bbf53a82105107622b35eaa40",
+      "name": "Bybit: Hot Wallet",
+      "category": "exchange",
+      "entity": "Bybit",
+      "source": "https://etherscan.io/address/0xf89d7b9c864f589bbf53a82105107622b35eaa40",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xee5b5b923ffce93a870b3104b7ca09c3db80047a",
+      "name": "Bybit: Hot Wallet 4",
+      "category": "exchange",
+      "entity": "Bybit",
+      "source": "https://etherscan.io/address/0xee5b5b923ffce93a870b3104b7ca09c3db80047a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd6216fc19db775df9774a6e33526131da7d19a2c",
+      "name": "KuCoin 6",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0xd6216fc19db775df9774a6e33526131da7d19a2c",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xf16e9b0d03470827a95cdfd0cb8a8a3b46969b91",
+      "name": "KuCoin 9",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0xf16e9b0d03470827a95cdfd0cb8a8a3b46969b91",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x2b5634c42055806a59e9107ed44d43c426e58258",
+      "name": "KuCoin 1",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0x2b5634c42055806a59e9107ed44d43c426e58258",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x689c56aef474df92d44a1b70850f808488f9769c",
+      "name": "KuCoin 2",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0x689c56aef474df92d44a1b70850f808488f9769c",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x0d0707963952f2fba59dd06f2b425ace40b492fe",
+      "name": "Gate Deposit",
+      "category": "exchange",
+      "entity": "Gate",
+      "source": "https://etherscan.io/address/0x0d0707963952f2fba59dd06f2b425ace40b492fe",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1c4b70a3968436b9a0a9cf5205c787eb81bb558c",
+      "name": "Gate Deposit",
+      "category": "exchange",
+      "entity": "Gate",
+      "source": "https://etherscan.io/address/0x1c4b70a3968436b9a0a9cf5205c787eb81bb558c",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xab5c66752a9e8167967685f1450532fb96d5d24f",
+      "name": "HTX 1",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0xab5c66752a9e8167967685f1450532fb96d5d24f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6748f50f686bfbca6fe8ad62b22228b87f31ff2b",
+      "name": "HTX 12",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0x6748f50f686bfbca6fe8ad62b22228b87f31ff2b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xfdb16996831753d5331ff813c29a93c76834a0ad",
+      "name": "HTX 23",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0xfdb16996831753d5331ff813c29a93c76834a0ad",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6262998ced04146fa42253a5c0af90ca02dfd2a3",
+      "name": "Crypto.com 1",
+      "category": "exchange",
+      "entity": "Crypto.com",
+      "source": "https://etherscan.io/address/0x6262998ced04146fa42253a5c0af90ca02dfd2a3",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x46340b20830761efd32832a74d7169b29feb9758",
+      "name": "Crypto.com 12",
+      "category": "exchange",
+      "entity": "Crypto.com",
+      "source": "https://etherscan.io/address/0x46340b20830761efd32832a74d7169b29feb9758",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x75e89d5979e4f6fba9f97c104c2f0afb3f1dcb88",
+      "name": "MEXC 1",
+      "category": "exchange",
+      "entity": "MEXC",
+      "source": "https://etherscan.io/address/0x75e89d5979e4f6fba9f97c104c2f0afb3f1dcb88",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5bdf85216ec1e38d6458c870992a69e38e03f7ef",
+      "name": "Bitget 5",
+      "category": "exchange",
+      "entity": "Bitget",
+      "source": "https://etherscan.io/address/0x5bdf85216ec1e38d6458c870992a69e38e03f7ef",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+      "name": "Uniswap V2: Router 2",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://etherscan.io/address/0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe592427a0aece92de3edee1f18e0157c05861564",
+      "name": "Uniswap V3: Router",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+      "name": "Uniswap V3: Router 2",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://etherscan.io/address/0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad",
+      "name": "Uniswap: Universal Router v1.2",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://etherscan.io/address/0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+      "name": "Aggregation Router V5",
+      "category": "dex",
+      "entity": "1inch",
+      "source": "https://etherscan.io/address/0x1111111254eeb25477b68fb85ed929f73a960582",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+      "name": "0x: Exchange Proxy",
+      "category": "dex",
+      "entity": "0x",
+      "source": "https://etherscan.io/address/0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+      "name": "Velora v5: Augustus Swapper",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://etherscan.io/address/0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
+      "name": "SushiSwap: Router",
+      "category": "dex",
+      "entity": "SushiSwap",
+      "source": "https://etherscan.io/address/0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x99a58482bd75cbab83b27ec03ca68ff489b5788f",
+      "name": "Curve: Swap Router",
+      "category": "dex",
+      "entity": "Curve",
+      "source": "https://etherscan.io/address/0x99a58482bd75cbab83b27ec03ca68ff489b5788f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8731d54e9d02c286767d56ac03e8037c07e01e98",
+      "name": "Stargate Finance: Router",
+      "category": "bridge",
+      "entity": "Stargate",
+      "source": "https://etherscan.io/address/0x8731d54e9d02c286767d56ac03e8037c07e01e98",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3e4a3a4796d16c0cd582c382691998f7c06420b6",
+      "name": "Hop Protocol: USDT Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://etherscan.io/address/0x3e4a3a4796d16c0cd582c382691998f7c06420b6",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "name": "Tether: USDT Stablecoin",
+      "category": "token",
+      "entity": "Tether",
+      "source": "https://etherscan.io/address/0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "name": "Circle: USDC Token",
+      "category": "token",
+      "entity": "Circle",
+      "source": "https://etherscan.io/address/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "name": "Wrapped Ether",
+      "category": "token",
+      "source": "https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "name": "Sky: Dai Stablecoin",
+      "category": "token",
+      "entity": "Sky",
+      "source": "https://etherscan.io/address/0x6b175474e89094c44da98b954eedeac495271d0f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8e870d67f660d95d5be530380d0ec0bd388289e1",
+      "name": "Paxos: USDP Token",
+      "category": "token",
+      "entity": "Paxos",
+      "source": "https://etherscan.io/address/0x8e870d67f660d95d5be530380d0ec0bd388289e1",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x722122df12d4e14e13ac3b6895a86e84145b6967",
+      "name": "Tornado.Cash: Proxy",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x722122df12d4e14e13ac3b6895a86e84145b6967",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "name": "Tornado.Cash: Router",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+      "name": "Tornado.Cash: 10 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa160cdab225685da1d56aa342ad8841c3b53f291",
+      "name": "Tornado.Cash: 100 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xa160cdab225685da1d56aa342ad8841c3b53f291",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd96f2b1c14db8458374d9aca76e26c3d18364307",
+      "name": "Tornado.Cash: 1,000 USDC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xd96f2b1c14db8458374d9aca76e26c3d18364307",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd691f27f38b395864ea86cfc7253969b409c362d",
+      "name": "Tornado.Cash: 10,000 USDC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xd691f27f38b395864ea86cfc7253969b409c362d",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3",
+      "name": "Tornado.Cash: 100 DAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x7793cd85c11a924478d358d49b05b37e91b5810f",
+      "name": "Gate Deposit",
+      "category": "exchange",
+      "entity": "Gate",
+      "source": "https://etherscan.io/address/0x7793cd85c11a924478d358d49b05b37e91b5810f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x234ee9e35f8e9749a002fc42970d570db716453b",
+      "name": "Gate Deposit",
+      "category": "exchange",
+      "entity": "Gate",
+      "source": "https://etherscan.io/address/0x234ee9e35f8e9749a002fc42970d570db716453b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xc882b111a75c0c657fc507c04fbfcd2cc984f071",
+      "name": "Gate Deposit",
+      "category": "exchange",
+      "entity": "Gate",
+      "source": "https://etherscan.io/address/0xc882b111a75c0c657fc507c04fbfcd2cc984f071",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x59fae149a8f8ec74d5bc038f8b76d25b136b9573",
+      "name": "OKX 5",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x59fae149a8f8ec74d5bc038f8b76d25b136b9573",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe9172daf64b05b26eb18f07ac8d6d723acb48f99",
+      "name": "OKX 19",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0xe9172daf64b05b26eb18f07ac8d6d723acb48f99",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x461249076b88189f8ac9418de28b365859e46bfd",
+      "name": "OKX 9",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x461249076b88189f8ac9418de28b365859e46bfd",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x7eb6c83ab7d8d9b8618c0ed973cbef71d1921ef2",
+      "name": "OKX 20",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x7eb6c83ab7d8d9b8618c0ed973cbef71d1921ef2",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x4ad64983349c49defe8d7a4686202d24b25d0ce8",
+      "name": "KuCoin 4",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0x4ad64983349c49defe8d7a4686202d24b25d0ce8",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa1d8d972560c2f8144af871db508f0b0b10a3fbf",
+      "name": "KuCoin 3",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0xa1d8d972560c2f8144af871db508f0b0b10a3fbf",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe59cd29be3be4461d79c0881d238cbe87d64595a",
+      "name": "KuCoin 7",
+      "category": "exchange",
+      "entity": "KuCoin",
+      "source": "https://etherscan.io/address/0xe59cd29be3be4461d79c0881d238cbe87d64595a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x53d284357ec70ce289d6d64134dfac8e511c8a3d",
+      "name": "Kraken 6",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0x53d284357ec70ce289d6d64134dfac8e511c8a3d",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe9f7ecae3a53d2a67105292894676b00d1fab785",
+      "name": "Kraken: Hot Wallet",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0xe9f7ecae3a53d2a67105292894676b00d1fab785",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xae2d4617c862309a3d75a0ffb358c7a5009c673f",
+      "name": "Kraken 10",
+      "category": "exchange",
+      "entity": "Kraken",
+      "source": "https://etherscan.io/address/0xae2d4617c862309a3d75a0ffb358c7a5009c673f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x72a53cdbbcc1b9efa39c834a540550e23463aacb",
+      "name": "Crypto.com 14",
+      "category": "exchange",
+      "entity": "Crypto.com",
+      "source": "https://etherscan.io/address/0x72a53cdbbcc1b9efa39c834a540550e23463aacb",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x7758e507850da48cd47df1fb5f875c23e3340c50",
+      "name": "Crypto.com 4",
+      "category": "exchange",
+      "entity": "Crypto.com",
+      "source": "https://etherscan.io/address/0x7758e507850da48cd47df1fb5f875c23e3340c50",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xeec606a66edb6f497662ea31b5eb1610da87ab5f",
+      "name": "HTX 8",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0xeec606a66edb6f497662ea31b5eb1610da87ab5f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x4d77a1144dc74f26838b69391a6d3b1e403d0990",
+      "name": "HTX 26",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0x4d77a1144dc74f26838b69391a6d3b1e403d0990",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5861b8446a2f6e19a067874c133f04c578928727",
+      "name": "HTX 6",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://etherscan.io/address/0x5861b8446a2f6e19a067874c133f04c578928727",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3b3ae790df4f312e745d270119c6052904fb6790",
+      "name": "OKX DEX: Aggregation Router",
+      "category": "dex",
+      "entity": "OKX",
+      "source": "https://etherscan.io/address/0x3b3ae790df4f312e745d270119c6052904fb6790",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x12d66f87a04a9e220743712ce6d9bb1b5616b8fc",
+      "name": "Tornado.Cash: 0.1 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x12d66f87a04a9e220743712ce6d9bb1b5616b8fc",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936",
+      "name": "Tornado.Cash: 1 ETH",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144",
+      "name": "Tornado.Cash: 1,000 DAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x07687e702b410fa43f4cb4af7fa097918ffd2730",
+      "name": "Tornado.Cash: 10,000 DAI 2",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x07687e702b410fa43f4cb4af7fa097918ffd2730",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x23773e65ed146a459791799d01336db287f25334",
+      "name": "Tornado.Cash: 100,000 DAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x23773e65ed146a459791799d01336db287f25334",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x22aaa7720ddd5388a3c0a3333430953c68f1849b",
+      "name": "Tornado.Cash: 5,000 cDAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x22aaa7720ddd5388a3c0a3333430953c68f1849b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xba214c1c1928a32bffe790263e38b4af9bfcd659",
+      "name": "Tornado.Cash: 50,000 cDAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xba214c1c1928a32bffe790263e38b4af9bfcd659",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xb1c8094b234dce6e03f10a5b673c1d8c69739a00",
+      "name": "Tornado.Cash: 500,000 cDAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xb1c8094b234dce6e03f10a5b673c1d8c69739a00",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x169ad27a470d064dede56a2d3ff727986b15d52b",
+      "name": "Tornado.Cash: 100 USDT",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x169ad27a470d064dede56a2d3ff727986b15d52b",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x0836222f2b2b24a3f36f98668ed8f0b38d1a872f",
+      "name": "Tornado.Cash: 1,000 USDT",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x0836222f2b2b24a3f36f98668ed8f0b38d1a872f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xf67721a2d8f736e75a49fdd7fad2e31d8676542a",
+      "name": "Tornado.Cash: 10,000 USDT",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xf67721a2d8f736e75a49fdd7fad2e31d8676542a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x9ad122c22b14202b4490edaf288fdb3c7cb3ff5e",
+      "name": "Tornado.Cash: 100,000 USDT",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x9ad122c22b14202b4490edaf288fdb3c7cb3ff5e",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x178169b423a011fff22b9e3f3abea13414ddd0f1",
+      "name": "Tornado.Cash: 0.1 WBTC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x178169b423a011fff22b9e3f3abea13414ddd0f1",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x610b717796ad172b316836ac95a2ffad065ceab4",
+      "name": "Tornado.Cash: 1 WBTC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x610b717796ad172b316836ac95a2ffad065ceab4",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xbb93e510bbcd0b7beb5a853875f9ec60275cf498",
+      "name": "Tornado.Cash: 10 WBTC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xbb93e510bbcd0b7beb5a853875f9ec60275cf498",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x2717c5e28cf931547b621a5dddb772ab6a35b701",
+      "name": "Tornado.Cash: 500,000 cDAI 2",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x2717c5e28cf931547b621a5dddb772ab6a35b701",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x03893a7c7463ae47d46bc7f091665f1893656003",
+      "name": "Tornado.Cash: 50,000 cDAI 2",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x03893a7c7463ae47d46bc7f091665f1893656003",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd21be7248e0197ee08e0c20d4a96debdac3d20af",
+      "name": "Tornado.Cash: 5,000,000 cDAI",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0xd21be7248e0197ee08e0c20d4a96debdac3d20af",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5c7bcd6e7de5423a257d81b442095a1a6ced35c5",
+      "name": "Across Protocol: Ethereum Spoke Pool V2",
+      "category": "bridge",
+      "entity": "Across",
+      "source": "https://etherscan.io/address/0x5c7bcd6e7de5423a257d81b442095a1a6ced35c5",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f",
+      "name": "Arbitrum: Delayed Inbox",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://etherscan.io/address/0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a",
+      "name": "Arbitrum: Bridge",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://etherscan.io/address/0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef",
+      "name": "Arbitrum One: L1 Gateway Router",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://etherscan.io/address/0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa3a7b6f88361f48403514059f1f16c8e78d60eec",
+      "name": "Arbitrum One: L1 ERC20 Gateway",
+      "category": "bridge",
+      "entity": "Arbitrum",
+      "source": "https://etherscan.io/address/0xa3a7b6f88361f48403514059f1f16c8e78d60eec",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3666f603cc164936c1b87e207f36beba4ac5f18a",
+      "name": "Hop Protocol: USDC Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://etherscan.io/address/0x3666f603cc164936c1b87e207f36beba4ac5f18a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xb8901acb165ed027e32754e0ffe830802919727f",
+      "name": "Hop Protocol: Ethereum Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://etherscan.io/address/0xb8901acb165ed027e32754e0ffe830802919727f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3d4cc8a61c7528fd86c55cfe061a78dcba48edd1",
+      "name": "Hop Protocol: DAI Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://etherscan.io/address/0x3d4cc8a61c7528fd86c55cfe061a78dcba48edd1",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x5427fefa711eff984124bfbb1ab6fbf5e3da1820",
+      "name": "Celer Network: cBridge V2",
+      "category": "bridge",
+      "entity": "Celer",
+      "source": "https://etherscan.io/address/0x5427fefa711eff984124bfbb1ab6fbf5e3da1820",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x111111125421ca6dc452d289314280a0f8842a65",
+      "name": "1inch: Aggregation Router V6",
+      "category": "dex",
+      "entity": "1inch",
+      "source": "https://etherscan.io/address/0x111111125421ca6dc452d289314280a0f8842a65",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6a000f20005980200259b80c5102003040001068",
+      "name": "Velora: Augustus V6.2",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://etherscan.io/address/0x6a000f20005980200259b80c5102003040001068",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x16c6521dff6bab339122a0fe25a9116693265353",
+      "name": "Curve: Router",
+      "category": "dex",
+      "entity": "Curve",
+      "source": "https://etherscan.io/address/0x16c6521dff6bab339122a0fe25a9116693265353",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1b81d678ffb9c0263b24a97847620c99d213eb14",
+      "name": "PancakeSwap V3: Swap Router",
+      "category": "dex",
+      "entity": "PancakeSwap",
+      "source": "https://etherscan.io/address/0x1b81d678ffb9c0263b24a97847620c99d213eb14",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x9008d19f58aabd9ed0d60971565aa8510560ab41",
+      "name": "CoW Protocol: GPv2Settlement",
+      "category": "dex",
+      "entity": "CoW Protocol",
+      "source": "https://etherscan.io/address/0x9008d19f58aabd9ed0d60971565aa8510560ab41",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa0c68c638235ee32657e8f720a23cec1bfc77c77",
+      "name": "Polygon PoS RootChainManager (Proxy)",
+      "category": "bridge",
+      "entity": "Polygon",
+      "source": "https://raw.githubusercontent.com/maticnetwork/static/master/network/mainnet/v1/index.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf",
+      "name": "Polygon PoS ERC20 Predicate (Proxy)",
+      "category": "bridge",
+      "entity": "Polygon",
+      "source": "https://raw.githubusercontent.com/maticnetwork/static/master/network/mainnet/v1/index.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8484ef722627bf18ca5ae6bcf031c23e6e922b30",
+      "name": "Polygon PoS Ether Predicate (Proxy)",
+      "category": "bridge",
+      "entity": "Polygon",
+      "source": "https://raw.githubusercontent.com/maticnetwork/static/master/network/mainnet/v1/index.json",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d",
+      "name": "Tornado.Cash: 1,00 USDC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://etherscan.io/address/0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d",
+      "verifiedAt": "2026-10-20"
+    }
+  ]
+}

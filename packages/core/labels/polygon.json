@@ -1,0 +1,283 @@
+{
+  "chain": "polygon",
+  "entries": [
+    {
+      "address": "0x082489a616ab4d46d1947ee3f912e080815b08da",
+      "name": "Binance 53",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://polygonscan.com/address/0x082489a616ab4d46d1947ee3f912e080815b08da",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe7804c37c13166ff0b37f5ae0bb07a3aebb6e245",
+      "name": "Binance 48",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://polygonscan.com/address/0xe7804c37c13166ff0b37f5ae0bb07a3aebb6e245",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xf977814e90da44bfa03b6295a0616a897441acec",
+      "name": "Binance: Hot Wallet 20",
+      "category": "exchange",
+      "entity": "Binance",
+      "source": "https://polygonscan.com/address/0xf977814e90da44bfa03b6295a0616a897441acec",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xd70250731a72c33bfb93016e3d1f0ca160df7e42",
+      "name": "HTX 43",
+      "category": "exchange",
+      "entity": "HTX",
+      "source": "https://polygonscan.com/address/0xd70250731a72c33bfb93016e3d1f0ca160df7e42",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x576b81f0c21edbc920ad63feeeb2b0736b018a58",
+      "name": "MEXC 11",
+      "category": "exchange",
+      "entity": "MEXC",
+      "source": "https://polygonscan.com/address/0x576b81f0c21edbc920ad63feeeb2b0736b018a58",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x51e3d44172868acc60d68ca99591ce4230bc75e0",
+      "name": "MEXC 8",
+      "category": "exchange",
+      "entity": "MEXC",
+      "source": "https://polygonscan.com/address/0x51e3d44172868acc60d68ca99591ce4230bc75e0",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x876eabf441b2ee5b5b0554fd502a8e0600950cfa",
+      "name": "Bitfinex 3",
+      "category": "exchange",
+      "entity": "Bitfinex",
+      "source": "https://polygonscan.com/address/0x876eabf441b2ee5b5b0554fd502a8e0600950cfa",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "name": "USDT0: USDT0 Token",
+      "category": "token",
+      "entity": "Tether",
+      "source": "https://polygonscan.com/address/0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "name": "Circle: USDC Token",
+      "category": "token",
+      "entity": "Circle",
+      "source": "https://polygonscan.com/address/0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "name": "Circle: USDC.e Token",
+      "category": "token",
+      "entity": "Circle",
+      "source": "https://polygonscan.com/address/0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "name": "Maker: Dai Stablecoin",
+      "category": "token",
+      "entity": "Sky",
+      "source": "https://polygonscan.com/address/0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+      "name": "Wrapped Ether",
+      "category": "token",
+      "source": "https://polygonscan.com/address/0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "name": "Polygon: WPOL Token",
+      "category": "token",
+      "source": "https://polygonscan.com/address/0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xe592427a0aece92de3edee1f18e0157c05861564",
+      "name": "Uniswap V3: Router",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://polygonscan.com/address/0xe592427a0aece92de3edee1f18e0157c05861564",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+      "name": "Uniswap V3: Router 2",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://polygonscan.com/address/0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1095692a6237d83c6a72f3f5efedb9a670c49223",
+      "name": "Uniswap V4: Universal Router",
+      "category": "dex",
+      "entity": "Uniswap",
+      "source": "https://polygonscan.com/address/0x1095692a6237d83c6a72f3f5efedb9a670c49223",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+      "name": "1inch: Aggregation Router V5",
+      "category": "dex",
+      "entity": "1inch",
+      "source": "https://polygonscan.com/address/0x1111111254eeb25477b68fb85ed929f73a960582",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x111111125421ca6dc452d289314280a0f8842a65",
+      "name": "1inch: Aggregation Router V6",
+      "category": "dex",
+      "entity": "1inch",
+      "source": "https://polygonscan.com/address/0x111111125421ca6dc452d289314280a0f8842a65",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+      "name": "0x: Exchange Proxy",
+      "category": "dex",
+      "entity": "0x",
+      "source": "https://polygonscan.com/address/0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+      "name": "Velora v5: Augustus Swapper",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://polygonscan.com/address/0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x6a000f20005980200259b80c5102003040001068",
+      "name": "Velora: Augustus V6.2",
+      "category": "dex",
+      "entity": "Velora",
+      "source": "https://polygonscan.com/address/0x6a000f20005980200259b80c5102003040001068",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506",
+      "name": "SushiSwap: Router",
+      "category": "dex",
+      "entity": "SushiSwap",
+      "source": "https://polygonscan.com/address/0x1b02da8cb0d097eb8d57a175b88c7d8b47997506",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+      "name": "QuickSwap V2: Router",
+      "category": "dex",
+      "entity": "QuickSwap",
+      "source": "https://polygonscan.com/address/0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x45a01e4e04f14f7a4a6702c74187c5f6222033cd",
+      "name": "Stargate Finance: Router",
+      "category": "bridge",
+      "entity": "Stargate",
+      "source": "https://polygonscan.com/address/0x45a01e4e04f14f7a4a6702c74187c5f6222033cd",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x9295ee1d8c5b022be115a2ad3c30c72e34e7f096",
+      "name": "Across Protocol: Spoke Pool V3",
+      "category": "bridge",
+      "entity": "Across",
+      "source": "https://polygonscan.com/address/0x9295ee1d8c5b022be115a2ad3c30c72e34e7f096",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x25d8039bb044dc227f741a9e381ca4ceae2e6ae8",
+      "name": "Hop Protocol: USDC Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://polygonscan.com/address/0x25d8039bb044dc227f741a9e381ca4ceae2e6ae8",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xecf268be00308980b5b3fcd0975d47c4c8e1382a",
+      "name": "Hop Protocol: DAI Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://polygonscan.com/address/0xecf268be00308980b5b3fcd0975d47c4c8e1382a",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x553bc791d746767166fa3888432038193ceed5e2",
+      "name": "Hop Protocol: MATIC Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://polygonscan.com/address/0x553bc791d746767166fa3888432038193ceed5e2",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xb98454270065a31d71bf635f6f7ee6a518dfb849",
+      "name": "Hop Protocol: ETH Bridge",
+      "category": "bridge",
+      "entity": "Hop Protocol",
+      "source": "https://polygonscan.com/address/0xb98454270065a31d71bf635f6f7ee6a518dfb849",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x88dcdc47d2f83a99cf0000fdf667a468bb958a78",
+      "name": "Celer Network: cBridge",
+      "category": "bridge",
+      "entity": "Celer",
+      "source": "https://polygonscan.com/address/0x88dcdc47d2f83a99cf0000fdf667a468bb958a78",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x1e34a77868e19a6647b1f2f47b51ed72dede95dd",
+      "name": "Tornado.Cash: 100 Matic",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://polygonscan.com/address/0x1e34a77868e19a6647b1f2f47b51ed72dede95dd",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0x43de2d77bf8027e25dbd179b491e8d64f38398aa",
+      "name": "deBridgeGate",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://polygonscan.com/address/0x43de2d77bf8027e25dbd179b491e8d64f38398aa",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xdf231d99ff8b6c6cbf4e9b9a945cbacef9339178",
+      "name": "Tornado.Cash: 1,000 MATIC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://polygonscan.com/address/0xdf231d99ff8b6c6cbf4e9b9a945cbacef9339178",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xaf4c0b70b2ea9fb7487c7cbb37ada259579fe040",
+      "name": "Tornado.Cash: 10,000 MATIC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://polygonscan.com/address/0xaf4c0b70b2ea9fb7487c7cbb37ada259579fe040",
+      "verifiedAt": "2026-10-20"
+    },
+    {
+      "address": "0xa5c2254e4253490c54cef0a4347fddb8f75a4998",
+      "name": "Tornado.Cash: 100,000 MATIC",
+      "category": "mixer",
+      "entity": "Tornado Cash",
+      "source": "https://polygonscan.com/address/0xa5c2254e4253490c54cef0a4347fddb8f75a4998",
+      "verifiedAt": "2026-10-20"
+    }
+  ]
+}
