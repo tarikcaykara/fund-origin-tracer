@@ -27,3 +27,10 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 - Gate before every commit: `bun run check && bun run typecheck && bun test`.
 - Explicit `.ts` import extensions and `import type`.
 - Update `README.md`, `CLAUDE.md` and `.env.example` in the same commit as any behaviour or config change.
+
+## Workflow
+
+- Work is tracked in GitHub milestones (`Phase N — Name`, each with a "Done when:" description) and issues, one issue per plan step until v1.
+- Issue titles use the commit style (`feat(core): …`); bodies carry Scope, an Acceptance checklist and the planned commit message.
+- Commits reference their issue with a `Refs #N` footer, or `Closes #N` on the commit that finishes it. The owner pushes and closes issues; never close one yourself.
+- After v1, branches are `<type>/<issue-number>-<slug>` and the PR body says `Closes #N`.
