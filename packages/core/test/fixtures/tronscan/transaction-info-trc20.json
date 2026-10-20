@@ -1,0 +1,24 @@
+{
+  "hash": "8b5e5f9a99d65c0b3aac7f3cbc2ee3029a0d4225054fd99830236d96d853c503",
+  "block": 77951958,
+  "timestamp": 1764517689000,
+  "ownerAddress": "TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn",
+  "toAddress": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+  "contractType": 31,
+  "contractRet": "SUCCESS",
+  "contractData": {
+    "owner_address": "TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn",
+    "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+  },
+  "trc20TransferInfo": [
+    {
+      "symbol": "USDT",
+      "name": "Tether USD",
+      "decimals": 6,
+      "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "from_address": "TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn",
+      "to_address": "TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9",
+      "amount_str": "2000000"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "coins": {
+    "coingecko:ethereum": {
+      "symbol": "ETH",
+      "prices": [{ "timestamp": 1759996803, "price": 4427.188671503945, "confidence": 0.99 }]
+    },
+    "tron:TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR": {
+      "symbol": "WTRX",
+      "prices": [{ "timestamp": 1759996641, "price": 0.33893640947884784, "confidence": 0.99 }]
+    }
+  }
+}

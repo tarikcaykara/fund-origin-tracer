@@ -22,7 +22,11 @@ function abortReason(signal?: AbortSignal): unknown {
   return signal?.reason ?? new DOMException("Aborted", "AbortError");
 }
 
-/** FIFO limiter: consecutive slots are at least `intervalMs` apart. */
+/**
+ * FIFO limiter: consecutive slots are at least `intervalMs` apart. One instance may be shared
+ * by concurrent runs, so the pause gate is awaited before queueing (a paused run never blocks
+ * other runs) and an aborted waiter leaves the queue immediately.
+ */
 export class MinIntervalLimiter {
   private readonly now: () => number;
   private readonly sleep: (ms: number, signal?: AbortSignal) => Promise<void>;
@@ -37,10 +41,10 @@ export class MinIntervalLimiter {
     this.sleep = opts.sleep ?? abortableSleep;
   }
 
-  acquire(signal?: AbortSignal, pauseGate?: () => Promise<void>): Promise<void> {
+  async acquire(signal?: AbortSignal, pauseGate?: () => Promise<void>): Promise<void> {
+    if (pauseGate) await pauseGate();
+    if (signal?.aborted) throw abortReason(signal);
     const run = async () => {
-      if (signal?.aborted) throw abortReason(signal);
-      if (pauseGate) await pauseGate();
       if (signal?.aborted) throw abortReason(signal);
       const wait = this.lastSlot + this.intervalMs - this.now();
       if (wait > 0) await this.sleep(wait, signal);
@@ -48,6 +52,15 @@ export class MinIntervalLimiter {
     };
     const result = this.tail.then(run);
     this.tail = result.catch(() => undefined);
-    return result;
+    return raceAbort(result, signal);
   }
+}
+
+function raceAbort(p: Promise<void>, signal?: AbortSignal): Promise<void> {
+  if (!signal) return p;
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+  const onAbort = () => reject(abortReason(signal));
+  signal.addEventListener("abort", onAbort, { once: true });
+  p.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
+  return promise;
 }
