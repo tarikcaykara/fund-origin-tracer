@@ -44,7 +44,7 @@ function make(transport: Transport, cache = new MemoryCacheStore(() => NOW)) {
   return new PriceService({
     transport,
     cache,
-    limiter: new MinIntervalLimiter(0),
+    limiter: new MinIntervalLimiter(0, { now: () => NOW }),
     now: () => NOW,
   });
 }

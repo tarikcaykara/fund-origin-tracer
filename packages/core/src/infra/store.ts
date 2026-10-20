@@ -5,7 +5,8 @@ export interface CacheStore {
 
 export class MemoryCacheStore implements CacheStore {
   private readonly map = new Map<string, { value: string; expiresAt: number }>();
-  constructor(private readonly now: () => number = Date.now) {}
+  /** `now` is epoch milliseconds; injected so core never reads the clock itself. */
+  constructor(private readonly now: () => number) {}
 
   async get(key: string): Promise<string | null> {
     const hit = this.map.get(key);

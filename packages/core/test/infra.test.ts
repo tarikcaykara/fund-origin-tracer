@@ -154,22 +154,24 @@ describe("withRetry", () => {
   });
 
   test("assertHttpOk maps statuses", () => {
-    expect(() => assertHttpOk({ status: 200 }, "t")).not.toThrow();
-    expect(() => assertHttpOk({ status: 404 }, "t")).not.toThrow();
+    expect(() => assertHttpOk({ status: 200 }, "t", 0)).not.toThrow();
+    expect(() => assertHttpOk({ status: 404 }, "t", 0)).not.toThrow();
     try {
-      assertHttpOk({ status: 429, retryAfter: "3" }, "t");
+      assertHttpOk({ status: 429, retryAfter: "3" }, "t", 0);
       expect.unreachable();
     } catch (e) {
       expect(e).toMatchObject({ code: "rate_limited", retryable: true, retryAfterSec: 3 });
     }
     try {
-      assertHttpOk({ status: 503 }, "t");
+      assertHttpOk({ status: 503 }, "t", 0);
       expect.unreachable();
     } catch (e) {
       expect(e).toMatchObject({ code: "provider_error", retryable: true });
     }
-    expect(parseRetryAfter(undefined)).toBeUndefined();
-    expect(parseRetryAfter("abc")).toBeUndefined();
+    expect(parseRetryAfter(undefined, 0)).toBeUndefined();
+    expect(parseRetryAfter("abc", 0)).toBeUndefined();
+    // An HTTP-date is measured against the injected clock, not the wall clock.
+    expect(parseRetryAfter("Thu, 01 Jan 1970 00:00:10 GMT", 4000)).toBe(6);
   });
 });
 

@@ -1,5 +1,6 @@
 export interface LimiterOptions {
-  now?: () => number;
+  /** Epoch milliseconds; injected so core never reads the clock itself. */
+  now: () => number;
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
 
@@ -35,9 +36,9 @@ export class MinIntervalLimiter {
 
   constructor(
     private readonly intervalMs: number,
-    opts: LimiterOptions = {},
+    opts: LimiterOptions,
   ) {
-    this.now = opts.now ?? Date.now;
+    this.now = opts.now;
     this.sleep = opts.sleep ?? abortableSleep;
   }
 

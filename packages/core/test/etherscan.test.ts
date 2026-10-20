@@ -60,7 +60,7 @@ function make(
 ) {
   return new EtherscanV2Provider(opts.chain ?? "ethereum", {
     apiKey: "TESTKEY",
-    limiter: new MinIntervalLimiter(0),
+    limiter: new MinIntervalLimiter(0, { now: () => NOW_MS }),
     transport,
     cache: opts.cache ?? new MemoryCacheStore(() => NOW_MS),
     now: () => NOW_MS,

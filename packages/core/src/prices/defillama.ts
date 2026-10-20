@@ -144,7 +144,7 @@ export class PriceService implements PriceSource {
         } catch (e) {
           throw toNetworkError(e, signal);
         }
-        assertHttpOk(res, "DefiLlama");
+        assertHttpOk(res, "DefiLlama", this.opts.now());
         if (res.status !== 200) {
           throw new FotError("provider_error", `DefiLlama: HTTP ${res.status}`);
         }

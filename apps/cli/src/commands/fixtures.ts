@@ -60,7 +60,7 @@ export async function fixturesCommand(
       transport: RecordingTransport(fetchTransport, (rec) =>
         http.set(rec.key, { status: rec.status, body: rec.body }),
       ),
-      cache: new MemoryCacheStore(),
+      cache: new MemoryCacheStore(Date.now),
       concurrency: 1,
       labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, runtime.ofacSet),
       ofacFetchedAt: snapshot.fetchedAt,

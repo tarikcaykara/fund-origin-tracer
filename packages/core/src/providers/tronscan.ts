@@ -366,7 +366,7 @@ export class TronscanProvider implements ExplorerProvider {
                 ...extra,
               });
             }
-            assertHttpOk(res, `Tronscan ${endpoint}`);
+            assertHttpOk(res, `Tronscan ${endpoint}`, this.now());
             if (res.status !== 200) {
               throw new FotError("provider_error", `Tronscan ${endpoint}: HTTP ${res.status}`);
             }

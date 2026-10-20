@@ -188,7 +188,7 @@ export class RunManager {
         labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, ofac),
         ofacFetchedAt: ofac.fetchedAt,
         transport: FixtureTransport(http, { delayMs: this.replayDelayMs }),
-        cache: new MemoryCacheStore(),
+        cache: new MemoryCacheStore(Date.now),
         replay: true,
         concurrency: 1,
       }),

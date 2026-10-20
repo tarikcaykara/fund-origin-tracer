@@ -9,7 +9,8 @@ export interface TronscanKeyPoolOptions {
   keyIntervalMs?: number;
   /** Minimum spacing between any two requests, regardless of key. */
   globalIntervalMs?: number;
-  now?: () => number;
+  /** Epoch milliseconds; injected so core never reads the clock itself. */
+  now: () => number;
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
 
@@ -41,7 +42,7 @@ export class TronscanKeyPool {
     if (this.keys.length === 0) throw new Error("TronscanKeyPool needs at least one API key");
     this.keyIntervalMs = opts.keyIntervalMs ?? 2000;
     this.globalIntervalMs = opts.globalIntervalMs ?? 500;
-    this.now = opts.now ?? Date.now;
+    this.now = opts.now;
     this.sleep = opts.sleep ?? abortableSleep;
     this.lastUsed = this.keys.map(() => Number.NEGATIVE_INFINITY);
     this.exhaustedAt = this.keys.map(() => Number.NEGATIVE_INFINITY);

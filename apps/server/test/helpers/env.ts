@@ -118,7 +118,7 @@ export async function recordDemoScenario(
     transport: RecordingTransport(fakeTransport(chainOfTransfers(8)), (r) =>
       http.set(r.key, { status: r.status, body: r.body }),
     ),
-    cache: new MemoryCacheStore(),
+    cache: new MemoryCacheStore(Date.now),
     concurrency: 1,
     labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, runtime.ofacSet),
     ofacFetchedAt: snapshot.fetchedAt,

@@ -28,7 +28,7 @@ export async function withRetry<T>(fn: () => Promise<T>, opts: RetryOptions = {}
   }
 }
 
-export function parseRetryAfter(value: string | undefined, nowMs = Date.now()): number | undefined {
+export function parseRetryAfter(value: string | undefined, nowMs: number): number | undefined {
   if (!value) return undefined;
   const secs = Number(value);
   if (Number.isFinite(secs) && secs >= 0) return secs;
@@ -37,8 +37,12 @@ export function parseRetryAfter(value: string | undefined, nowMs = Date.now()): 
 }
 
 /** Throws a retryable FotError for HTTP 429/5xx; other statuses pass through. */
-export function assertHttpOk(res: { status: number; retryAfter?: string }, what: string): void {
-  const retryAfterSec = parseRetryAfter(res.retryAfter);
+export function assertHttpOk(
+  res: { status: number; retryAfter?: string },
+  what: string,
+  nowMs: number,
+): void {
+  const retryAfterSec = parseRetryAfter(res.retryAfter, nowMs);
   const extra = retryAfterSec === undefined ? {} : { retryAfterSec };
   if (res.status === 429) {
     throw new FotError("rate_limited", `${what}: HTTP 429`, { retryable: true, ...extra });

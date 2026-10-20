@@ -113,14 +113,15 @@ export async function createRuntime(config: AppConfig, options: RuntimeOptions):
   const localLabels = await loadLocalLabels(config.labelsPath);
   const policy = await loadPolicyFile(config.policyPath);
 
-  const etherscanLimiter = new MinIntervalLimiter(1000 / config.etherscanRps);
-  const priceLimiter = new MinIntervalLimiter(PRICE_INTERVAL_MS);
+  const etherscanLimiter = new MinIntervalLimiter(1000 / config.etherscanRps, { now });
+  const priceLimiter = new MinIntervalLimiter(PRICE_INTERVAL_MS, { now });
   const keyPool =
     config.tronscanApiKeys.length > 0
       ? new TronscanKeyPool({
           keys: config.tronscanApiKeys,
           keyIntervalMs: config.tronscanKeyIntervalMs,
           globalIntervalMs: config.tronscanGlobalIntervalMs,
+          now,
         })
       : null;
 
@@ -179,11 +180,11 @@ export async function createRuntime(config: AppConfig, options: RuntimeOptions):
         return new EtherscanV2Provider(chain as EtherscanChain, {
           ...common,
           apiKey,
-          limiter: opts.replay ? new MinIntervalLimiter(0) : etherscanLimiter,
+          limiter: opts.replay ? new MinIntervalLimiter(0, { now }) : etherscanLimiter,
         });
       }
       const pool = opts.replay
-        ? new TronscanKeyPool({ keys: ["replay"], keyIntervalMs: 0, globalIntervalMs: 0 })
+        ? new TronscanKeyPool({ keys: ["replay"], keyIntervalMs: 0, globalIntervalMs: 0, now })
         : keyPool;
       if (pool === null) {
         throw new FotError("invalid_api_key", "TRONSCAN_API_KEYS is not set", { fatal: true });
@@ -195,7 +196,7 @@ export async function createRuntime(config: AppConfig, options: RuntimeOptions):
       return new PriceService({
         transport: opts.transport ?? defaultTransport,
         cache: opts.cache ?? db.cache,
-        limiter: opts.replay ? new MinIntervalLimiter(0) : priceLimiter,
+        limiter: opts.replay ? new MinIntervalLimiter(0, { now }) : priceLimiter,
         now,
         ...(opts.pauseGate ? { pauseGate: opts.pauseGate } : {}),
       });

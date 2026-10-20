@@ -263,7 +263,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       } finally {
         this.counters.apiCalls++;
       }
-      assertHttpOk(res, `Etherscan ${module}.${action}`);
+      assertHttpOk(res, `Etherscan ${module}.${action}`, this.opts.now());
       if (res.status !== 200) {
         throw providerError(`Etherscan ${module}.${action}: HTTP ${res.status}`);
       }
