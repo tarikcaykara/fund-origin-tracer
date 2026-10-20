@@ -12,6 +12,7 @@ import {
   type AttemptResult,
   cachedRequest,
   TTL_IMMUTABLE_SEC,
+  TTL_RECENT_SEC,
   ttlForTimestamp,
 } from "../infra/http.ts";
 import type { MinIntervalLimiter } from "../infra/limiter.ts";
@@ -76,6 +77,12 @@ const RpcReceipt = z.object({
   logs: z.array(RpcLog),
 });
 const RpcBlock = z.object({ timestamp: HexString });
+
+function parseRpc<T>(schema: z.ZodType<T>, raw: unknown, method: string): T {
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) throw providerError(`Etherscan ${method}: unexpected result shape`);
+  return parsed.data;
+}
 
 // `txlistinternal&txhash=` rows carry no `hash` field (observed live); the tx is already known.
 const InternalRow = z.object({
@@ -292,7 +299,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       signal,
       () => recent,
     );
-    const tx = RpcTx.parse(rawTx);
+    const tx = parseRpc(RpcTx, rawTx, "eth_getTransactionByHash");
     if (tx.blockNumber === null) {
       throw new FotError("not_found", `Transaction ${txHash} is not mined yet`);
     }
@@ -307,7 +314,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       signal,
       () => ttl,
     );
-    const receipt = RpcReceipt.parse(rawReceipt);
+    const receipt = parseRpc(RpcReceipt, rawReceipt, "eth_getTransactionReceipt");
     if (
       receipt.status !== null &&
       receipt.status !== undefined &&
@@ -345,7 +352,9 @@ export class EtherscanV2Provider implements ExplorerProvider {
 
     for (const row of internal) {
       if (row.isError !== "0" || row.value === "0") continue;
-      addNative(row.from, row.to, row.value);
+      const to = row.to || row.contractAddress;
+      if (!to) continue;
+      addNative(row.from, to, row.value);
     }
 
     for (const log of receipt.logs) {
@@ -396,7 +405,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
           return parsed.success ? this.ttlAt(hexToNumber(parsed.data.timestamp)) : null;
         },
       );
-      return hexToNumber(RpcBlock.parse(raw).timestamp);
+      return hexToNumber(parseRpc(RpcBlock, raw, "eth_getBlockByNumber").timestamp);
     })();
     this.blockTs.set(blockNumber, p);
     p.catch(() => this.blockTs.delete(blockNumber));
@@ -484,23 +493,25 @@ export class EtherscanV2Provider implements ExplorerProvider {
     }
     const boundTs = window.beforeTs ?? window.afterTs;
     const ttl = this.ttlAt(boundTs);
+    const maxPages = Math.max(1, Math.min(q.maxPages ?? this.maxPages, this.maxPages));
     const sort = ascending ? "asc" : "desc";
 
     const fetchList = async <T>(action: string, schema: z.ZodType<T>) => {
       const rows: T[] = [];
       let truncated = false;
-      for (let page = 1; page <= this.maxPages; page++) {
+      for (let page = 1; page <= maxPages; page++) {
         const raw = await this.call(
           "account",
           action,
           { address, page, offset: PAGE_SIZE, sort, ...range },
           signal,
-          () => ttl,
+          // Forward listings can still gain rows unless the page is already full.
+          (r) => (ascending && !(Array.isArray(r) && r.length >= PAGE_SIZE) ? TTL_RECENT_SEC : ttl),
         );
         const batch = parseArray(schema, raw, action);
         rows.push(...batch);
         if (batch.length < PAGE_SIZE) break;
-        if (page === this.maxPages) truncated = true;
+        if (page === maxPages) truncated = true;
       }
       return { rows, truncated };
     };

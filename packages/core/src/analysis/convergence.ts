@@ -108,6 +108,7 @@ export async function followUpConvergences(
         address: conv.address,
         direction,
         window: {},
+        maxPages: 1,
         signal: deps.signal,
       });
       const seen = new Set<string>();

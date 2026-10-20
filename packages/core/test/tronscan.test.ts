@@ -421,6 +421,34 @@ describe("TronscanProvider.listTransfers", () => {
     }
   });
 
+  test("query.maxPages caps paging below the provider maxPages", async () => {
+    const proto = trc20Page.token_transfers[2];
+    const page = (start: number) =>
+      Array.from({ length: 50 }, (_, i) => ({
+        ...proto,
+        transaction_id: `t${start + i}`,
+        block_ts: 1_764_517_689_000 - (start + i) * 1000,
+      }));
+    const { provider, calls } = setup(
+      ["k1"],
+      (c) =>
+        ok(
+          c.endpoint === "transaction"
+            ? emptyPage("transaction")
+            : { rangeTotal: 500, token_transfers: page(Number(c.params.start)) },
+        ),
+      4,
+    );
+    await provider.listTransfers({
+      address: ADDR,
+      direction: "in",
+      window: { beforeTs: 1_764_517_700 },
+      maxPages: 1,
+      signal,
+    });
+    expect(calls.filter((c) => c.endpoint !== "transaction")).toHaveLength(1);
+  });
+
   test("paging stops early on a short page or when rangeTotal is reached", async () => {
     const proto = trc20Page.token_transfers[2];
     const full = Array.from({ length: 50 }, (_, i) => ({ ...proto, transaction_id: `t${i}` }));

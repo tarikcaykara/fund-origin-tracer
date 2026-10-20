@@ -13,6 +13,7 @@ import {
   type TraceEdge,
   type Transfer,
 } from "../src/schema.ts";
+import { flagIds, runAnalysis } from "./helpers/analysis-fixtures.ts";
 import {
   addr,
   EventLog,
@@ -110,6 +111,11 @@ function chainTransfers(hops: number): Transfer[] {
   );
 }
 
+function chainProviderOpts(hops: number): FakeProviderOptions {
+  const transfers = chainTransfers(hops);
+  return { transfers, txs: [mkTx(txHash(1), [transfers[0] as Transfer])] };
+}
+
 function chainProvider(hops: number, over: FakeProviderOptions = {}): FakeProvider {
   const transfers = chainTransfers(hops);
   return new FakeProvider({
@@ -205,6 +211,35 @@ describe("candidate selection and drops", () => {
     expect(out.stats.droppedCandidates).toBe(1);
   });
 
+  test("retains one example of every drop reason even when scored drops fill the cap", async () => {
+    const seed = mkTransfer({ tx: 1, from: addr(2), to: addr(1), amount: 100, ts: T0 });
+    const excess = Array.from({ length: 100 }, (_, i) =>
+      mkTransfer({ tx: 100 + i, from: addr(100 + i), to: addr(2), amount: 100, ts: T0 - 10 - i }),
+    );
+    const spoof = mkTransfer({
+      tx: 500,
+      from: addr(500),
+      to: addr(2),
+      amount: 100,
+      ts: T0 - 10,
+      asset: FAKE_USDT,
+    });
+    const provider = new FakeProvider({
+      transfers: [seed, ...excess, spoof],
+      txs: [mkTx(txHash(1), [seed])],
+    });
+    const { out } = await run(params({ maxBranches: 1, maxDepth: 1 }), provider);
+    const root = out.edges[0] as TraceEdge;
+    expect(root.droppedTotal).toBe(100);
+    expect(root.dropped).toHaveLength(30);
+    expect(root.dropped.some((d) => d.reason === "spoofed_token")).toBe(true);
+    expect(root.dropped.filter((d) => d.reason === "exceeds_max_branches")[0]?.score).toBe(
+      Math.max(...root.dropped.map((d) => d.score ?? -1)),
+    );
+    const result = await runAnalysis(out.edges, {});
+    expect(flagIds(result)).toContain("spoofed_tokens_ignored");
+  });
+
   test("applies drop reasons in order and records every dropped candidate", async () => {
     const Y = addr(2);
     const seed = mkTransfer({ tx: 1, from: Y, to: addr(1), amount: 100, ts: T0 });
@@ -278,6 +313,24 @@ describe("candidate selection and drops", () => {
     expect(out.edges.every((e) => e.usd === null)).toBe(true);
     expect(out.warnings.filter((w) => w.code === "prices_unavailable")).toHaveLength(1);
     expect(log.of("warning").filter((w) => w.code === "prices_unavailable")).toHaveLength(1);
+  });
+});
+
+describe("truncated listings", () => {
+  test("no_candidates on a truncated listing says so; one run-level warning", async () => {
+    const provider = chainProvider(1, { truncated: true });
+    const { out, log } = await run(params(), provider);
+    const root = out.edges[0] as TraceEdge;
+    expect(root.stopReason).toBe("no_candidates");
+    expect(root.stopDetail).toBe("listing_truncated");
+    expect(out.warnings.filter((w) => w.code === "listing_truncated")).toHaveLength(1);
+    expect(log.of("warning").filter((w) => w.code === "listing_truncated")).toHaveLength(1);
+  });
+
+  test("an untruncated dead end has no detail and no warning", async () => {
+    const { out } = await run(params(), chainProvider(1));
+    expect(out.edges[0]?.stopDetail).toBeNull();
+    expect(out.warnings.some((w) => w.code === "listing_truncated")).toBe(false);
   });
 });
 
@@ -523,6 +576,24 @@ describe("seeds", () => {
     expect(log.of("warning").map((w) => w.code)).toEqual(["seed_failed:s2"]);
     expect(out.edges.length).toBeGreaterThan(0);
     expect(out.edges.every((e) => e.seedId === null || e.seedId === "s1")).toBe(true);
+  });
+
+  test("a provider_error on one seed warns and the run continues", async () => {
+    const provider = new FakeProvider({
+      ...chainProviderOpts(2),
+      errors: { [txHash(2)]: new FotError("provider_error", "unexpected result shape") },
+    });
+    const { out } = await run(
+      params({
+        seeds: [
+          { id: "s1", kind: "tx", value: txHash(1) },
+          { id: "s2", kind: "tx", value: txHash(2) },
+        ],
+      }),
+      provider,
+    );
+    expect(out.status).toBe("completed");
+    expect(out.warnings.map((w) => w.code)).toEqual(["seed_failed:s2"]);
   });
 
   test("a failed tx counts as a seed failure; all seeds failed means failed", async () => {

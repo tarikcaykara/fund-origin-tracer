@@ -110,6 +110,8 @@ export interface FakeProviderOptions {
   windowSlackSec?: number;
   /** Return rows of both directions instead of only the requested one. */
   bothDirections?: boolean;
+  /** Report every listing as truncated. */
+  truncated?: boolean;
 }
 
 export class FakeProvider implements ExplorerProvider {
@@ -165,7 +167,7 @@ export class FakeProvider implements ExplorerProvider {
     rows = rows.sort((x, y) =>
       afterTs !== undefined ? x.timestamp - y.timestamp : y.timestamp - x.timestamp,
     );
-    return { rows, truncated: false };
+    return { rows, truncated: this.#opts.truncated ?? false };
   }
 
   stats(): ProviderStats {

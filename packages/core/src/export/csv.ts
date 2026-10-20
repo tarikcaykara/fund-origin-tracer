@@ -26,7 +26,7 @@ type Cell = string | number | null | undefined;
 /** Quotes per RFC 4180 and neutralizes spreadsheet formulas (cells starting with = + - @ TAB CR). */
 export function escapeCsvCell(value: Cell): string {
   let s = value === null || value === undefined ? "" : String(value);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

@@ -627,3 +627,97 @@ describe("getTransaction", () => {
     expect(tx2).toEqual(tx1);
   });
 });
+
+describe("review fixes", () => {
+  const A = "0x00000000000000000000000000000000000000aa";
+  const B = "0x00000000000000000000000000000000000000bb";
+  const C = "0x00000000000000000000000000000000000000cc";
+
+  test("forward listing under a full page is cached for 300 s even when the bound is old", async () => {
+    const ttls: number[] = [];
+    const inner = new MemoryCacheStore(() => NOW_MS);
+    const cache: MemoryCacheStore = Object.assign(Object.create(inner), {
+      get: inner.get.bind(inner),
+      set: (k: string, v: string, ttl: number) => {
+        ttls.push(ttl);
+        return inner.set(k, v, ttl);
+      },
+    });
+    const t = scripted((p) => {
+      if (p.get("action") === "getblocknobytime") return json({ status: "1", result: "100" });
+      return json(emptyEnvelope);
+    });
+    const afterTs = NOW_MS / 1000 - 2 * 86400;
+    await make(t.transport, { cache }).listTransfers({
+      address: addr,
+      direction: "out",
+      window: { afterTs },
+      signal,
+    });
+    // Block lookup is immutable (30 d); the three listings must be 300 s.
+    expect(ttls.filter((x) => x === 300)).toHaveLength(3);
+  });
+
+  test("internal CREATE rows use contractAddress as recipient; rows with neither are skipped", async () => {
+    const t = scripted((p) => {
+      switch (p.get("action")) {
+        case "eth_getTransactionByHash":
+          return json({
+            result: { hash: SWAP_TX, blockNumber: "0x10", from: A, to: B, value: "0x0" },
+          });
+        case "eth_getBlockByNumber":
+          return json({ result: { timestamp: "0x1000" } });
+        case "eth_getTransactionReceipt":
+          return json({ result: { status: "0x1", contractAddress: null, logs: [] } });
+        case "txlistinternal":
+          return json({
+            status: "1",
+            message: "OK",
+            result: [
+              { from: B, to: "", value: "5", isError: "0", contractAddress: C },
+              { from: B, to: "", value: "7", isError: "0", contractAddress: "" },
+            ],
+          });
+        default:
+          return json({ error: { message: "unexpected" } });
+      }
+    });
+    const tx = await make(t.transport).getTransaction(SWAP_TX, signal);
+    expect(tx.transfers.map((x) => [x.from, x.to, x.amountRaw])).toEqual([[B, C, "5"]]);
+  });
+
+  test("a malformed RPC result is provider_error", async () => {
+    const t = scripted(() => json({ result: { hash: "0x1" } }));
+    const e = await failure(make(t.transport).getTransaction(SWAP_TX, signal));
+    expect(e.code).toBe("provider_error");
+    expect(e.message).toContain("eth_getTransactionByHash: unexpected result shape");
+  });
+
+  test("query.maxPages caps paging below the provider maxPages", async () => {
+    const row = (i: number) => ({
+      blockNumber: String(1000 + i),
+      timeStamp: String(2_000_000 - i),
+      hash: `0x${i.toString(16).padStart(64, "0")}`,
+      from: A,
+      to: B,
+      value: "1000000",
+      contractAddress: "0xc0ffee",
+      tokenName: "AAA",
+      tokenSymbol: "AAA",
+      tokenDecimal: "6",
+    });
+    const t = scripted((p) =>
+      p.get("action") === "tokentx"
+        ? json({ status: "1", message: "OK", result: Array.from({ length: 50 }, (_, i) => row(i)) })
+        : json(emptyEnvelope),
+    );
+    await make(t.transport, { maxPages: 4 }).listTransfers({
+      address: addr,
+      direction: "in",
+      window: {},
+      maxPages: 1,
+      signal,
+    });
+    expect(t.calls.filter((p) => p.get("action") === "tokentx")).toHaveLength(1);
+  });
+});

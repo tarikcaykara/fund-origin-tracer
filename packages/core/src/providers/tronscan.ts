@@ -294,7 +294,8 @@ export class TronscanProvider implements ExplorerProvider {
     ttlTs: number | undefined,
   ): Promise<ListFetch<R>> {
     const out: ListFetch<R> = { rows: [], fetched: 0, rangeTotal: undefined, capped: false };
-    for (let page = 0; page < this.maxPages; page++) {
+    const maxPages = Math.max(1, Math.min(q.maxPages ?? this.maxPages, this.maxPages));
+    for (let page = 0; page < maxPages; page++) {
       const parsed = await this.fetchParsed(
         endpoint,
         { ...params, limit: PAGE_SIZE, start: page * PAGE_SIZE },

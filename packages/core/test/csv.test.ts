@@ -66,6 +66,13 @@ async function sample(): Promise<AnalysisResult> {
   });
 }
 
+describe("escapeCsvCell numbers", () => {
+  test("finite numbers are emitted as plain numbers, strings still guarded", () => {
+    expect(escapeCsvCell(-10)).toBe("-10");
+    expect(escapeCsvCell("-10")).toBe("'-10");
+  });
+});
+
 describe("escapeCsvCell", () => {
   test("neutralizes formula starters with a leading apostrophe", () => {
     for (const s of ["=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx"]) {

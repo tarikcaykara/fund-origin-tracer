@@ -5,6 +5,7 @@ import { isSpoofed } from "../labels/spoof.ts";
 import { priceKey } from "../providers/types.ts";
 import {
   assetId,
+  type DropReason,
   type LabelCategory,
   type RunParams,
   type Seed,
@@ -32,6 +33,37 @@ import type {
 
 const MAX_SEED_LEGS = 10;
 const MAX_DROPPED_KEPT = 30;
+const DROP_REASON_ORDER: readonly DropReason[] = [
+  "spoofed_token",
+  "zero_value",
+  "self_transfer",
+  "same_tx",
+  "outside_time_window",
+  "below_min_usd",
+  "unpriced",
+  "exceeds_max_branches",
+];
+
+/**
+ * Keeps at most MAX_DROPPED_KEPT drops: first one example per distinct reason (plan order; the
+ * best-scored one for exceeds_max_branches), then fills by score desc, then unscored in order.
+ * `all` lists exceeds_max_branches in score order, followed by unscored drops in candidate order.
+ */
+function retainDropped(all: TraceEdge["dropped"]): TraceEdge["dropped"] {
+  if (all.length <= MAX_DROPPED_KEPT) return all;
+  const chosen = new Set<number>();
+  for (const reason of DROP_REASON_ORDER) {
+    const i = all.findIndex((d) => d.reason === reason);
+    if (i >= 0 && chosen.size < MAX_DROPPED_KEPT) chosen.add(i);
+  }
+  for (let i = 0; i < all.length && chosen.size < MAX_DROPPED_KEPT; i++) {
+    if (all[i]?.score !== null) chosen.add(i);
+  }
+  for (let i = 0; i < all.length && chosen.size < MAX_DROPPED_KEPT; i++) chosen.add(i);
+  const reserved = all.filter((_, i) => chosen.has(i));
+  const rank = (d: TraceEdge["dropped"][number]): number => (d.score === null ? 1 : 0);
+  return reserved.sort((a, b) => rank(a) - rank(b) || (b.score ?? 0) - (a.score ?? 0));
+}
 const PROGRESS_INTERVAL_MS = 1000;
 
 const DEFAULT_STOP_CATEGORIES: ReadonlySet<LabelCategory> = new Set([
@@ -219,6 +251,16 @@ export async function runTrace(
     emit({ type: "warning", code, message });
   }
 
+  let truncatedWarned = false;
+  function noteTruncated(listing: { truncated: boolean }): void {
+    if (!listing.truncated || truncatedWarned) return;
+    truncatedWarned = true;
+    warn(
+      "listing_truncated",
+      "At least one address listing hit the page cap; older or newer transfers may be missing. Raise EXPLORER_MAX_PAGES for deeper listings.",
+    );
+  }
+
   function raiseFatal(code: string, message: string): void {
     if (state.fatal) return;
     state.fatal = { code, message };
@@ -355,6 +397,7 @@ export async function runTrace(
       window: {},
       signal,
     });
+    noteTruncated(listing);
     const seen = new Set<string>();
     const rows = listing.rows.filter((t) => {
       if ((backward ? norm(t.to) : norm(t.from)) !== address) return false;
@@ -518,6 +561,7 @@ export async function runTrace(
       window: backward ? { beforeTs: t } : { afterTs: t },
       signal,
     });
+    noteTruncated(listing);
     const subjectNorm = norm(subject);
     const seen = new Set<string>();
     const rows = listing.rows.filter((r) => {
@@ -569,12 +613,12 @@ export async function runTrace(
 
     if (signal.aborted) throw new InterruptedError();
 
-    edge.dropped = droppedAll.slice(0, MAX_DROPPED_KEPT);
+    edge.dropped = retainDropped(droppedAll);
     edge.droppedTotal = droppedAll.length;
     state.dropped += droppedAll.length;
 
     if (selected.length === 0) {
-      stopEdge(edge, "no_candidates", null);
+      stopEdge(edge, "no_candidates", listing.truncated ? "listing_truncated" : null);
       return;
     }
 

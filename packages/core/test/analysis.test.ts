@@ -135,6 +135,22 @@ describe("analyze: address nodes and seed reachability", () => {
   });
 });
 
+describe("analyze: convergence follow-up paging", () => {
+  test("the follow-up asks for page 1 only", async () => {
+    const provider = fakeProvider();
+    await runAnalysis(
+      buildEdges([
+        { id: "p", near: addr(1), far: addr(2), seedId: "s1", amount: 1 },
+        { id: "x", near: addr(2), far: addr(3), parents: ["p"], amount: 5 },
+        { id: "y", near: addr(4), far: addr(3), parents: ["p"], amount: 5 },
+      ]),
+      { provider },
+    );
+    expect(provider.calls.length).toBeGreaterThan(0);
+    expect(provider.calls.every((c) => c.maxPages === 1)).toBe(true);
+  });
+});
+
 describe("analyze: convergences", () => {
   test("flags an unlabeled address shared across seeds and within the trace", async () => {
     const result = await runAnalysis(twoSeedGraph(), { seedIds: ["s1", "s2"], labels: [BINANCE] });

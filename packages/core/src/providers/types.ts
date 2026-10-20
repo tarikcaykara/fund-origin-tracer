@@ -21,6 +21,8 @@ export interface ListTransfersQuery {
   direction: "in" | "out";
   window: TransferWindow;
   signal: AbortSignal;
+  /** Optional page cap, applied as min(this, provider maxPages). */
+  maxPages?: number;
 }
 
 export interface ListTransfersResult {
