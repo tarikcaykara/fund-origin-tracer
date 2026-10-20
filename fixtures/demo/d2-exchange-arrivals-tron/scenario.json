@@ -1,0 +1,25 @@
+{
+  "id": "d2-exchange-arrivals-tron",
+  "title": "Where withdrawn funds went on TRON",
+  "description": "Forward trace of a USDT-TRC20 withdrawal from a Binance hot wallet. The recipient moves the funds through deposit addresses that sweep into exchange wallets (Gate, Binance): the exchange arrivals are where a freeze request would go.",
+  "chain": "tron",
+  "direction": "forward",
+  "params": {
+    "chain": "tron",
+    "direction": "forward",
+    "maxDepth": 6,
+    "maxBranches": 3,
+    "maxEdges": 120,
+    "minUsd": 0,
+    "traceThroughEntities": false,
+    "timeoutSec": 1800,
+    "seeds": [
+      {
+        "id": "s1",
+        "kind": "tx",
+        "value": "e251f502e0626baf152d26fc8b810f4a3bc75dc6ac74bd0536da6c30e95375eb"
+      }
+    ]
+  },
+  "recordedAt": "2026-10-20T20:55:46.325Z"
+}
