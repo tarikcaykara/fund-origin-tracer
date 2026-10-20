@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "flags": {
+    "sanctioned_exposure": { "severity": "high" },
+    "mixer_direct": { "severity": "high", "directHops": 1 },
+    "mixer_indirect": { "severity": "medium", "directHops": 1 },
+    "scam_direct": { "severity": "high", "directHops": 1 },
+    "scam_indirect": { "severity": "medium", "directHops": 1 },
+    "common_source_across_seeds": { "severity": "medium" },
+    "common_source_within_trace": { "severity": "low" },
+    "cycle": { "severity": "medium" },
+    "funnel": { "severity": "medium", "minSenders": 4, "windowSec": 86400 },
+    "round_trip": { "severity": "medium", "tolerance": 0.03 },
+    "structuring": { "severity": "low", "minAddresses": 5, "maxUsd": 100 },
+    "long_chain": { "severity": "low", "hops": 5 },
+    "unresolved_majority": { "severity": "low", "share": 0.5 },
+    "exchange_origin": { "severity": "info" },
+    "spoofed_tokens_ignored": { "severity": "info" },
+    "incomplete_trace": { "severity": "info" }
+  }
+}
