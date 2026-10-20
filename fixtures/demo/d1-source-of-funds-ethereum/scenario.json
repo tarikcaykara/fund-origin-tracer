@@ -1,0 +1,25 @@
+{
+  "id": "d1-source-of-funds-ethereum",
+  "title": "Source of funds on Ethereum",
+  "description": "Backward trace of a 50k USDT transfer. The funds lead back through an intermediary wallet to a Binance hot wallet (exchange origin).",
+  "chain": "ethereum",
+  "direction": "backward",
+  "params": {
+    "chain": "ethereum",
+    "direction": "backward",
+    "maxDepth": 6,
+    "maxBranches": 3,
+    "maxEdges": 120,
+    "minUsd": 0,
+    "traceThroughEntities": false,
+    "timeoutSec": 600,
+    "seeds": [
+      {
+        "id": "s1",
+        "kind": "tx",
+        "value": "0xe7f7c8836a109082c31d9587904304caa1f004ab056bf5e3b4e40d08d2078f0b"
+      }
+    ]
+  },
+  "recordedAt": "2026-10-20T20:42:04.799Z"
+}

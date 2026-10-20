@@ -1,0 +1,30 @@
+{
+  "id": "d3-linked-wallets",
+  "title": "Linked wallets across two payments",
+  "description": "Backward trace of two unrelated-looking USDT payments. Both lead back to the same unlabeled funding wallet, which is flagged as a common source shared across seeds.",
+  "chain": "ethereum",
+  "direction": "backward",
+  "params": {
+    "chain": "ethereum",
+    "direction": "backward",
+    "maxDepth": 4,
+    "maxBranches": 3,
+    "maxEdges": 80,
+    "minUsd": 0,
+    "traceThroughEntities": false,
+    "timeoutSec": 600,
+    "seeds": [
+      {
+        "id": "s1",
+        "kind": "tx",
+        "value": "0x8e463bd42d8cc09e3d05449676c631132dcb170147fc410d406e9049822fe998"
+      },
+      {
+        "id": "s2",
+        "kind": "tx",
+        "value": "0x1b59b93dcee5cc162d96a9140809d45e72f8946d265116489389b1e70fef8de5"
+      }
+    ]
+  },
+  "recordedAt": "2026-10-20T20:45:18.324Z"
+}
