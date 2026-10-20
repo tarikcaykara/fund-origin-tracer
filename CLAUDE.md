@@ -7,8 +7,8 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | Path | Role |
 |---|---|
 | `packages/core` (`@fot/core`) | Runtime-agnostic engine: chains, result schema, providers, prices, labels, trace engine, analysis, exports |
-| `apps/server` (`@fot/server`) | Hono REST/SSE API, SQLite persistence, run manager |
-| `apps/cli` (`@fot/cli`) | `fot` CLI: trace, screen, labels, serve, fixtures |
+| `apps/server` (`@fot/server`) | `config.ts` env→`AppConfig`; `db.ts` bun:sqlite (investigations, `SqliteCacheStore`, `SqliteKv`); `runtime.ts` shared limiter/key pool/labels/OFAC/policy + per-run providers; `execute.ts` `executeRun` (trace→analyze); `runs.ts` `RunManager` (live state, SSE fan-out, expand); `demo.ts` scenario files; `app.ts` Hono routes; `serve.ts` `startServer` |
+| `apps/cli` (`@fot/cli`) | `fot` CLI (`main.ts` is the only `process.exit`; `cli.ts` `runCli` returns the exit code): `commands/{trace,screen,labels,serve,fixtures}.ts`, `summary.ts` text report |
 | `apps/web` (`@fot/web`) | React + Vite + Tailwind + shadcn/ui UI |
 | `scripts/dev.ts` | Runs API (3000) and Vite (5173) together |
 
