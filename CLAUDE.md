@@ -25,6 +25,8 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | `fixtures/demo/<id>/` | Recorded demo scenarios: `scenario.json`, `http.json.gz`, `ofac.json` (written by `fot fixtures record`) |
 | `docs/` | `methodology.md` (scoring, drops, stops, flags), `api.md` (REST + SSE), `labels.md` (source policy, formats, coverage) |
 | `scripts/dev.ts` | Runs API (3000) and Vite (5173) together |
+| `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Two-stage image on `oven/bun:1.4.3-debian` (build the web app, then ship sources + prod deps + `apps/web/dist`, `packages/core/labels`, `fixtures/demo`); compose pins `PORT`/`DATA_DIR` inside the container and maps `${PORT:-3000}` |
+| `.github/workflows/ci.yml` | CI: install, check, typecheck, test, build, gitleaks |
 | `CONTRIBUTING.md`, `SECURITY.md` | Contributor workflow and secrets runbook; private vulnerability reporting |
 
 ## Gotchas
@@ -41,6 +43,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 - **TRON swap-through only works for seed transactions** (listings are direction-filtered, so the opposite swap leg is not visible).
 - **`maxEdges` counts expansions started**, reserved before the first await so the limit is exact under concurrency.
 - **`paused` is a live overlay status**, never persisted; `GET /api/runs?status=paused` is rejected.
+- **Docker: `env_file: .env` overrides the image `ENV`.** A dev `.env` with `DATA_DIR=./data` or `PORT=3100` would break the volume and port mapping, so `docker-compose.yml` sets `PORT` and `DATA_DIR` under `environment:` (which wins over `env_file`). The server runs from TypeScript sources; there is no server build step, only `apps/web/dist`.
 
 ## Hard rules
 

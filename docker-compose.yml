@@ -1,0 +1,18 @@
+name: fund-origin-tracer
+services:
+  fot:
+    build: .
+    image: fund-origin-tracer:local
+    env_file: .env
+    environment:
+      # Fixed inside the container; .env values for these would break the port mapping and volume.
+      PORT: "3000"
+      DATA_DIR: /app/data
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - data:/app/data
+volumes:
+  data:
