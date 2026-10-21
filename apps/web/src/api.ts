@@ -72,6 +72,7 @@ export interface LiveRunRequest {
   maxEdges?: number;
   minUsd?: number;
   traceThroughEntities?: boolean;
+  followUnpriced?: boolean;
   timeoutSec?: number;
 }
 

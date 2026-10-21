@@ -34,6 +34,10 @@ import {
 const settle = () => new Promise<void>((r) => setImmediate(r));
 const ZERO = CHAINS.ethereum.zeroAddresses[0] as string;
 
+/**
+ * `followUnpriced` is on so the scenarios stay about their own subject: FakePrices only prices
+ * USDT/USDC, which leaves native and WETH candidates unpriced as an artefact of the fake.
+ */
 function params(over: Partial<RunParams> = {}): RunParams {
   return {
     chain: "ethereum",
@@ -44,6 +48,7 @@ function params(over: Partial<RunParams> = {}): RunParams {
     maxEdges: 200,
     minUsd: 0,
     traceThroughEntities: false,
+    followUnpriced: true,
     timeoutSec: 600,
     ...over,
   };
@@ -297,6 +302,36 @@ describe("candidate selection and drops", () => {
     expect(root.dropped[1]?.reason).toBe("zero_value");
   });
 
+  test("drops unpriced candidates by default; followUnpriced follows them", async () => {
+    const seed = mkTransfer({ tx: 1, from: addr(2), to: addr(1), amount: 100, ts: T0 });
+    const priced = mkTransfer({ tx: 2, from: addr(10), to: addr(2), amount: 100, ts: T0 - 20 });
+    const unpriced = mkTransfer({
+      tx: 3,
+      from: addr(11),
+      to: addr(2),
+      amount: 100,
+      ts: T0 - 20,
+      asset: WETH,
+    });
+    const provider = new FakeProvider({
+      transfers: [seed, priced, unpriced],
+      txs: [mkTx(txHash(1), [seed])],
+    });
+
+    const dropped = await run(params({ followUnpriced: false, maxDepth: 1 }), provider);
+    const droppedRoot = dropped.out.edges[0] as TraceEdge;
+    expect(droppedRoot.children).toHaveLength(1);
+    expect(edgeBy(dropped.out, (e) => e.id === droppedRoot.children[0]).far).toBe(addr(10));
+    expect(droppedRoot.dropped).toEqual([
+      { transfer: unpriced, usd: null, reason: "unpriced", score: null },
+    ]);
+
+    const followed = await run(params({ followUnpriced: true, maxDepth: 1 }), provider);
+    const followedRoot = followed.out.edges[0] as TraceEdge;
+    const fars = followedRoot.children.map((id) => edgeBy(followed.out, (e) => e.id === id).far);
+    expect(fars.sort()).toEqual([addr(10), addr(11)].sort());
+  });
+
   test("prices every candidate with one batched lookup per expansion", async () => {
     const provider = chainProvider(3);
     const { prices, out } = await run(params(), provider);
@@ -313,6 +348,9 @@ describe("candidate selection and drops", () => {
     expect(out.edges.every((e) => e.usd === null)).toBe(true);
     expect(out.warnings.filter((w) => w.code === "prices_unavailable")).toHaveLength(1);
     expect(log.of("warning").filter((w) => w.code === "prices_unavailable")).toHaveLength(1);
+    // The outage suspends the default unpriced drop instead of leaving only the seed edges.
+    const strict = await run(params({ followUnpriced: false }), chainProvider(3), { prices });
+    expect(strict.out.edges.length).toBe(out.edges.length);
   });
 });
 

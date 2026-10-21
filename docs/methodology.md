@@ -87,7 +87,7 @@ Checked in this order; the first that applies is the reason. `TIME_TOLERANCE_SEC
 | 3 | `zero_value` | Raw amount is `0` |
 | 4 | `spoofed_token` | Look-alike of a canonical token (see [Spoofed tokens](#spoofed-tokens)) |
 | 5 | `outside_time_window` | Backward: `timestamp > t + 5`. Forward: `timestamp < t − 5` |
-| 6 | `unpriced` | `minUsd > 0` and no USD price |
+| 6 | `unpriced` | No USD price, and `minUsd > 0` or `followUnpriced` is false (the default). Not applied while the expansion's price lookup failed (`prices_unavailable`) unless `minUsd > 0` |
 | 7 | `below_min_usd` | `minUsd > 0` and USD value `< minUsd` |
 | 8 | `exceeds_max_branches` | Scored but ranked below the top `maxBranches` |
 
@@ -265,7 +265,7 @@ Per address the explorer is asked for several lists (Etherscan: ERC-20 `tokentx`
 - **Canonical stablecoins are priced 1:1 by contract address only**: Ethereum USDT, USDC, DAI, USDP; Polygon USDT, USDC, USDC.e, DAI; Arbitrum USDT, USDC, USDC.e, DAI; TRON USDT. Priced by contract, never by symbol, so a token that merely calls itself "USDT" is not valued as a dollar.
 - Everything else (native coins, WETH, other tokens, TRON USDC/USDD) is looked up on DefiLlama. A token DefiLlama does not know is **unpriced** (`usd: null`).
 - If DefiLlama cannot be reached, prices come back null and the run carries warning `prices_unavailable`; the run is not aborted.
-- Unpriced edges never count towards USD totals. With `minUsd > 0` they are dropped as `unpriced`, so set `minUsd` knowing that unpriced tokens will not be followed.
+- Unpriced edges never count towards USD totals. Unpriced expansion candidates are not followed by default (dropped as `unpriced`), which keeps spam and airdrop tokens out of the graph; `followUnpriced` follows them. `minUsd > 0` always drops them. Seed legs are never dropped for being unpriced.
 
 ### Spoofed tokens
 

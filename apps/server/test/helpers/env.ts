@@ -104,6 +104,7 @@ export async function recordDemoScenario(
     maxEdges: 50,
     minUsd: 0,
     traceThroughEntities: false,
+    followUnpriced: false,
     timeoutSec: 60,
   };
   const http: HttpRecording = new Map();

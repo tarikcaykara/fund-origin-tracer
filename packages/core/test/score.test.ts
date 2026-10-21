@@ -123,6 +123,8 @@ describe("dropReason", () => {
     edgeTxHash: "0xedge",
     refTimestamp: T0,
     minUsd: 0,
+    followUnpriced: false,
+    pricesComplete: true,
   };
   const row = (over: Partial<Parameters<typeof mkTransfer>[0]> = {}) =>
     mkTransfer({ tx: 9, from: addr(2), to: addr(1), amount: 100, ts: T0 - 10, ...over });
@@ -175,10 +177,20 @@ describe("dropReason", () => {
     );
   });
 
-  test("unpriced beats below_min_usd, and only applies when minUsd > 0", () => {
-    expect(dropReason(row(), null, { ...base, minUsd: 10 })).toBe("unpriced");
-    expect(dropReason(row(), null, base)).toBeNull();
+  test("unpriced is dropped by default and kept with followUnpriced; minUsd > 0 always drops it", () => {
+    expect(dropReason(row(), null, base)).toBe("unpriced");
+    expect(dropReason(row(), null, { ...base, followUnpriced: true })).toBeNull();
+    expect(dropReason(row(), null, { ...base, followUnpriced: true, minUsd: 10 })).toBe("unpriced");
     expect(dropReason(row(), 9.99, { ...base, minUsd: 10 })).toBe("below_min_usd");
     expect(dropReason(row(), 10, { ...base, minUsd: 10 })).toBeNull();
+    // Priced dust is not a drop at minUsd 0.
+    expect(dropReason(row(), 0.5, base)).toBeNull();
+  });
+
+  test("a failed price lookup suspends the default unpriced drop, not minUsd", () => {
+    expect(dropReason(row(), null, { ...base, pricesComplete: false })).toBeNull();
+    expect(dropReason(row(), null, { ...base, pricesComplete: false, minUsd: 10 })).toBe(
+      "unpriced",
+    );
   });
 });

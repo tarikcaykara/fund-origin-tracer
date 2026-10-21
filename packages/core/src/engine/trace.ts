@@ -303,29 +303,40 @@ export async function runTrace(
     if (signal.aborted) throw new InterruptedError();
   }
 
-  /** USD value per transfer (aligned with input) from one batched price lookup. */
-  async function priceAll(transfers: readonly Transfer[]): Promise<(number | null)[]> {
-    if (transfers.length === 0) return [];
+  /**
+   * USD value per transfer (aligned with input) from one batched price lookup; `complete` is
+   * false when the lookup failed or returned a warning.
+   */
+  async function priceAll(
+    transfers: readonly Transfer[],
+  ): Promise<{ usd: (number | null)[]; complete: boolean }> {
+    if (transfers.length === 0) return { usd: [], complete: true };
     await gate();
     const items = new Map<string, { asset: Transfer["asset"]; timestamp: number }>();
     for (const t of transfers) {
       items.set(priceKey(t.asset, t.timestamp), { asset: t.asset, timestamp: t.timestamp });
     }
     let map: Map<string, number | null>;
+    let complete = true;
     try {
       const res = await prices.priceMany([...items.values()], signal);
       map = res.prices;
-      if (res.warning) pricesUnavailable(res.warning.message);
+      if (res.warning) {
+        complete = false;
+        pricesUnavailable(res.warning.message);
+      }
     } catch (e) {
       if (signal.aborted || !isFotError(e) || e.fatal) throw e;
+      complete = false;
       pricesUnavailable(e.message);
       map = new Map();
     }
     if (signal.aborted) throw new InterruptedError();
-    return transfers.map((t) => {
+    const usd = transfers.map((t) => {
       const p = map.get(priceKey(t.asset, t.timestamp));
       return p === undefined || p === null ? null : t.amount * p;
     });
+    return { usd, complete };
   }
 
   function pricesUnavailable(message: string): void {
@@ -379,7 +390,7 @@ export async function runTrace(
       const candidates = tx.transfers.filter(
         (t) => t.amount > 0 && !isZeroAddress(chain, t.from) && !isZeroAddress(chain, t.to),
       );
-      const usd = await priceAll(candidates);
+      const { usd } = await priceAll(candidates);
       const legs = candidates.map((transfer, i) => ({
         transfer,
         usd: usd[i] ?? null,
@@ -413,7 +424,7 @@ export async function runTrace(
       seen.add(id);
       return true;
     });
-    const usd = await priceAll(rows);
+    const { usd } = await priceAll(rows);
     const legs = rows.map((transfer, i) => ({
       transfer,
       usd: usd[i] ?? null,
@@ -571,13 +582,15 @@ export async function runTrace(
       seen.add(id);
       return true;
     });
-    const usd = await priceAll(rows);
+    const { usd, complete } = await priceAll(rows);
 
     const ctx: DropContext = {
       direction: params.direction,
       edgeTxHash: edge.transfer.txHash,
       refTimestamp: t,
       minUsd: params.minUsd,
+      followUnpriced: params.followUnpriced,
+      pricesComplete: complete,
     };
     const refAssetId = assetId(reference.asset);
     type Scored = {

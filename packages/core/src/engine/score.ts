@@ -88,6 +88,10 @@ export interface DropContext {
   /** Unix seconds of the edge being expanded. */
   refTimestamp: number;
   minUsd: number;
+  /** Follow candidates without a USD price (only when minUsd is 0). */
+  followUnpriced: boolean;
+  /** The expansion's price lookup succeeded; a failed lookup suspends the default unpriced drop. */
+  pricesComplete: boolean;
 }
 
 /** First applicable drop reason in the fixed order, or null when the candidate stays in play. */
@@ -103,9 +107,10 @@ export function dropReason(t: Transfer, usd: number | null, ctx: DropContext): D
       ? t.timestamp > ctx.refTimestamp + TIME_TOLERANCE_SEC
       : t.timestamp < ctx.refTimestamp - TIME_TOLERANCE_SEC;
   if (outside) return "outside_time_window";
-  if (ctx.minUsd > 0) {
-    if (usd === null) return "unpriced";
-    if (usd < ctx.minUsd) return "below_min_usd";
+  if (usd === null) {
+    if (ctx.minUsd > 0 || (!ctx.followUnpriced && ctx.pricesComplete)) return "unpriced";
+  } else if (usd < ctx.minUsd) {
+    return "below_min_usd";
   }
   return null;
 }

@@ -70,6 +70,7 @@ export const RunParamsSchema = z.object({
   maxEdges: z.number().int().min(10).max(5000).default(200),
   minUsd: z.number().min(0).default(0),
   traceThroughEntities: z.boolean().default(false),
+  followUnpriced: z.boolean().default(false),
   timeoutSec: z.number().int().min(10).max(3600).default(600),
 });
 export type RunParams = z.infer<typeof RunParamsSchema>;

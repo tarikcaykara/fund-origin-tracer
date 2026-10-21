@@ -18,7 +18,8 @@ Usage:
 
 Trace options:
   --max-depth <n>  --max-branches <n>  --max-edges <n>  --min-usd <n>  --timeout <sec>
-  --through-entities  --format summary|json|csv  --csv-kind edges|convergences|exposure|touchpoints
+  --through-entities  --follow-unpriced  --format summary|json|csv
+  --csv-kind edges|convergences|exposure|touchpoints
   --out <file>  --quiet
 
 Global options:

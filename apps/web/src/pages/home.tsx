@@ -201,6 +201,7 @@ export function HomePage() {
   const [maxEdges, setMaxEdges] = useState(200);
   const [minUsd, setMinUsd] = useState(0);
   const [through, setThrough] = useState(false);
+  const [followUnpriced, setFollowUnpriced] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const chains = health.data?.chains;
@@ -256,6 +257,7 @@ export function HomePage() {
         maxEdges,
         minUsd,
         traceThroughEntities: through,
+        followUnpriced,
       }),
     );
   };
@@ -397,6 +399,14 @@ export function HomePage() {
               onCheckedChange={(v) => setThrough(v === true)}
             />
             <Label htmlFor="through">Trace through exchanges, DEXes and bridges</Label>
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <Checkbox
+              id="followUnpriced"
+              checked={followUnpriced}
+              onCheckedChange={(v) => setFollowUnpriced(v === true)}
+            />
+            <Label htmlFor="followUnpriced">Follow tokens without a USD price</Label>
           </div>
         </details>
 

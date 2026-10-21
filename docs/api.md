@@ -104,6 +104,7 @@ The body is one of two shapes.
 | `maxEdges` | integer | 200 | 10–5000 |
 | `minUsd` | number | 0 | ≥ 0 |
 | `traceThroughEntities` | boolean | false | |
+| `followUnpriced` | boolean | false | |
 | `timeoutSec` | integer | 600 | 10–3600 |
 
 Seed formats: EVM tx `0x` + 64 hex; EVM address `0x` + 40 hex; TRON tx 64 hex (no `0x`); TRON address `T` + 33 base58 characters.
@@ -153,7 +154,7 @@ Response `{items, total}`. Each item is a run row **without** the result:
 ```json
 {"total":1,"items":[{"id":"d5a99a54-…","chain":"ethereum","direction":"backward",
   "seeds":[{"id":"s1","kind":"tx","value":"0xe7f7c883…"}],
-  "params":{"chain":"ethereum","direction":"backward","maxDepth":6,"maxBranches":3,"maxEdges":120,"minUsd":0,"traceThroughEntities":false,"timeoutSec":600,"seeds":[…]},
+  "params":{"chain":"ethereum","direction":"backward","maxDepth":6,"maxBranches":3,"maxEdges":120,"minUsd":0,"traceThroughEntities":false,"followUnpriced":false,"timeoutSec":600,"seeds":[…]},
   "status":"completed","riskLevel":"medium","title":"Source of funds on Ethereum","notes":null,
   "demo":"d1-source-of-funds-ethereum","createdAt":"2026-10-20T20:59:22.516Z","finishedAt":"2026-10-20T20:59:28.540Z","error":null}]}
 ```
@@ -341,13 +342,14 @@ ID=$(curl -s -XPOST localhost:3000/api/runs -H 'content-type: application/json' 
   -d '{"demo":"d1-source-of-funds-ethereum"}' | sed 's/.*"runId":"\([^"]*\)".*/\1/')
 curl -sN localhost:3000/api/runs/$ID/events | grep '^event:' | sort | uniq -c
 #   1 event: done
-#  91 event: edge_added
-#  40 event: edge_expanded
-#  14 event: edge_linked
-#  54 event: edge_stopped
-#   7 event: progress
+#  84 event: edge_added
+#  36 event: edge_expanded
+#   7 event: edge_linked
+#  48 event: edge_stopped
+#   6 event: progress
 #   1 event: result
 #   1 event: snapshot
+#   1 event: warning
 ```
 
 (Counts vary with when you subscribe: a connection made after the run started begins with a larger `snapshot` and fewer `edge_added` events.)

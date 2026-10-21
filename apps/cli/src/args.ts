@@ -17,6 +17,7 @@ const OPTIONS = {
   "max-edges": { type: "string" },
   "min-usd": { type: "string" },
   "through-entities": { type: "boolean" },
+  "follow-unpriced": { type: "boolean" },
   timeout: { type: "string" },
   format: { type: "string" },
   "csv-kind": { type: "string" },
@@ -71,6 +72,7 @@ export function buildRunParams(parsed: ReturnType<typeof parseCli>): RunParams {
     maxEdges: numberFlag(values, "max-edges"),
     minUsd: numberFlag(values, "min-usd"),
     traceThroughEntities: values["through-entities"],
+    followUnpriced: values["follow-unpriced"],
     timeoutSec: numberFlag(values, "timeout"),
   };
   const defined = Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== undefined));

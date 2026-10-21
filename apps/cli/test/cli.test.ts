@@ -278,6 +278,7 @@ describe("output formats", () => {
         maxEdges: 50,
         minUsd: 0,
         traceThroughEntities: false,
+        followUnpriced: false,
         timeoutSec: 60,
       },
       runtime,

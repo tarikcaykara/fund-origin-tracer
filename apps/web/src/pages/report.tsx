@@ -79,6 +79,8 @@ function ReportBody({ result, title }: { result: AnalysisResult; title: string }
           <dd>{params.minUsd}</dd>
           <dt className="text-muted-foreground">Trace through entities</dt>
           <dd>{params.traceThroughEntities ? "yes" : "no"}</dd>
+          <dt className="text-muted-foreground">Follow unpriced tokens</dt>
+          <dd>{params.followUnpriced ? "yes" : "no"}</dd>
           <dt className="text-muted-foreground">Timeout</dt>
           <dd>{params.timeoutSec}s</dd>
         </dl>

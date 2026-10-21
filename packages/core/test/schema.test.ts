@@ -16,6 +16,7 @@ test("RunParams defaults", () => {
     maxEdges: 200,
     minUsd: 0,
     traceThroughEntities: false,
+    followUnpriced: false,
     timeoutSec: 600,
   });
 });
