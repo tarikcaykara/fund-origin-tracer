@@ -80,11 +80,13 @@ function GraphCanvas({
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(
     () => new Map(),
   );
+  const [canvasElement, setCanvasElement] = useState<HTMLDivElement | null>(null);
   const [layoutError, setLayoutError] = useState<string | null>(null);
   const modelRef = useRef(model);
   const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seqRef = useRef(0);
   const userMovedRef = useRef(false);
+  const positionsRef = useRef(positions);
   const { fitView } = useReactFlow();
 
   useEffect(() => {
@@ -125,9 +127,28 @@ function GraphCanvas({
   );
 
   useEffect(() => {
+    positionsRef.current = positions;
     if (userMovedRef.current || positions.size === 0) return;
     requestAnimationFrame(() => void fitView({ padding: 0.15, duration: 200 }));
   }, [positions, fitView]);
+  useEffect(() => {
+    if (!canvasElement) return;
+    let frame: number | null = null;
+    const observer = new ResizeObserver(() => {
+      if (userMovedRef.current || positionsRef.current.size === 0) return;
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        if (userMovedRef.current || positionsRef.current.size === 0) return;
+        void fitView({ padding: 0.15, duration: 200 });
+      });
+    });
+    observer.observe(canvasElement);
+    return () => {
+      observer.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, [canvasElement, fitView]);
 
   const nodes: AddressFlowNode[] = [];
   for (const node of model.nodes) {
@@ -181,7 +202,7 @@ function GraphCanvas({
           {live ? "Waiting for the first transfers…" : "No transfers in this run."}
         </p>
       ) : (
-        <div className="h-[70vh] min-h-[420px] rounded-md border">
+        <div ref={setCanvasElement} className="h-[70vh] min-h-[420px] rounded-md border">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -199,7 +220,7 @@ function GraphCanvas({
               if (only !== undefined) onSelectEdge(only);
               else onSelectPair(group.from, group.to);
             }}
-            onMoveStart={(event) => {
+            onMove={(event) => {
               if (event) userMovedRef.current = true;
             }}
           >

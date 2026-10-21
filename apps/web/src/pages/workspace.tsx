@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { ApiError, api, CSV_KINDS, exportCsvUrl, exportJsonUrl, type RunDetail } from "@/api.ts";
@@ -23,11 +23,16 @@ import { useRunStream } from "@/use-run-stream.ts";
 import { EdgeDetail } from "./workspace/edge-detail.tsx";
 import { ExposureTab } from "./workspace/exposure.tsx";
 import { FlagsTab } from "./workspace/flags.tsx";
-import { GraphTab, type Selection } from "./workspace/graph.tsx";
+import type { Selection } from "./workspace/graph.tsx";
 import { AddressDetail, PairDetail } from "./workspace/graph-detail.tsx";
 import { LinkedWalletsTab } from "./workspace/linked.tsx";
 import { TouchpointsTab } from "./workspace/touchpoints.tsx";
 import { TransfersTab } from "./workspace/transfers.tsx";
+
+const GraphTab = lazy(async () => {
+  const module = await import("./workspace/graph.tsx");
+  return { default: module.GraphTab };
+});
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Unexpected error.";
@@ -288,7 +293,7 @@ export function WorkspacePage() {
 
       <div className={hasSelection ? "grid gap-4 lg:grid-cols-[1fr_28rem]" : undefined}>
         <Tabs value={tab} onValueChange={setTab} className="min-w-0">
-          <TabsList className="flex-wrap">
+          <TabsList className="!h-auto flex-wrap [&_[role=tab]]:!h-auto">
             <TabsTrigger value="graph">Graph</TabsTrigger>
             <TabsTrigger value="transfers">Transfers ({edges.length})</TabsTrigger>
             <TabsTrigger value="exposure">Exposure</TabsTrigger>
@@ -304,16 +309,24 @@ export function WorkspacePage() {
           </TabsList>
 
           <TabsContent value="graph" className="pt-4">
-            <GraphTab
-              chain={chain}
-              edges={edges}
-              result={result}
-              live={live}
-              selection={selection}
-              onSelectEdge={(edgeId) => setSelection({ kind: "edge", edgeId })}
-              onSelectAddress={(address) => setSelection({ kind: "address", address })}
-              onSelectPair={(from, to) => setSelection({ kind: "pair", from, to })}
-            />
+            <Suspense
+              fallback={
+                <div className="flex h-[70vh] min-h-[420px] items-center justify-center rounded-md border">
+                  <p className="text-sm text-muted-foreground">Loading graph…</p>
+                </div>
+              }
+            >
+              <GraphTab
+                chain={chain}
+                edges={edges}
+                result={result}
+                live={live}
+                selection={selection}
+                onSelectEdge={(edgeId) => setSelection({ kind: "edge", edgeId })}
+                onSelectAddress={(address) => setSelection({ kind: "address", address })}
+                onSelectPair={(from, to) => setSelection({ kind: "pair", from, to })}
+              />
+            </Suspense>
           </TabsContent>
           <TabsContent value="transfers" className="pt-4">
             <TransfersTab
