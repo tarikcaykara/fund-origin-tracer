@@ -1,5 +1,5 @@
 import { type ChainId, EXPANDABLE_REASONS, type TraceEdge } from "@fot/core/schema";
-import { StopReasonText } from "@/components/badges.tsx";
+import { LabelList, StopReasonText } from "@/components/badges.tsx";
 import { AddressLink, type LabelIndex, TxLink } from "@/components/links.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -81,16 +81,7 @@ export function EdgeDetail({
         {farLabels.length > 0 ? (
           <section className="space-y-1">
             <h4 className="font-medium">Labels on the followed address</h4>
-            <ul className="space-y-1">
-              {farLabels.map((l) => (
-                <li key={`${l.origin}:${l.name}`}>
-                  <Badge variant="outline">{l.category}</Badge> {l.name}{" "}
-                  <span className="text-xs text-muted-foreground">
-                    {l.origin} · {l.source}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <LabelList labels={farLabels} />
           </section>
         ) : null}
 

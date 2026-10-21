@@ -51,6 +51,15 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
+  --cat-exchange: #0072b2;
+  --cat-dex: #56b4e9;
+  --cat-bridge: #cc79a7;
+  --cat-mixer: #e69f00;
+  --cat-sanctioned: #d55e00;
+  --cat-scam: #882255;
+  --cat-defi: #009e73;
+  --cat-token: #999999;
+  --cat-other: #bbbbbb;
 }
 
 .dark {

@@ -23,6 +23,8 @@ import { useRunStream } from "@/use-run-stream.ts";
 import { EdgeDetail } from "./workspace/edge-detail.tsx";
 import { ExposureTab } from "./workspace/exposure.tsx";
 import { FlagsTab } from "./workspace/flags.tsx";
+import { GraphTab, type Selection } from "./workspace/graph.tsx";
+import { AddressDetail, PairDetail } from "./workspace/graph-detail.tsx";
 import { LinkedWalletsTab } from "./workspace/linked.tsx";
 import { TouchpointsTab } from "./workspace/touchpoints.tsx";
 import { TransfersTab } from "./workspace/transfers.tsx";
@@ -139,7 +141,7 @@ export function WorkspacePage() {
   const { state, restart } = useRunStream(id);
   const detail = useAsync(() => api.getRun(id), [id]);
   const [tab, setTab] = useState("graph");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<Selection | null>(null);
   const [expanding, setExpanding] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -159,7 +161,9 @@ export function WorkspacePage() {
   const labels = useMemo(() => indexAddresses(result?.graph.addresses), [result]);
   const live = isLivePhase(state.phase);
   const chain = run?.chain ?? result?.chain;
-  const selected = selectedId ? (state.edges[selectedId] ?? null) : null;
+  const selectedEdge = selection?.kind === "edge" ? (state.edges[selection.edgeId] ?? null) : null;
+  const hasSelection =
+    selectedEdge !== null || selection?.kind === "address" || selection?.kind === "pair";
 
   if (detail.error && !run) {
     return (
@@ -185,10 +189,10 @@ export function WorkspacePage() {
   };
 
   const expand = async () => {
-    if (!selected) return;
+    if (!selectedEdge) return;
     setExpanding(true);
     try {
-      await api.expand(id, selected.id);
+      await api.expand(id, selectedEdge.id);
       restart();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -197,8 +201,8 @@ export function WorkspacePage() {
   };
 
   const selectEdge = (edgeId: string) => {
-    setSelectedId(edgeId);
-    setTab("transfers");
+    setSelection({ kind: "edge", edgeId });
+    setTab("graph");
   };
 
   const riskLevel = result?.riskLevel ?? run.riskLevel;
@@ -282,7 +286,7 @@ export function WorkspacePage() {
         </ul>
       ) : null}
 
-      <div className={selected ? "grid gap-4 lg:grid-cols-[1fr_28rem]" : undefined}>
+      <div className={hasSelection ? "grid gap-4 lg:grid-cols-[1fr_28rem]" : undefined}>
         <Tabs value={tab} onValueChange={setTab} className="min-w-0">
           <TabsList className="flex-wrap">
             <TabsTrigger value="graph">Graph</TabsTrigger>
@@ -300,18 +304,24 @@ export function WorkspacePage() {
           </TabsList>
 
           <TabsContent value="graph" className="pt-4">
-            <p className="text-sm text-muted-foreground">
-              Graph view coming soon · {edges.length} transfer{edges.length === 1 ? "" : "s"} so
-              far.
-            </p>
+            <GraphTab
+              chain={chain}
+              edges={edges}
+              result={result}
+              live={live}
+              selection={selection}
+              onSelectEdge={(edgeId) => setSelection({ kind: "edge", edgeId })}
+              onSelectAddress={(address) => setSelection({ kind: "address", address })}
+              onSelectPair={(from, to) => setSelection({ kind: "pair", from, to })}
+            />
           </TabsContent>
           <TabsContent value="transfers" className="pt-4">
             <TransfersTab
               chain={chain}
               edges={edges}
               labels={labels}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
+              selectedId={selection?.kind === "edge" ? selection.edgeId : null}
+              onSelect={(edgeId) => setSelection({ kind: "edge", edgeId })}
             />
           </TabsContent>
           <TabsContent value="exposure" className="pt-4">
@@ -328,17 +338,41 @@ export function WorkspacePage() {
           </TabsContent>
         </Tabs>
 
-        {selected ? (
+        {hasSelection ? (
           <aside>
-            <EdgeDetail
-              chain={chain}
-              edge={selected}
-              labels={labels}
-              canExpand={state.done && result !== null}
-              expanding={expanding}
-              onExpand={() => void expand()}
-              onClose={() => setSelectedId(null)}
-            />
+            {selectedEdge ? (
+              <EdgeDetail
+                chain={chain}
+                edge={selectedEdge}
+                labels={labels}
+                canExpand={state.done && result !== null}
+                expanding={expanding}
+                onExpand={() => void expand()}
+                onClose={() => setSelection(null)}
+              />
+            ) : selection?.kind === "address" ? (
+              <AddressDetail
+                chain={chain}
+                address={selection.address}
+                edges={edges}
+                labels={labels}
+                convergence={
+                  result?.convergences.some((entry) => entry.address === selection.address) ?? false
+                }
+                onSelectEdge={(edgeId) => setSelection({ kind: "edge", edgeId })}
+                onClose={() => setSelection(null)}
+              />
+            ) : selection?.kind === "pair" ? (
+              <PairDetail
+                chain={chain}
+                from={selection.from}
+                to={selection.to}
+                edges={edges}
+                labels={labels}
+                onSelectEdge={(edgeId) => setSelection({ kind: "edge", edgeId })}
+                onClose={() => setSelection(null)}
+              />
+            ) : null}
           </aside>
         ) : null}
       </div>

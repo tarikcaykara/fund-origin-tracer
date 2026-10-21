@@ -1,4 +1,4 @@
-import type { LabelCategory, Severity, StopReason } from "@fot/core/schema";
+import type { Label, LabelCategory, Severity, StopReason } from "@fot/core/schema";
 import type { InvestigationStatus } from "@/api.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import type { RunPhase } from "@/run-state.ts";
@@ -39,4 +39,19 @@ export function CategoryBadge({ category }: { category: LabelCategory }) {
 
 export function StopReasonText({ reason }: { reason: StopReason | null }) {
   return <span>{reason ? reason.replace("_", " ") : "—"}</span>;
+}
+
+export function LabelList({ labels }: { labels: readonly Label[] }) {
+  return (
+    <ul className="space-y-1">
+      {labels.map((label) => (
+        <li key={`${label.origin}:${label.name}`}>
+          <Badge variant="outline">{label.category}</Badge> {label.name}{" "}
+          <span className="text-xs text-muted-foreground">
+            {label.origin} · {label.source}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 }
