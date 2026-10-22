@@ -83,6 +83,8 @@ This runs a live trace through a recording transport and writes `fixtures/demo/<
   gitleaks detect --no-git --source fixtures   # older versions
   ```
 
+  A reviewed false positive (for example a TRON contract address in a `tokenId` field) goes into the root `.gitleaksignore` as its gitleaks `Fingerprint` (`<commit>:<file>:<rule>:<line>`) so the CI gitleaks step stays green. Never add a real credential there; rotate it instead.
+
 ## Secrets runbook
 
 - `.env` and `.env.*` (except `.env.example`) are git-ignored. **Never commit `.env`**, API keys, recorded requests with keys, or local label/policy files with private data. Do not paste keys into issues, pull requests, logs or screenshots.
