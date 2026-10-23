@@ -13,6 +13,7 @@ import { StopTag } from "@/components/badges.tsx";
 import { AddressChip, ExplorerLink, type LabelIndex, TxLink } from "@/components/links.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { useCopyText } from "@/lib/clipboard.ts";
 import {
   assetSymbol,
   formatAmount,
@@ -23,7 +24,7 @@ import {
 } from "../../format.ts";
 import { buildGraphModel, type GraphModel } from "../../graph-model.ts";
 import { CATEGORY_META, STOP_TAGS } from "../../meta.ts";
-import type { Selection } from "../../selection.ts";
+import { type Selection, selectionKey } from "../../selection.ts";
 
 const DROP_REASONS: DropReason[] = [
   "spoofed_token",
@@ -62,6 +63,7 @@ export function DetailPanel({
   onClose,
   onPrev,
   onNext,
+  live,
   mode,
 }: {
   chain: ChainId;
@@ -81,17 +83,15 @@ export function DetailPanel({
   onClose(): void;
   onPrev?: (() => void) | undefined;
   onNext?: (() => void) | undefined;
+  /** True while the run is streaming: per-candidate drop details are not available yet. */
+  live: boolean;
   mode: "docked" | "sheet" | "full";
 }) {
   const selectedEdge =
     selection.kind === "edge" ? (edges.find((edge) => edge.id === selection.edgeId) ?? null) : null;
   const pairEdges =
     selection.kind === "pair"
-      ? edges.filter(
-          (edge) =>
-            (edge.from === selection.from && edge.to === selection.to) ||
-            (edge.from === selection.to && edge.to === selection.from),
-        )
+      ? edges.filter((edge) => edge.from === selection.from && edge.to === selection.to)
       : [];
   const graphModel = useMemo(
     () => buildGraphModel(edges, result, params.direction),
@@ -176,7 +176,7 @@ export function DetailPanel({
           ×
         </Button>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div key={selectionKey(selection)} className="min-h-0 flex-1 overflow-y-auto">
         {selection.kind === "address" ? (
           <AddressPanel
             chain={chain}
@@ -203,6 +203,7 @@ export function DetailPanel({
         {selectedEdge ? (
           <TransferPanel
             chain={chain}
+            live={live}
             edge={selectedEdge}
             direction={params.direction}
             params={params}
@@ -264,9 +265,7 @@ function AddressPanel({
       <section className="space-y-3 border-b border-border p-4">
         <div className="flex flex-wrap items-center gap-2">
           <AddressChip chain={chain} address={address} />{" "}
-          <ExplorerLink chain={chain} kind="address" value={address}>
-            ↗
-          </ExplorerLink>
+          <ExplorerLink chain={chain} kind="address" value={address} />
         </div>
         <code className="block break-all type-mono-sm text-faint-foreground">{address}</code>
         <div className="flex flex-wrap gap-1.5 type-mono-sm">
@@ -305,14 +304,20 @@ function AddressPanel({
                 entity {label.entity ?? "—"} · {label.origin} labels{" "}
                 {sources?.labelsVersion ?? "unknown version"}
               </span>
-              <a
-                className="col-span-2 break-all type-mono-sm text-link underline-offset-2 hover:underline"
-                href={label.source}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                source: {label.source} ↗
-              </a>
+              {/^https?:\/\//.test(label.source) ? (
+                <a
+                  className="col-span-2 break-all type-mono-sm text-link underline-offset-2 hover:underline"
+                  href={label.source}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  source: {label.source} ↗
+                </a>
+              ) : (
+                <span className="col-span-2 break-all type-mono-sm text-muted-foreground">
+                  source: {label.source}
+                </span>
+              )}
             </div>
           ) : sources ? (
             <p className="rounded-sm border border-dashed border-border-strong p-2 text-xs leading-relaxed text-muted-foreground">
@@ -420,15 +425,17 @@ function PairPanel({
   onSelect(sel: Selection | null): void;
   graphModel: GraphModel;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyText();
   const totals = new Map<string, { symbol: string; amount: number }>();
   let priced = 0;
+  let unpriced = 0;
   for (const edge of edges) {
     const id = assetId(edge.transfer.asset);
     const total = totals.get(id) ?? { symbol: assetSymbol(edge.transfer.asset), amount: 0 };
     total.amount += edge.transfer.amount;
     totals.set(id, total);
-    if (edge.usd !== null) priced += edge.usd;
+    if (edge.usd === null) unpriced++;
+    else priced += edge.usd;
   }
   const aggregate = [...totals.values()];
   const amountText =
@@ -438,15 +445,11 @@ function PairPanel({
   const ids = edges.map((edge) => edge.id);
   const fromLabel = labels.get(from)?.labels[0];
   const toLabel = labels.get(to)?.labels[0];
-  const copyHashes = async () => {
-    try {
-      await navigator.clipboard.writeText(edges.map((edge) => edge.transfer.txHash).join("\n"));
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
-  };
+  const copyHashes = () =>
+    copy(edges.map((edge) => edge.transfer.txHash).join("\n"), {
+      title: "⧉ Copied tx hashes",
+      subtitle: `${edges.length} transaction${edges.length === 1 ? "" : "s"}`,
+    });
 
   return (
     <>
@@ -492,11 +495,12 @@ function PairPanel({
         <div className="flex flex-wrap items-baseline gap-2">
           <strong className="type-amount">{amountText}</strong>
           <span className="type-mono-sm text-muted-foreground">
-            {formatUsd(edges.some((edge) => edge.usd !== null) ? priced : null)}
+            {formatUsd(unpriced < edges.length ? priced : null)}
+            {unpriced > 0 ? ` · ${unpriced} unpriced, not in the USD total` : ""}
           </span>
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          All transfers between these two addresses in this trace.
+          Transfers from {shortAddress(chain, from)} to {shortAddress(chain, to)} in this trace.
           {edges.some((edge) => edge.stopReason === "entity") && !params.traceThroughEntities
             ? " Each stopped at the labelled entity because trace through entities is off."
             : ""}
@@ -571,6 +575,7 @@ function TransferPanel({
   expandNote,
   expandBlockedReason,
   onExpand,
+  live,
 }: {
   chain: ChainId;
   edge: TraceEdge;
@@ -581,10 +586,13 @@ function TransferPanel({
   expanding: boolean;
   expandNote: string | undefined;
   expandBlockedReason: string | undefined;
+  live: boolean;
   onExpand(edgeId: string): void;
 }) {
   const [dropFilter, setDropFilter] = useState<DropReason | "all">("all");
   const [showMore, setShowMore] = useState(false);
+  // Live runs stream only drop totals; per-candidate details arrive with the final result.
+  const candidatesPending = live && edge.status !== "pending" && edge.dropped.length === 0;
   const transfer = edge.transfer;
   const breakdown = edge.selection
     ? [
@@ -659,18 +667,14 @@ function TransferPanel({
             address={transfer.from}
             {...(fromLabel ? { label: fromLabel } : {})}
           />
-          <ExplorerLink chain={chain} kind="address" value={transfer.from}>
-            ↗
-          </ExplorerLink>
+          <ExplorerLink chain={chain} kind="address" value={transfer.from} />
           <span className="text-muted-foreground">to</span>
           <AddressChip
             chain={chain}
             address={transfer.to}
             {...(toLabel ? { label: toLabel } : {})}
           />
-          <ExplorerLink chain={chain} kind="address" value={transfer.to}>
-            ↗
-          </ExplorerLink>
+          <ExplorerLink chain={chain} kind="address" value={transfer.to} />
         </div>
         <dl className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-xs">
           <dt className="text-muted-foreground">Followed</dt>
@@ -759,10 +763,16 @@ function TransferPanel({
         <div className="flex flex-wrap items-baseline gap-2">
           <h3 className="text-[13px] font-semibold">Dropped candidates</h3>
           <span className="type-mono-sm text-muted-foreground">
-            {edge.droppedTotal} · {edge.dropped.length} stored
+            {candidatesPending
+              ? `${edge.droppedTotal} so far`
+              : `${edge.droppedTotal} · ${edge.dropped.length} stored`}
           </span>
         </div>
-        {edge.droppedTotal === 0 ? (
+        {candidatesPending ? (
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Candidate details are available when the run finishes.
+          </p>
+        ) : edge.droppedTotal === 0 ? (
           <p className="text-xs leading-relaxed text-muted-foreground">
             {edge.status === "expanded"
               ? "No candidates were dropped."

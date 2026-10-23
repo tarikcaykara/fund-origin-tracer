@@ -1,6 +1,5 @@
 import type { AnalysisResult, ExchangeTouchpoint } from "@fot/core/schema";
 import { useMemo } from "react";
-import { toast } from "sonner";
 import { CategoryTag } from "@/components/badges.tsx";
 import { EmptyState } from "@/components/empty-state.tsx";
 import { AddressChip, indexAddresses, TxLink } from "@/components/links.tsx";
@@ -13,6 +12,8 @@ import {
   fullAddress,
   txUrl,
 } from "@/format.ts";
+import { copyText } from "@/lib/clipboard.ts";
+import { withUniqueKeys } from "@/lib/utils.ts";
 import { CATEGORY_META } from "@/meta.ts";
 
 /** Plain-text block per touchpoint, ready to paste into a freeze or information request. */
@@ -61,19 +62,15 @@ export function TouchpointsTab({ result }: { result: AnalysisResult }) {
   const groups = useMemo(() => groupByEntity(primary), [primary]);
   const otherGroups = useMemo(() => groupByEntity(other), [other]);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(freezeRequestText(result));
-      const exchangeWallets = new Set(
-        exchangeTouchpoints.map((touchpoint) => touchpoint.exchangeAddress),
-      );
-      const entities = [...new Set(exchangeTouchpoints.map((touchpoint) => touchpoint.entity))];
-      toast.success("⧉ Copied freeze-request list", {
-        description: `${exchangeWallets.size} exchange wallets · ${entities.join(", ") || "No exchange entities"}`,
-      });
-    } catch {
-      toast.error("Clipboard is not available.");
-    }
+  const copy = () => {
+    const exchangeWallets = new Set(
+      exchangeTouchpoints.map((touchpoint) => touchpoint.exchangeAddress),
+    );
+    const entities = [...new Set(exchangeTouchpoints.map((touchpoint) => touchpoint.entity))];
+    return copyText(freezeRequestText(result), {
+      title: "⧉ Copied freeze-request list",
+      subtitle: `${exchangeWallets.size} exchange wallets · ${entities.join(", ") || "No exchange entities"}`,
+    });
   };
 
   const labelProps = (address: string) => {
@@ -108,9 +105,13 @@ export function TouchpointsTab({ result }: { result: AnalysisResult }) {
             <span>TX</span>
           </div>
           <ul className="divide-y divide-border">
-            {records.map((touchpoint) => (
+            {withUniqueKeys(
+              records,
+              (touchpoint) =>
+                `${touchpoint.kind}:${touchpoint.txHash}:${touchpoint.exchangeAddress}:${touchpoint.counterparty ?? ""}:${touchpoint.assetId}:${touchpoint.amount}`,
+            ).map(({ key, item: touchpoint }) => (
               <li
-                key={`${touchpoint.kind}:${touchpoint.txHash}:${touchpoint.exchangeAddress}:${touchpoint.assetId}:${touchpoint.amount}`}
+                key={key}
                 className="grid min-w-0 grid-cols-1 gap-2 px-3 py-3 type-body-sm md:grid-cols-3 xl:grid-cols-[minmax(110px,1.1fr)_minmax(110px,1.1fr)_minmax(100px,1fr)_76px_52px_minmax(105px,.9fr)_minmax(80px,.8fr)] xl:items-center max-md:[&_button]:min-h-11"
               >
                 <div className="min-w-0">

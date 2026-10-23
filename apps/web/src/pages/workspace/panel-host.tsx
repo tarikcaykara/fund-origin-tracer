@@ -1,5 +1,6 @@
 import type { AnalysisResult, ChainId, RunParams, TraceEdge } from "@fot/core/schema";
 import type { LabelIndex } from "@/components/links.tsx";
+import { ModalLayer } from "@/components/modal-layer.tsx";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import type { Selection } from "@/selection.ts";
 import { DetailPanel } from "./detail-panel.tsx";
@@ -11,6 +12,7 @@ export function PanelHost({
   result,
   labels,
   params,
+  live,
   canExpand,
   expanding,
   expandNote,
@@ -27,6 +29,7 @@ export function PanelHost({
   result: AnalysisResult | null;
   labels: LabelIndex;
   params: RunParams;
+  live: boolean;
   canExpand: boolean;
   expanding: boolean;
   expandNote?: string | undefined;
@@ -49,6 +52,7 @@ export function PanelHost({
       result={result}
       labels={labels}
       params={params}
+      live={live}
       canExpand={canExpand}
       expanding={expanding}
       expandNote={expandNote}
@@ -64,12 +68,13 @@ export function PanelHost({
 
   if (phone) {
     return (
-      <aside
+      <ModalLayer
+        label="Selection details"
+        onClose={onClose}
         className="fixed inset-0 z-50 flex min-h-0 flex-col bg-card"
-        aria-label="Selection details"
       >
         <div className="min-h-0 flex-1 overflow-y-auto">{content}</div>
-      </aside>
+      </ModalLayer>
     );
   }
 

@@ -2,6 +2,7 @@ import type { AnalysisResult, ChainId, RunParams, TraceEdge } from "@fot/core/sc
 import {
   Background,
   type Edge,
+  type FitViewOptions,
   MarkerType,
   MiniMap,
   type Node,
@@ -9,7 +10,7 @@ import {
   useReactFlow,
   useViewport,
 } from "@xyflow/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { assetSymbol, formatAmount, formatUsd, shortAddress } from "../../format.ts";
 import { type GraphLayout, layoutGraph } from "../../graph-layout.ts";
 import {
@@ -18,11 +19,12 @@ import {
   type GraphModel,
   groupId,
   selectVisibleEdgeLabels,
+  type TransferGroupData,
 } from "../../graph-model.ts";
 import { useBreakpoint } from "../../hooks/use-breakpoint.ts";
 import { CATEGORY_META, STOP_TAGS } from "../../meta.ts";
 import type { RunPhase } from "../../run-state.ts";
-import type { Selection } from "../../selection.ts";
+import { type Selection, selectionKey } from "../../selection.ts";
 import { useTheme } from "../../theme.tsx";
 import { GraphEdgeView, type GraphFlowEdge } from "./graph-edge.tsx";
 import { GraphLegend } from "./graph-legend.tsx";
@@ -34,6 +36,28 @@ const EDGE_TYPES = { flow: GraphEdgeView };
 const LAYOUT_THROTTLE_MS = 500;
 const NEW_NODE_PULSE_MS = 1_400;
 const NEW_NODE_BADGE_MS = 2_000;
+
+/** Room a dot's label needs to its right: 16px offset plus up to 11 mono characters. */
+const DOT_LABEL_EXTENT_PX = 96;
+
+/**
+ * Fit options for `fitView`. Node boxes exclude the labels that dots draw to their right, so in
+ * dot density the right padding reserves that width and zoom is capped so it stays accurate.
+ */
+function fitOptions(density: "chips" | "dots" | "compact", ratio: number): FitViewOptions {
+  if (density !== "dots") return { padding: ratio };
+  return {
+    padding: { top: ratio, bottom: ratio, left: ratio, right: `${DOT_LABEL_EXTENT_PX}px` },
+    maxZoom: 1,
+  };
+}
+
+/** The selection a click on an edge makes: the single transfer, or the pair when several share it. */
+function groupSelection(group: TransferGroupData): Selection {
+  return group.edgeIds.length === 1
+    ? { kind: "edge", edgeId: group.edgeIds[0] as string }
+    : { kind: "pair", from: group.from, to: group.to };
+}
 
 export function GraphCanvas({
   chain,
@@ -118,7 +142,6 @@ function GraphCanvasInner({
   const [hoveredAddress, setHoveredAddress] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const hoverTimer = useRef<number | null>(null);
-  const activeTimer = useRef<number | null>(null);
   const fittedFocus = useRef("");
 
   const defaultDensity =
@@ -144,7 +167,7 @@ function GraphCanvasInner({
       : breakpoint === "phone"
         ? Math.max(420, Math.min(720, window.innerHeight - 220))
         : 560;
-  const selectionKey = selection === null ? "none" : JSON.stringify(selection);
+  const focusKey = selectionKey(selection);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -197,15 +220,23 @@ function GraphCanvasInner({
     setNow(Date.now());
   }, [model.nodes, phase]);
 
+  // Tick only while a node is still inside its "new" window, then stop rebuilding the nodes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `model.nodes` re-arms the ticker when new nodes arrive.
   useEffect(() => {
-    if (activeTimer.current !== null) window.clearInterval(activeTimer.current);
     if (!running) return;
-    activeTimer.current = window.setInterval(() => setNow(Date.now()), 200);
-    return () => {
-      if (activeTimer.current !== null) window.clearInterval(activeTimer.current);
-      activeTimer.current = null;
+    const hasNewNodes = () => {
+      const current = Date.now();
+      for (const timestamp of firstSeen.current.values())
+        if (current - timestamp < NEW_NODE_BADGE_MS) return true;
+      return false;
     };
-  }, [running]);
+    if (!hasNewNodes()) return;
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+      if (!hasNewNodes()) window.clearInterval(timer);
+    }, 200);
+    return () => window.clearInterval(timer);
+  }, [running, model.nodes]);
 
   useEffect(() => {
     layoutInput.current = {
@@ -241,16 +272,17 @@ function GraphCanvasInner({
     () => () => {
       if (pendingLayout.current !== null) window.clearTimeout(pendingLayout.current);
       if (hoverTimer.current !== null) window.clearTimeout(hoverTimer.current);
-      if (activeTimer.current !== null) window.clearInterval(activeTimer.current);
     },
     [],
   );
 
   useEffect(() => {
     if (userMoved.current || !layout || layout.positions.size === 0) return;
-    const frame = requestAnimationFrame(() => void fitView({ padding: 0.12, duration: 180 }));
+    const frame = requestAnimationFrame(
+      () => void fitView({ ...fitOptions(density, 0.12), duration: 180 }),
+    );
     return () => cancelAnimationFrame(frame);
-  }, [fitView, layout]);
+  }, [density, fitView, layout]);
 
   const edgeById = useMemo(() => new Map(edges.map((edge) => [edge.id, edge])), [edges]);
   const highlightedEdgeIds = useMemo(() => {
@@ -342,8 +374,8 @@ function GraphCanvasInner({
   const fitAll = useCallback(() => {
     userMoved.current = false;
     setFocusSelection(false);
-    void fitView({ padding: 0.12, duration: 200 });
-  }, [fitView]);
+    void fitView({ ...fitOptions(density, 0.12), duration: 200 });
+  }, [density, fitView]);
   const focusSelected = useCallback(() => {
     setFocusSelection((current) => !current);
     userMoved.current = true;
@@ -365,16 +397,16 @@ function GraphCanvasInner({
       fittedFocus.current = "";
       return;
     }
-    const key = `${selectionKey}:${layout.positions.size}`;
+    const key = `${focusKey}:${layout.positions.size}`;
     if (fittedFocus.current === key) return;
     fittedFocus.current = key;
     requestAnimationFrame(() => {
       const nodes = [...baseFocusNodes]
         .filter((address) => layout.positions.has(address))
         .map((id) => ({ id }));
-      if (nodes.length > 0) void fitView({ nodes, padding: 0.2, duration: 220 });
+      if (nodes.length > 0) void fitView({ nodes, ...fitOptions(density, 0.2), duration: 220 });
     });
-  }, [baseFocusNodes, effectiveFocus, fitView, layout, selectionKey]);
+  }, [baseFocusNodes, effectiveFocus, density, fitView, layout, focusKey]);
 
   let firstSeenCount = 0;
   for (const timestamp of firstSeen.current.values())
@@ -438,6 +470,7 @@ function GraphCanvasInner({
         height: layout.nodeHeight,
         draggable: false,
         selectable: true,
+        ariaLabel: `Address ${node.label?.name ?? shortAddress(chain, node.address)}`,
         selected: selection?.kind === "address" && selection.address === node.address,
       });
     }
@@ -520,6 +553,24 @@ function GraphCanvasInner({
     };
   }, [hoverCandidate]);
 
+  const onCanvasKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    // Only the focused React Flow node/edge itself: nested controls keep their own behaviour.
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const id = target.getAttribute("data-id");
+    if (!id) return;
+    if (target.classList.contains("react-flow__node")) {
+      event.preventDefault();
+      onSelect({ kind: "address", address: id });
+    } else if (target.classList.contains("react-flow__edge")) {
+      const group = model.groups.find((item) => groupId(item.from, item.to) === id);
+      if (!group) return;
+      event.preventDefault();
+      onSelect(groupSelection(group));
+    }
+  };
+
   const pairCount = model.groups.length;
   const layoutColumns = layout?.columns ?? [];
   const stopText = graphAddress?.stopReason
@@ -579,12 +630,13 @@ function GraphCanvasInner({
           ))}
         </div>
       ) : null}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: pointer-leave only dismisses the hover tooltip; React Flow owns all canvas interaction. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: pointer-leave dismisses the hover tooltip and Enter/Space on a focused React Flow node or edge opens the detail panel; React Flow owns all other canvas interaction. */}
       <div
         ref={containerRef}
         className="relative min-w-0"
         style={{ height: graphHeight, backgroundColor: "var(--graph-canvas)" }}
         onMouseLeave={clearHover}
+        onKeyDown={onCanvasKeyDown}
       >
         {model.nodes.length === 0 ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center text-sm text-muted-foreground">
@@ -611,19 +663,12 @@ function GraphCanvasInner({
           }}
           onEdgeClick={(_, edge) => {
             const group = (edge as GraphFlowEdge).data?.group;
-            if (!group) return;
-            if (group.edgeIds.length === 1)
-              onSelect({ kind: "edge", edgeId: group.edgeIds[0] as string });
-            else onSelect({ kind: "pair", from: group.from, to: group.to });
+            if (group) onSelect(groupSelection(group));
           }}
           onEdgeDoubleClick={(_, edge) => {
             const group = (edge as GraphFlowEdge).data?.group;
             if (!group) return;
-            onSelect(
-              group.edgeIds.length === 1
-                ? { kind: "edge", edgeId: group.edgeIds[0] as string }
-                : { kind: "pair", from: group.from, to: group.to },
-            );
+            onSelect(groupSelection(group));
             setFocusSelection(true);
             userMoved.current = true;
           }}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatCompactTimestamp, formatUsd, isoTime, shortAddress } from "../src/format.ts";
+import { formatCompactTimestamp, formatUsd, shortAddress } from "../src/format.ts";
 import { parseSeeds } from "../src/seeds.ts";
 
 describe("shortAddress", () => {
@@ -15,10 +15,9 @@ describe("shortAddress", () => {
 });
 
 describe("formatting", () => {
-  test("usd and iso time", () => {
+  test("usd", () => {
     expect(formatUsd(null)).toBe("—");
     expect(formatUsd(1234.5)).toBe("$1,234.50");
-    expect(isoTime(0)).toBe("1970-01-01T00:00:00Z");
   });
 
   test("transfer timestamps are unix seconds", () => {

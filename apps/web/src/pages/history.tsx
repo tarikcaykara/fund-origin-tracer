@@ -1,6 +1,6 @@
 import { CHAIN_IDS } from "@fot/core/chains";
 import type { ChainId } from "@fot/core/schema";
-import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { ApiError, api, type InvestigationStatus, type RunSummary } from "@/api.ts";
@@ -40,6 +40,7 @@ import {
   shortAddress,
 } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
+import { parsePageParam } from "@/page-param.ts";
 
 const PAGE_SIZE = 25;
 const ALL = "all";
@@ -170,7 +171,7 @@ export function HistoryPage() {
   const statusParam = params.get("status");
   const chain = CHAIN_IDS.find((candidate) => candidate === chainParam);
   const status = STATUSES.find((candidate) => candidate === statusParam);
-  const page = Math.max(0, Number(params.get("page") ?? 0) || 0);
+  const page = parsePageParam(params.get("page"));
   const [qDraft, setQDraft] = useState(q);
   const [deleteTarget, setDeleteTarget] = useState<RunSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -259,24 +260,14 @@ export function HistoryPage() {
     }
   };
 
-  const openRun = (id: string) => navigate(`/runs/${id}`);
+  // The row click is a mouse convenience; keyboard and screen-reader users open a run through
+  // the real link in the title cell.
   const rowProps = (run: RunSummary) => ({
     onClick: (event: MouseEvent<HTMLTableRowElement>) => {
       if ((event.target as HTMLElement).closest("a, button")) return;
-      openRun(run.id);
+      navigate(`/runs/${run.id}`);
     },
-    onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
-      if (event.target !== event.currentTarget) return;
-      if (event.key === "Enter") {
-        event.preventDefault();
-        openRun(run.id);
-      }
-    },
-    role: "link" as const,
-    tabIndex: 0,
-    "aria-label": `Open investigation ${runTitle(run)}`,
-    className:
-      "group cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+    className: "group cursor-pointer hover:bg-muted",
   });
 
   const emptyAction = (
@@ -428,9 +419,13 @@ export function HistoryPage() {
                     <TableRow key={run.id} {...rowProps(run)}>
                       <TableCell className="truncate font-medium">
                         <span className="inline-flex max-w-full items-center gap-2 truncate">
-                          <span className="truncate" title={runTitle(run)}>
+                          <Link
+                            to={`/runs/${run.id}`}
+                            title={runTitle(run)}
+                            className="truncate rounded-xs text-foreground no-underline hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
                             {runTitle(run)}
-                          </span>
+                          </Link>
                           {run.demo ? <DemoChip /> : null}
                         </span>
                       </TableCell>

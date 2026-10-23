@@ -1,5 +1,11 @@
 import type { ChainId, TraceEdge } from "@fot/core/schema";
-import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useState } from "react";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { StopTag } from "@/components/badges.tsx";
 import { AddressChip, type LabelIndex, TxLink } from "@/components/links.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -113,12 +119,17 @@ export function TransfersTab({
 
   useEffect(() => {
     if (phase !== "running") return;
-    const hasNewEdges = edges.some((edge) => {
-      const added = firstSeen[edge.id] ?? 0;
-      return added > 0 && Date.now() - added < 2000;
-    });
-    if (!hasNewEdges) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 300);
+    const hasNewEdges = () =>
+      edges.some((edge) => {
+        const added = firstSeen[edge.id] ?? 0;
+        return added > 0 && Date.now() - added < 2000;
+      });
+    if (!hasNewEdges()) return;
+    // Tick only while a row is still inside its "new" window, then stop.
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+      if (!hasNewEdges()) window.clearInterval(timer);
+    }, 300);
     return () => window.clearInterval(timer);
   }, [edges, firstSeen, phase]);
 
@@ -144,8 +155,12 @@ export function TransfersTab({
     tabIndex: 0,
     "aria-selected": selectedId === edge.id,
     selected: selectedId === edge.id || isNew(edge),
-    onClick: () => onSelect(edge.id),
+    onClick: (event: ReactMouseEvent<HTMLTableRowElement>) => {
+      if (event.target instanceof Element && event.target.closest("a, button")) return;
+      onSelect(edge.id);
+    },
     onKeyDown: (event: ReactKeyboardEvent<HTMLTableRowElement>) => {
+      if (event.target !== event.currentTarget) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         onSelect(edge.id);
@@ -307,7 +322,7 @@ export function TransfersTab({
                     <TransferStatus edge={edge} />
                   </TableCell>
                   {wide ? (
-                    <TableCell onClick={(event) => event.stopPropagation()}>
+                    <TableCell>
                       <TxLink chain={chain} hash={edge.transfer.txHash} />
                     </TableCell>
                   ) : null}

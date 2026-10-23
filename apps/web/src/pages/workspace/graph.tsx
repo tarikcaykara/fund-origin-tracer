@@ -24,13 +24,6 @@ export function GraphTab({
   onSelect(sel: Selection | null): void;
   density?: "chips" | "dots" | "auto" | undefined;
 }) {
-  const effectiveParams = params ?? result?.params;
-  if (!effectiveParams)
-    return (
-      <p role="status" className="p-4 text-sm text-muted-foreground">
-        Waiting for run parameters…
-      </p>
-    );
   return (
     <ReactFlowProvider>
       <GraphCanvas
@@ -38,7 +31,7 @@ export function GraphTab({
         edges={edges}
         result={result}
         phase={phase}
-        params={effectiveParams}
+        params={params}
         selection={selection}
         density={density}
         onSelect={onSelect}

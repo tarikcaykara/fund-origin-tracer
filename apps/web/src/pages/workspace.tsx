@@ -1,19 +1,20 @@
-import type { AnalysisResult, TraceEdge } from "@fot/core/schema";
-import { Clock3 } from "lucide-react";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import type { AnalysisResult } from "@fot/core/schema";
+import { CircleSlash, Clock3 } from "lucide-react";
+import { lazy, type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import type { LiveRunRequest } from "@/api.ts";
 import { ApiError, api, type RunDetail } from "@/api.ts";
 import { EmptyState } from "@/components/empty-state.tsx";
 import { indexAddresses } from "@/components/links.tsx";
+import { ModalLayer } from "@/components/modal-layer.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import { chainName } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
-import { isLivePhase, type RunPhase, sortedEdges } from "@/run-state.ts";
+import { isLivePhase, type RunPhase, sortedEdges, transferOrder } from "@/run-state.ts";
 import type { Selection } from "@/selection.ts";
 import { useRunStream } from "@/use-run-stream.ts";
 import { WorkspaceBanners } from "./workspace/banners.tsx";
@@ -46,22 +47,19 @@ function errorMessage(error: unknown): string {
       : "Unexpected error.";
 }
 
-function transferOrder(a: TraceEdge, b: TraceEdge): number {
-  const depth = a.depth - b.depth;
-  if (depth !== 0) return depth;
-  if (a.usd === null && b.usd !== null) return 1;
-  if (a.usd !== null && b.usd === null) return -1;
-  if (a.usd !== null && b.usd !== null && a.usd !== b.usd) return b.usd - a.usd;
-  return 0;
-}
-
 function getVisiblePhase(run: RunDetail, phase: RunPhase): RunPhase {
   if (phase !== "connecting") return phase;
   return run.status === "interrupted" ? "failed" : run.status;
 }
 
-function ProvisionalStrip({ phase }: { phase: RunPhase }) {
+function ProvisionalStrip({ phase, hasResult }: { phase: RunPhase; hasResult: boolean }) {
   if (phase === "completed") return null;
+  const before = { cancelled: "cancellation", failed: "the run failed", timed_out: "timeout" };
+  const outcome = { cancelled: "was cancelled", failed: "failed", timed_out: "timed out" };
+  const partial = (reason: "cancelled" | "failed" | "timed_out") =>
+    hasResult
+      ? `Partial result · analysis reflects the transfers retained before ${before[reason]}.`
+      : `Partial transfers · the run ${outcome[reason]} before an analysis was produced.`;
   const copy: Record<Exclude<RunPhase, "completed">, { tag: string; text: string }> = {
     connecting: { tag: "● LIVE", text: "Connecting to the live run stream." },
     running: {
@@ -72,18 +70,9 @@ function ProvisionalStrip({ phase }: { phase: RunPhase }) {
       tag: "❚❚ PAUSED",
       text: "Provisional · the run is paused; derived analysis is deferred.",
     },
-    cancelled: {
-      tag: "□ CANCELLED",
-      text: "Partial result · analysis reflects the transfers retained before cancellation.",
-    },
-    failed: {
-      tag: "✕ FAILED",
-      text: "Partial result · analysis reflects the transfers retained before the run failed.",
-    },
-    timed_out: {
-      tag: "✕ FAILED",
-      text: "Partial result · analysis reflects the transfers retained before timeout.",
-    },
+    cancelled: { tag: "□ CANCELLED", text: partial("cancelled") },
+    failed: { tag: "✕ FAILED", text: partial("failed") },
+    timed_out: { tag: "✕ FAILED", text: partial("timed_out") },
   };
   const message = copy[phase];
   return (
@@ -106,11 +95,31 @@ function WaitingForResult() {
   );
 }
 
-function getRerunBody(run: RunDetail): LiveRunRequest {
-  return {
-    chain: run.chain,
+/** A finished run (failed, timed out or interrupted) that stored no analysis. */
+function NoResult({ error }: { error: string | null }) {
+  return (
+    <div className="p-3 md:p-5">
+      <EmptyState
+        icon={CircleSlash}
+        title="No result was produced for this run"
+        body={error ?? "The run ended before an analysis could be produced."}
+      />
+    </div>
+  );
+}
+
+/** Request body that repeats `run` with its limits; `overrides` swaps direction and seeds. */
+function getRunBody(
+  run: RunDetail,
+  overrides: Pick<LiveRunRequest, "direction" | "seeds"> = {
     direction: run.direction,
     seeds: run.seeds.map(({ kind, value }) => ({ kind, value })),
+  },
+): LiveRunRequest {
+  return {
+    chain: run.chain,
+    direction: overrides.direction,
+    seeds: overrides.seeds,
     maxDepth: run.params.maxDepth,
     maxBranches: run.params.maxBranches,
     maxEdges: run.params.maxEdges,
@@ -149,21 +158,6 @@ export function WorkspacePage() {
   useEffect(() => {
     if (state.done) setExpanding(false);
   }, [state.done]);
-  useEffect(() => {
-    if (!fullGraph && !(phone && selection !== null)) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (phone && selection !== null) setSelection(null);
-      else setFullGraph(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [fullGraph, phone, selection]);
 
   const run = detail.data?.id === id ? detail.data : null;
   const result: AnalysisResult | null = state.result ?? run?.result ?? null;
@@ -212,7 +206,7 @@ export function WorkspacePage() {
     try {
       const next = run.demo
         ? await api.createDemoRun(run.demo)
-        : await api.createRun(getRerunBody(run));
+        : await api.createRun(getRunBody(run));
       navigate(`/runs/${encodeURIComponent(next.runId)}`);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -236,6 +230,7 @@ export function WorkspacePage() {
   );
 
   const onClosePanel = useCallback(() => setSelection(null), []);
+  const closeFullGraph = useCallback(() => setFullGraph(false), []);
   const onPanelSelect = useCallback((next: Selection | null) => setSelection(next), []);
   const selectInGraph = useCallback((next: Selection) => {
     setSelection(next);
@@ -263,18 +258,9 @@ export function WorkspacePage() {
       if (!run) return;
       setBusy(true);
       try {
-        const next = await api.createRun({
-          chain: run.chain,
-          direction: "forward",
-          seeds: [{ kind: "address", value: address }],
-          maxDepth: run.params.maxDepth,
-          maxBranches: run.params.maxBranches,
-          maxEdges: run.params.maxEdges,
-          minUsd: run.params.minUsd,
-          traceThroughEntities: run.params.traceThroughEntities,
-          followUnpriced: run.params.followUnpriced,
-          timeoutSec: run.params.timeoutSec,
-        });
+        const next = await api.createRun(
+          getRunBody(run, { direction: "forward", seeds: [{ kind: "address", value: address }] }),
+        );
         navigate(`/runs/${encodeURIComponent(next.runId)}`);
       } catch (error) {
         toast.error(errorMessage(error));
@@ -307,6 +293,7 @@ export function WorkspacePage() {
         edges={edges}
         result={result}
         phase={phase}
+        params={run.params}
         onSelect={setSelection}
       />
     </Suspense>
@@ -341,6 +328,14 @@ export function WorkspacePage() {
   const expandNote = run.demo
     ? "This run is a recorded demo: expanding calls the live explorer API."
     : undefined;
+  const runError = state.error ? `${state.error.code}: ${state.error.message}` : run.error;
+  const strip = <ProvisionalStrip phase={phase} hasResult={result !== null} />;
+  // Result-only tabs: wait while live, explain when a finished run produced nothing.
+  const resultTab = (render: (final: AnalysisResult) => ReactNode) => {
+    if (live) return <WaitingForResult />;
+    if (result === null) return <NoResult error={runError} />;
+    return render(result);
+  };
 
   const panel = selection ? (
     <PanelHost
@@ -350,6 +345,7 @@ export function WorkspacePage() {
       result={result}
       labels={labels}
       params={run.params}
+      live={live}
       canExpand={canExpand}
       expanding={expanding}
       expandNote={expandNote}
@@ -395,7 +391,7 @@ export function WorkspacePage() {
         >
           <div className="min-w-0">
             <TabsContent value="graph" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
+              {strip}
               {phone ? (
                 <div>
                   <div className="flex items-center justify-between border-b border-border px-4 py-2">
@@ -411,7 +407,7 @@ export function WorkspacePage() {
               )}
             </TabsContent>
             <TabsContent value="transfers" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
+              {strip}
               <TransfersTab
                 key={run.id}
                 chain={run.chain}
@@ -424,33 +420,33 @@ export function WorkspacePage() {
               />
             </TabsContent>
             <TabsContent value="exposure" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
-              {result && !live ? <ExposureTab result={result} /> : <WaitingForResult />}
+              {strip}
+              {resultTab((final) => (
+                <ExposureTab result={final} />
+              ))}
             </TabsContent>
             <TabsContent value="linked" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
-              {result && !live ? (
+              {strip}
+              {resultTab((final) => (
                 <LinkedWalletsTab
                   key={run.id}
-                  result={result}
+                  result={final}
                   onSelect={selectInGraph}
                   onTraceForward={(address) => void traceForward(address)}
                 />
-              ) : (
-                <WaitingForResult />
-              )}
+              ))}
             </TabsContent>
             <TabsContent value="touchpoints" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
-              {result && !live ? <TouchpointsTab result={result} /> : <WaitingForResult />}
+              {strip}
+              {resultTab((final) => (
+                <TouchpointsTab result={final} />
+              ))}
             </TabsContent>
             <TabsContent value="flags" className="min-w-0">
-              <ProvisionalStrip phase={phase} />
-              {result && !live ? (
-                <FlagsTab result={result} onSelect={selectInGraph} />
-              ) : (
-                <WaitingForResult />
-              )}
+              {strip}
+              {resultTab((final) => (
+                <FlagsTab result={final} onSelect={selectInGraph} />
+              ))}
             </TabsContent>
           </div>
           {panel}
@@ -458,15 +454,19 @@ export function WorkspacePage() {
       </Tabs>
 
       {fullGraph ? (
-        <div className="fixed inset-0 z-40 flex min-h-0 flex-col bg-background">
+        <ModalLayer
+          label="Full graph"
+          onClose={closeFullGraph}
+          className="fixed inset-0 z-40 flex min-h-0 flex-col bg-background"
+        >
           <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-4">
             <h2 className="type-heading">Full graph</h2>
-            <Button variant="outline" size="sm" onClick={() => setFullGraph(false)}>
+            <Button variant="outline" size="sm" onClick={closeFullGraph}>
               × Close
             </Button>
           </header>
           <div className="min-h-0 flex-1">{graph}</div>
-        </div>
+        </ModalLayer>
       ) : null}
     </div>
   );

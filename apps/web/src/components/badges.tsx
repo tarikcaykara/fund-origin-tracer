@@ -1,4 +1,4 @@
-import type { Label, LabelCategory, Severity, StopReason } from "@fot/core/schema";
+import type { LabelCategory, Severity, StopReason } from "@fot/core/schema";
 import type { InvestigationStatus } from "@/api.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
@@ -137,57 +137,10 @@ export function StopTag({ reason }: { reason: StopReason | null }) {
   );
 }
 
-export function SeedTag() {
-  return (
-    <Badge variant="outline" className="font-semibold">
-      SEED
-    </Badge>
-  );
-}
-
 export function DemoChip({ label = "DEMO" }: { label?: string }) {
   return (
     <Badge variant="outline" className="border-dashed border-border-strong text-muted-foreground">
       {label}
     </Badge>
-  );
-}
-
-export function RiskBadge({ level }: { level: RiskLevel | null | undefined }) {
-  return <RiskChip level={level} />;
-}
-
-export function SeverityBadge({ severity }: { severity: Severity }) {
-  return <SeverityTag severity={severity} />;
-}
-
-export function StatusBadge({ status }: { status: InvestigationStatus | RunPhase }) {
-  return <StatusPill status={status} live={status === "running"} />;
-}
-
-export function CategoryBadge({ category }: { category: LabelCategory }) {
-  return <CategoryTag category={category} />;
-}
-
-export function StopReasonText({ reason }: { reason: StopReason | null }) {
-  return reason ? (
-    <span title={STOP_TAGS[reason].text}>{reason.replaceAll("_", " ")}</span>
-  ) : (
-    <span>—</span>
-  );
-}
-
-export function LabelList({ labels }: { labels: readonly Label[] }) {
-  return (
-    <ul className="space-y-1">
-      {labels.map((label) => (
-        <li key={`${label.origin}:${label.name}`}>
-          <CategoryTag category={label.category} /> {label.name}{" "}
-          <span className="text-xs text-muted-foreground">
-            {label.origin} · {label.source}
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }

@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { chainName, directionName, formatClock } from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import type { RiskLevel } from "@/meta.ts";
-import type { RunPhase, RunState } from "@/run-state.ts";
+import { isLivePhase, type RunPhase, type RunState } from "@/run-state.ts";
 import { ExportMenu, ExportSubmenu } from "./export-menu.tsx";
 import { NotesDialog } from "./notes-dialog.tsx";
 
@@ -43,21 +43,25 @@ export function WorkspaceHeader({
   const [savingTitle, setSavingTitle] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const title = run.title ?? run.id;
-  const exportResult = state.result ?? run.result;
+  const live = isLivePhase(phase) || phase === "connecting";
+  // While live (including an expand of a finished run) the stored result is stale and the
+  // server refuses exports until the run finishes again.
+  const exportResult = state.result ?? (live ? null : run.result);
   const observedEdges = Object.values(state.edges);
   const expanded =
     state.progress?.expandedEdges ??
     state.stats.expandedEdges ??
     observedEdges.filter((edge) => edge.status === "expanded").length;
-  const maxDepth =
-    state.stats.maxDepthReached ??
-    observedEdges.reduce((depth, edge) => Math.max(depth, edge.depth), 0);
+  // Snapshot stats can predate an in-progress expand, so never let them hide deeper streamed edges.
+  const maxDepth = Math.max(
+    state.stats.maxDepthReached ?? 0,
+    observedEdges.reduce((depth, edge) => Math.max(depth, edge.depth), 0),
+  );
   const finishedMs = run.finishedAt ? Date.parse(run.finishedAt) - Date.parse(run.createdAt) : null;
   const elapsed =
     state.progress?.elapsedMs ?? (finishedMs !== null && finishedMs >= 0 ? finishedMs : undefined);
-  const transferCount =
-    exportResult?.graph.edges.length ??
-    (state.phase === "connecting" ? null : observedEdges.length);
+  const streamedCount = state.phase === "connecting" ? null : observedEdges.length;
+  const transferCount = live ? streamedCount : (exportResult?.graph.edges.length ?? streamedCount);
   const progress = Math.min(100, (expanded / Math.max(1, run.params.maxEdges)) * 100);
   const showProgress = phase !== "completed";
   const failed = phase === "failed" || phase === "timed_out";

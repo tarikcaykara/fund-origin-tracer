@@ -1,4 +1,4 @@
-import type { AnalysisResult, Convergence } from "@fot/core/schema";
+import { type AnalysisResult, type Convergence, transferId } from "@fot/core/schema";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state.tsx";
 import { AddressChip, TxLink } from "@/components/links.tsx";
@@ -18,7 +18,7 @@ import {
   formatUsd,
   shortAddress,
 } from "@/format.ts";
-import { cn } from "@/lib/utils.ts";
+import { cn, withUniqueKeys } from "@/lib/utils.ts";
 import type { Selection } from "@/selection.ts";
 
 function roleLabel(convergence: Convergence, direction: "backward" | "forward"): string {
@@ -169,8 +169,9 @@ export function LinkedWalletsTab({
                         : "Who else paid this wallet"}
                     </h3>
                     <span className="type-mono-node text-muted-foreground">
-                      {entry.otherCounterparties.length} outgoing transfers outside the trace ·
-                      showing {shownTransfers.length} by amount
+                      {entry.otherCounterparties.length}{" "}
+                      {direction === "backward" ? "outgoing" : "incoming"} transfers outside the
+                      trace · showing {shownTransfers.length} by amount
                     </span>
                   </div>
                   <p className="type-mono-node text-muted-foreground">
@@ -182,9 +183,9 @@ export function LinkedWalletsTab({
 
                   {shownTransfers.length > 0 ? (
                     <ul className="divide-y divide-border rounded-xs border border-border">
-                      {shownTransfers.map((transfer) => (
+                      {withUniqueKeys(shownTransfers, transferId).map(({ key, item: transfer }) => (
                         <li
-                          key={`${transfer.txHash}:${transfer.from}:${transfer.to}:${transfer.amountRaw}`}
+                          key={key}
                           className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-2 md:grid-cols-[minmax(0,1.2fr)_minmax(95px,.7fr)_minmax(105px,.8fr)_auto] max-md:[&_button]:min-h-11"
                         >
                           <span className="min-w-0 truncate type-mono-sm">

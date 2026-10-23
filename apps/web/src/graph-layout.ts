@@ -26,7 +26,6 @@ export type GraphLayout = {
   columns: GraphColumn[];
   nodeWidth: number;
   nodeHeight: number;
-  maxHop: number;
 };
 
 export function layoutGraph(model: GraphModel, options: GraphLayoutOptions): GraphLayout {
@@ -107,5 +106,5 @@ export function layoutGraph(model: GraphModel, options: GraphLayoutOptions): Gra
     columns.push({ hop, index, x: Math.round(x), count: column.length, queued, failed });
   }
 
-  return { positions, columns, nodeWidth, nodeHeight, maxHop: model.maxHop };
+  return { positions, columns, nodeWidth, nodeHeight };
 }

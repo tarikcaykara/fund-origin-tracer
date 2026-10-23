@@ -1,4 +1,4 @@
-import type { AnalysisResult, ChainId, Direction, TraceEdge } from "@fot/core/schema";
+import type { AnalysisResult, ChainId, Direction, RunParams, TraceEdge } from "@fot/core/schema";
 import { useMemo } from "react";
 import { assetSymbol, formatAmount, formatUsd, shortAddress } from "../../format.ts";
 import { buildGraphModel } from "../../graph-model.ts";
@@ -11,12 +11,14 @@ export function PathView({
   edges,
   result,
   phase,
+  params,
   onSelect,
 }: {
   chain: ChainId;
   edges: TraceEdge[];
   result: AnalysisResult | null;
   phase: RunPhase;
+  params: RunParams;
   onSelect(sel: Selection): void;
 }) {
   const seedEdge = edges.find((edge) => edge.seedId !== null);
@@ -28,8 +30,8 @@ export function PathView({
     [direction, edges, result],
   );
   const path = useMemo(
-    () => highestValuePath(edges, result, direction),
-    [direction, edges, result],
+    () => highestValuePath(edges, result, direction, params),
+    [direction, edges, params, result],
   );
   const addressMap = useMemo(
     () => new Map((result?.graph.addresses ?? []).map((node) => [node.address, node])),

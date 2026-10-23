@@ -1,10 +1,8 @@
 import type { AddressNode, ChainId } from "@fot/core/schema";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { addressUrl, fullAddress, shortAddress, shortHash, txUrl } from "@/format.ts";
+import { useCopyText } from "@/lib/clipboard.ts";
 import { cn } from "@/lib/utils.ts";
 
 export type LabelIndex = ReadonlyMap<string, AddressNode>;
@@ -38,22 +36,7 @@ export function AddressChip({
   full?: boolean;
 }) {
   const displayAddress = fullAddress(chain, address);
-  const [copied, setCopied] = useState(false);
-  const timeout = useRef<number | undefined>(undefined);
-
-  useEffect(() => () => window.clearTimeout(timeout.current), []);
-
-  const copyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(displayAddress);
-      setCopied(true);
-      window.clearTimeout(timeout.current);
-      timeout.current = window.setTimeout(() => setCopied(false), 1500);
-      toast("⧉ Copied to clipboard", { description: displayAddress, duration: 4000 });
-    } catch {
-      setCopied(false);
-    }
-  };
+  const { copied, copy } = useCopyText();
 
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -61,8 +44,13 @@ export function AddressChip({
         <TooltipTrigger asChild>
           <button
             type="button"
-            aria-label={displayAddress}
-            onClick={() => void copyAddress()}
+            aria-label={`Copy ${displayAddress}`}
+            onClick={() =>
+              void copy(displayAddress, {
+                title: "⧉ Copied to clipboard",
+                subtitle: displayAddress,
+              })
+            }
             className={cn(
               "address rounded-sm px-0.5 text-foreground hover:bg-muted",
               copied && "bg-success-muted px-1 text-success [text-decoration:none]",
@@ -85,6 +73,10 @@ export function AddressChip({
   );
 }
 
+/**
+ * Explorer link. With text `children` the visible text is the accessible name; without them the
+ * link renders an arrow glyph and carries an `aria-label` instead.
+ */
 export function ExplorerLink({
   chain,
   kind,
@@ -97,41 +89,18 @@ export function ExplorerLink({
   children?: ReactNode;
 }) {
   const href = kind === "address" ? addressUrl(chain, value) : txUrl(chain, value);
+  const noun = kind === "tx" ? "transaction" : "address";
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer noopener"
-      aria-label={`Open ${kind === "tx" ? "transaction" : "address"} in explorer`}
+      title={value}
+      {...(children === undefined ? { "aria-label": `Open ${noun} ${value} in explorer` } : {})}
       className="inline-flex items-center gap-1 text-link underline-offset-2 hover:underline"
     >
       {children ?? <span aria-hidden="true">↗</span>}
     </a>
-  );
-}
-
-export function AddressLink({
-  chain,
-  address,
-  labels,
-}: {
-  chain: ChainId;
-  address: string;
-  labels?: LabelIndex | undefined;
-}) {
-  const node = labels?.get(address);
-  const primary = node?.labels[0];
-  return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <AddressChip chain={chain} address={address} {...(primary ? { label: primary.name } : {})} />
-      {primary ? (
-        <Badge variant="outline" title={`${primary.category} · ${primary.source}`}>
-          {primary.category}
-        </Badge>
-      ) : null}
-      {node?.sanctioned ? <Badge variant="destructive">sanctioned</Badge> : null}
-      <ExplorerLink chain={chain} kind="address" value={address} />
-    </span>
   );
 }
 

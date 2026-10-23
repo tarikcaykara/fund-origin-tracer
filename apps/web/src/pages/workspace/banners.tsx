@@ -1,7 +1,7 @@
-import { toast } from "sonner";
 import type { RunDetail } from "@/api.ts";
 import { Banner } from "@/components/banner.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { copyText } from "@/lib/clipboard.ts";
 import type { RunPhase, RunState } from "@/run-state.ts";
 
 export function WorkspaceBanners({
@@ -39,14 +39,6 @@ export function WorkspaceBanners({
   const showPaused = phase === "paused";
   const showCancelled = phase === "cancelled";
   const showError = phase === "failed" || phase === "timed_out";
-  const copyError = async () => {
-    try {
-      await navigator.clipboard.writeText(errorText);
-      toast.success("Error copied to clipboard.");
-    } catch {
-      toast.error("Clipboard is not available.");
-    }
-  };
   if (!showPaused && !showCancelled && !showError && warningMap.size === 0) return null;
 
   return (
@@ -77,7 +69,12 @@ export function WorkspaceBanners({
       {showError ? (
         <Banner tone="destructive" tag={phase === "timed_out" ? "✕ Timed out" : "✕ Trace failed"}>
           {errorText}
-          <Button variant="link" size="sm" className="ml-1" onClick={() => void copyError()}>
+          <Button
+            variant="link"
+            size="sm"
+            className="ml-1"
+            onClick={() => void copyText(errorText, { title: "Error copied to clipboard" })}
+          >
             Copy error
           </Button>
         </Banner>

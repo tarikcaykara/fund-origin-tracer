@@ -35,6 +35,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { chainName, formatUtcMinute } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
+import { firstLimitError } from "@/limits.ts";
 import { STATUS_META } from "@/meta.ts";
 import { MAX_SEEDS, type ParsedSeeds, parseSeeds } from "@/seeds.ts";
 
@@ -282,23 +283,25 @@ function SeedsEditor({
                 >
                   {lineNumber}
                 </span>
-                <span
-                  className={`min-w-0 truncate ${
-                    placeholder ? "text-faint-foreground" : "text-foreground"
-                  }`}
-                  style={
-                    invalid
-                      ? {
-                          color: "var(--risk-high)",
-                          textDecorationLine: "underline",
-                          textDecorationStyle: "wavy",
-                          textDecorationColor: "var(--risk-high)",
-                        }
-                      : undefined
-                  }
-                  title={trimmed || undefined}
-                >
-                  {placeholder ? "Transaction hashes or addresses" : trimmed}
+                <span className="min-w-0 overflow-hidden">
+                  <span
+                    className={`block whitespace-pre [transform:translateX(var(--seed-scroll-x,0px))] ${
+                      placeholder ? "text-faint-foreground" : "text-foreground"
+                    }`}
+                    style={
+                      invalid
+                        ? {
+                            color: "var(--risk-high)",
+                            textDecorationLine: "underline",
+                            textDecorationStyle: "wavy",
+                            textDecorationColor: "var(--risk-high)",
+                          }
+                        : undefined
+                    }
+                    title={trimmed || undefined}
+                  >
+                    {placeholder ? "Transaction hashes or addresses" : trimmed}
+                  </span>
                 </span>
                 {result ? (
                   <span
@@ -324,10 +327,14 @@ function SeedsEditor({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onShortcut}
+          wrap="off"
           onScroll={(event) => {
-            if (mirror.current) mirror.current.scrollTop = event.currentTarget.scrollTop;
+            const { scrollTop, scrollLeft } = event.currentTarget;
+            if (!mirror.current) return;
+            mirror.current.scrollTop = scrollTop;
+            mirror.current.style.setProperty("--seed-scroll-x", `${-scrollLeft}px`);
           }}
-          className="absolute inset-0 z-10 h-full w-full resize-none overflow-auto border-0 bg-transparent py-1.5 pr-2 pl-[46px] font-mono text-[13px] leading-[26px] text-transparent caret-foreground outline-none selection:bg-selection-muted selection:text-transparent"
+          className="absolute inset-0 z-10 h-full w-full resize-none overflow-auto whitespace-pre border-0 bg-transparent py-1.5 pr-2 pl-[46px] font-mono text-[13px] leading-[26px] text-transparent caret-foreground outline-none selection:bg-selection-muted selection:text-transparent"
         />
       </div>
       <ul id="seeds-errors" className="sr-only" aria-label="Seed validation errors">
@@ -638,7 +645,7 @@ function RecentCard({ runs }: { runs: RunSummary[] }) {
     <Card className="min-w-0">
       <CardHeader className="flex items-center justify-between border-b border-border px-4 py-3">
         <CardTitle className="text-lg">Recent</CardTitle>
-        <Link to="/history" className="text-[13px] font-medium text-link hover:underline">
+        <Link to="/runs" className="text-[13px] font-medium text-link hover:underline">
           History →
         </Link>
       </CardHeader>
@@ -705,14 +712,8 @@ export function HomePage() {
   }, [healthData, chainTouched, demoOnly]);
 
   const parsed = useMemo(() => parseSeeds(seedText, chain), [seedText, chain]);
-  const limitsValid =
-    maxDepth >= 1 &&
-    maxDepth <= 50 &&
-    maxBranches >= 1 &&
-    maxBranches <= 10 &&
-    maxEdges >= 10 &&
-    maxEdges <= 5000 &&
-    minUsd >= 0;
+  const limitError = firstLimitError({ maxDepth, maxBranches, maxEdges, minUsd });
+  const limitsValid = limitError === null;
   const canSubmit =
     liveReady &&
     !busy &&
@@ -759,21 +760,25 @@ export function HomePage() {
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   const shortcut = isMac ? "⌘↵" : "Ctrl↵";
   let startHint: string;
-  if (parsed.seeds.length === 0) startHint = "Add at least one seed.";
-  else if (parsed.invalid.length > 0) {
+  if (parsed.invalid.length > 0) {
     const invalidLines = parsed.invalid.map((seed) => seed.line);
     const linePhrase =
       invalidLines.length === 1
         ? `line ${invalidLines[0]}`
         : `lines ${invalidLines.slice(0, -1).join(", ")} and ${invalidLines.at(-1)}`;
     startHint = `Fix ${linePhrase} to start.`;
-  } else if (!liveReady) {
+  } else if (parsed.seeds.length === 0) startHint = "Add at least one seed.";
+  else if (parsed.seeds.length > MAX_SEEDS) startHint = `Use at most ${MAX_SEEDS} seeds.`;
+  else if (limitError !== null) startHint = limitError;
+  else if (!liveReady) {
     startHint = demoOnly
       ? "Live traces are disabled on this instance; run a recorded demo."
       : `Add ${keyName(chain)} or run a recorded demo.`;
   } else {
     startHint = `${parsed.seeds.length} ${parsed.seeds.length === 1 ? "seed" : "seeds"} · ${chainName(chain)} · ${direction}`;
   }
+  const hintIsError =
+    parsed.invalid.length > 0 || parsed.seeds.length > MAX_SEEDS || limitError !== null;
 
   const demoItems = demos.data ?? [];
   const prominentDemos = healthData !== null && (!anyReady || demoOnly);
@@ -885,7 +890,7 @@ export function HomePage() {
                     <kbd className="ml-2 type-mono-node opacity-70">{shortcut}</kbd>
                   </Button>
                   <p
-                    className={`min-w-0 text-xs ${parsed.invalid.length > 0 ? "text-risk-high" : "text-muted-foreground"}`}
+                    className={`min-w-0 text-xs ${hintIsError ? "text-risk-high" : "text-muted-foreground"}`}
                     aria-live="polite"
                   >
                     {startHint}

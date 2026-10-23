@@ -1,11 +1,18 @@
-import type { AnalysisResult, Direction, TraceEdge } from "@fot/core/schema";
+import type { AnalysisResult, Direction, RunParams, TraceEdge } from "@fot/core/schema";
 
-/** Returns the highest-USD greedy path in display order (origin → seed backward, seed → origin forward). */
+/**
+ * Returns the highest-USD greedy path in display order (origin → seed backward, seed → origin
+ * forward). Edge depths are 0-based, so a run holds up to `maxDepth + 1` edges per path; edges
+ * added by "Expand further" may sit deeper, so the walk is bounded by the deepest edge too.
+ */
 export function highestValuePath(
   edges: readonly TraceEdge[],
   result: AnalysisResult | null,
   direction: Direction,
+  params: Pick<RunParams, "maxDepth" | "traceThroughEntities">,
 ): TraceEdge[] {
+  const deepest = edges.reduce((depth, edge) => Math.max(depth, edge.depth), 0);
+  const stepLimit = Math.max(params.maxDepth, deepest) + 1;
   if (edges.length === 0) return [];
 
   const addresses = new Map((result?.graph.addresses ?? []).map((node) => [node.address, node]));
@@ -34,16 +41,20 @@ export function highestValuePath(
     const visited = new Set([seed]);
     const walked: TraceEdge[] = [];
 
-    for (let step = 0; step < 12; step++) {
-      const currentLabels = addresses.get(current)?.labels ?? [];
-      if (
-        currentLabels.some(
-          (label) =>
-            label.category === "exchange" ||
-            (label.entity !== undefined && label.entity.length > 0),
+    for (let step = 0; step < stepLimit; step++) {
+      // Entity labels end the walk like the engine's `entity` stop, unless the run traced through
+      // entities. The seed itself is the start of the trace, never a stop.
+      if (step > 0 && !params.traceThroughEntities) {
+        const currentLabels = addresses.get(current)?.labels ?? [];
+        if (
+          currentLabels.some(
+            (label) =>
+              label.category === "exchange" ||
+              (label.entity !== undefined && label.entity.length > 0),
+          )
         )
-      )
-        break;
+          break;
+      }
 
       const candidates = direction === "backward" ? incoming.get(current) : outgoing.get(current);
       let selected: TraceEdge | null = null;
