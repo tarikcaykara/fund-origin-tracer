@@ -12,7 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
-import { assetSymbol, formatAmount, formatCompactUtc, formatUsd, shortAddress } from "@/format.ts";
+import {
+  assetSymbol,
+  formatAmount,
+  formatCompactTimestamp,
+  formatUsd,
+  shortAddress,
+} from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import { cn } from "@/lib/utils.ts";
 import type { RunPhase } from "@/run-state.ts";
@@ -226,7 +232,7 @@ export function TransfersTab({
                   <span className="type-amount">{formatAmount(edge.transfer.amount)}</span>
                   <span className="text-muted-foreground">{assetSymbol(edge.transfer.asset)}</span>
                   <span className="ml-auto type-mono-node text-muted-foreground">
-                    {formatCompactUtc(edge.transfer.timestamp)} UTC
+                    {formatCompactTimestamp(edge.transfer.timestamp)} UTC
                   </span>
                 </span>
               </button>
@@ -275,7 +281,7 @@ export function TransfersTab({
                   <TableCell className="type-mono-node">{edge.depth}</TableCell>
                   {wide ? (
                     <TableCell className="whitespace-nowrap type-mono-node text-muted-foreground">
-                      {formatCompactUtc(edge.transfer.timestamp)}
+                      {formatCompactTimestamp(edge.transfer.timestamp)}
                     </TableCell>
                   ) : null}
                   <TableCell className="type-mono-sm">

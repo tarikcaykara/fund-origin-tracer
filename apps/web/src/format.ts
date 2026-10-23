@@ -109,6 +109,11 @@ export function formatCompactUtc(value: string | number): string {
   return new Date(value).toISOString().slice(5, 16).replace("T", " ");
 }
 
+/** `10-20 20:38` from unix seconds (transfer timestamps). */
+export function formatCompactTimestamp(unixSeconds: number): string {
+  return formatCompactUtc(unixSeconds * 1000);
+}
+
 /** `m:ss` for durations under an hour and `h:mm:ss` thereafter. */
 export function formatClock(milliseconds: number): string {
   const totalSeconds = Math.floor(Math.max(0, milliseconds) / 1000);

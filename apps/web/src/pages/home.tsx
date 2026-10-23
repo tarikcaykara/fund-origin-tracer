@@ -586,17 +586,18 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
               <ul className="space-y-2">
                 {orderedLabels.map((label) => {
                   const category = label.category;
-                  const detail =
-                    category === "sanctioned" && label.origin === "ofac"
-                      ? "OFAC SDN"
-                      : (label.entity ?? label.name);
+                  const origin = label.origin === "ofac" ? "OFAC SDN" : label.origin;
+                  const meta = [category, label.entity, origin].filter(
+                    (part, index, parts): part is string =>
+                      part !== undefined && part !== label.name && parts.indexOf(part) === index,
+                  );
                   return (
                     <li key={`${label.origin}:${label.category}:${label.name}`}>
                       <div className="flex min-w-0 items-center gap-2">
                         <CategoryTag category={category} label={label.name} />
                       </div>
                       <p className="mt-1 type-mono-node text-muted-foreground">
-                        {category} · {detail} · {label.origin}
+                        {meta.join(" · ")}
                       </p>
                     </li>
                   );

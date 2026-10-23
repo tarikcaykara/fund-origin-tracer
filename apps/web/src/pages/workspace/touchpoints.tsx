@@ -7,7 +7,7 @@ import { AddressChip, indexAddresses, TxLink } from "@/components/links.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   formatAmount,
-  formatCompactUtc,
+  formatCompactTimestamp,
   formatTimestamp,
   formatUsd,
   fullAddress,
@@ -155,7 +155,7 @@ export function TouchpointsTab({ result }: { result: AnalysisResult }) {
                   <span className="block type-overline text-muted-foreground xl:hidden">
                     TIME UTC
                   </span>
-                  {formatCompactUtc(touchpoint.timestamp)}
+                  {formatCompactTimestamp(touchpoint.timestamp)}
                 </div>
                 <div className="xl:justify-self-end">
                   <span className="mr-1 type-overline text-muted-foreground xl:hidden">TX</span>

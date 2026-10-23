@@ -402,7 +402,7 @@ export function HistoryPage() {
                 <colgroup>
                   <col />
                   <col className="hidden xl:table-column w-[100px]" />
-                  <col className="hidden xl:table-column w-[100px]" />
+                  <col className="hidden xl:table-column w-[120px]" />
                   <col className="hidden xl:table-column w-[150px]" />
                   <col className="w-[110px] xl:w-[120px]" />
                   <col className="w-[104px] xl:w-[120px]" />
@@ -435,8 +435,11 @@ export function HistoryPage() {
                         </span>
                       </TableCell>
                       <TableCell className="hidden xl:table-cell">{chainName(run.chain)}</TableCell>
-                      <TableCell className="hidden xl:table-cell">
-                        {directionName(run.direction)}
+                      <TableCell
+                        className="hidden xl:table-cell truncate"
+                        title={directionName(run.direction)}
+                      >
+                        {run.direction === "backward" ? "← Source" : "Destination →"}
                       </TableCell>
                       <TableCell className="hidden xl:table-cell truncate type-mono-sm text-muted-foreground">
                         {seedSummary(run)}

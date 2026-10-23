@@ -11,7 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { assetSymbol, formatAmount, formatCompactUtc, formatUsd, shortAddress } from "@/format.ts";
+import {
+  assetSymbol,
+  formatAmount,
+  formatCompactTimestamp,
+  formatUsd,
+  shortAddress,
+} from "@/format.ts";
 import { cn } from "@/lib/utils.ts";
 import type { Selection } from "@/selection.ts";
 
@@ -192,7 +198,7 @@ export function LinkedWalletsTab({
                             {formatAmount(transfer.amount)} {assetSymbol(transfer.asset)}
                           </span>
                           <span className="type-mono-node text-muted-foreground">
-                            {formatCompactUtc(transfer.timestamp)}
+                            {formatCompactTimestamp(transfer.timestamp)}
                           </span>
                           <span className="justify-self-end">
                             <TxLink chain={chain} hash={transfer.txHash} />
