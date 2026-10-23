@@ -160,13 +160,14 @@ describe("reduceRunEvent", () => {
 });
 
 describe("sortedEdges", () => {
-  test("orders by depth and keeps arrival order within a depth", () => {
+  test("orders by depth then USD descending, leaving unpriced edges last", () => {
     const state = fold([
       { type: "edge_added", edge: edge("deep", { depth: 2 }) },
-      { type: "edge_added", edge: edge("first", { depth: 0 }) },
+      { type: "edge_added", edge: edge("unpriced", { depth: 0 }) },
       { type: "edge_added", edge: edge("mid", { depth: 1 }) },
-      { type: "edge_added", edge: edge("second", { depth: 0 }) },
+      { type: "edge_added", edge: edge("low", { depth: 0, usd: 1 }) },
+      { type: "edge_added", edge: edge("high", { depth: 0, usd: 9 }) },
     ]);
-    expect(sortedEdges(state).map((e) => e.id)).toEqual(["first", "second", "mid", "deep"]);
+    expect(sortedEdges(state).map((e) => e.id)).toEqual(["high", "low", "unpriced", "mid", "deep"]);
   });
 });

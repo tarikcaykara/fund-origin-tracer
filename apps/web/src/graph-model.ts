@@ -1,4 +1,11 @@
-import type { AddressNode, AnalysisResult, Label, StopReason, TraceEdge } from "@fot/core/schema";
+import type {
+  AddressNode,
+  AnalysisResult,
+  Direction,
+  Label,
+  StopReason,
+  TraceEdge,
+} from "@fot/core/schema";
 import { assetId } from "@fot/core/schema";
 import { assetSymbol, formatAmount } from "./format.ts";
 
@@ -6,10 +13,12 @@ export type AddressNodeData = {
   address: string;
   label: Label | null;
   sanctioned: boolean;
-  mixer: boolean;
-  convergence: boolean;
+  commonSource: boolean;
   seed: boolean;
+  hop: number;
   stopReason: StopReason | null;
+  queued: boolean;
+  failed: boolean;
 };
 
 export type TransferGroupData = {
@@ -19,9 +28,15 @@ export type TransferGroupData = {
   totals: { assetId: string; symbol: string; amount: number }[];
   usd: number | null;
   pending: boolean;
+  stopped: boolean;
 };
 
-export type GraphModel = { nodes: AddressNodeData[]; groups: TransferGroupData[] };
+export type GraphModel = {
+  nodes: AddressNodeData[];
+  groups: TransferGroupData[];
+  maxHop: number;
+  direction: Direction;
+};
 
 export function groupId(from: string, to: string): string {
   return `${from}->${to}`;
@@ -30,41 +45,66 @@ export function groupId(from: string, to: string): string {
 export function buildGraphModel(
   edges: readonly TraceEdge[],
   result: Pick<AnalysisResult, "graph" | "convergences"> | null,
+  direction: Direction = "backward",
 ): GraphModel {
   const addresses = new Map<string, AddressNodeData>();
   const groups = new Map<string, TransferGroupData>();
   const resultAddresses = new Map<string, AddressNode>();
-  const convergences = new Set((result?.convergences ?? []).map((entry) => entry.address));
-  const stoppedAddresses = new Set<string>();
-  for (const node of result?.graph.addresses ?? []) resultAddresses.set(node.address, node);
-
-  const addAddress = (address: string) => {
-    if (addresses.has(address)) return;
-    const node = resultAddresses.get(address);
-    addresses.set(address, {
-      address,
-      label: node?.labels[0] ?? null,
-      sanctioned: node?.sanctioned ?? false,
-      mixer: node?.labels.some((label) => label.category === "mixer") ?? false,
-      convergence: convergences.has(address),
-      seed: false,
+  const commonSources = new Set(
+    (result?.convergences ?? [])
+      .filter((entry) => entry.role === "common_source")
+      .map((entry) => entry.address),
+  );
+  for (const node of result?.graph.addresses ?? []) {
+    resultAddresses.set(node.address, node);
+    addresses.set(node.address, {
+      address: node.address,
+      label: node.labels[0] ?? null,
+      sanctioned: node.sanctioned,
+      commonSource: commonSources.has(node.address),
+      seed: node.isSeedSubject,
+      hop: node.isSeedSubject ? 0 : Number.POSITIVE_INFINITY,
       stopReason: null,
+      queued: false,
+      failed: false,
     });
+  }
+
+  const addAddress = (address: string, hop: number): AddressNodeData => {
+    let node = addresses.get(address);
+    if (!node) {
+      const metadata = resultAddresses.get(address);
+      node = {
+        address,
+        label: metadata?.labels[0] ?? null,
+        sanctioned: metadata?.sanctioned ?? false,
+        commonSource: commonSources.has(address),
+        seed: metadata?.isSeedSubject ?? false,
+        hop: metadata?.isSeedSubject ? 0 : hop,
+        stopReason: null,
+        queued: false,
+        failed: false,
+      };
+      addresses.set(address, node);
+    }
+    if (node.seed) node.hop = 0;
+    else node.hop = Math.min(node.hop, hop);
+    return node;
   };
 
   for (const edge of edges) {
-    addAddress(edge.from);
-    addAddress(edge.to);
+    const near = addAddress(edge.near, edge.depth);
+    const far = addAddress(edge.far, edge.depth + 1);
+    if (edge.seedId !== null) near.seed = true;
+    if (edge.status === "stopped") far.stopReason ??= edge.stopReason;
+    if (edge.status === "pending") far.queued = true;
+    if (edge.stopReason === "fetch_failed") far.failed = true;
 
+    const fromNode = addAddress(edge.from, edge.depth + (edge.from === edge.far ? 1 : 0));
+    const toNode = addAddress(edge.to, edge.depth + (edge.to === edge.far ? 1 : 0));
     if (edge.seedId !== null) {
-      const seedNode = addresses.get(edge.near);
-      if (seedNode) seedNode.seed = true;
-    }
-
-    if (edge.status === "stopped" && !stoppedAddresses.has(edge.far)) {
-      const stoppedNode = addresses.get(edge.far);
-      if (stoppedNode) stoppedNode.stopReason = edge.stopReason;
-      stoppedAddresses.add(edge.far);
+      if (edge.near === edge.from) fromNode.seed = true;
+      if (edge.near === edge.to) toNode.seed = true;
     }
 
     const id = groupId(edge.from, edge.to);
@@ -77,12 +117,13 @@ export function buildGraphModel(
         totals: [],
         usd: null,
         pending: false,
+        stopped: false,
       };
       groups.set(id, group);
     }
-
     group.edgeIds.push(edge.id);
     group.pending ||= edge.status === "pending";
+    group.stopped ||= edge.status === "stopped";
     if (edge.usd !== null) group.usd = (group.usd ?? 0) + edge.usd;
 
     const idForAsset = assetId(edge.transfer.asset);
@@ -94,7 +135,14 @@ export function buildGraphModel(
     total.amount += edge.transfer.amount;
   }
 
-  return { nodes: [...addresses.values()], groups: [...groups.values()] };
+  const nodes = [...addresses.values()];
+  for (const node of nodes) if (!Number.isFinite(node.hop)) node.hop = 0;
+  return {
+    nodes,
+    groups: [...groups.values()],
+    maxHop: nodes.reduce((max, node) => Math.max(max, node.hop), 0),
+    direction,
+  };
 }
 
 export function groupLabel(group: TransferGroupData): string {
@@ -103,4 +151,34 @@ export function groupLabel(group: TransferGroupData): string {
   if (!total) return `${group.edgeIds.length}× · 0 assets`;
   const label = `${formatAmount(total.amount)} ${total.symbol}`;
   return group.edgeIds.length >= 2 ? `${group.edgeIds.length}× · ${label}` : label;
+}
+
+export function edgeStrokeWidth(usd: number | null, selected = false): number {
+  const width =
+    usd === null
+      ? 1
+      : usd < 1_000
+        ? 1
+        : usd < 10_000
+          ? 1.5
+          : usd < 100_000
+            ? 2
+            : usd < 1_000_000
+              ? 3
+              : 4;
+  return selected ? Math.max(3, width + 1) : width;
+}
+
+export function selectVisibleEdgeLabels(
+  groups: readonly TransferGroupData[],
+  highlightedIds: ReadonlySet<string>,
+  limit = 5,
+): TransferGroupData[] {
+  return groups
+    .filter((group) => highlightedIds.has(groupId(group.from, group.to)))
+    .sort(
+      (a, b) =>
+        (b.usd ?? 0) - (a.usd ?? 0) || groupId(a.from, a.to).localeCompare(groupId(b.from, b.to)),
+    )
+    .slice(0, limit);
 }

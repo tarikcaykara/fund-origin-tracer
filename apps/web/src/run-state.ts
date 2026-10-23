@@ -109,7 +109,14 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
   }
 }
 
-/** Edges in a stable order for tables: depth, then arrival. */
+/** Edges in transfer-list order: hop ascending, priced USD descending, then arrival. */
 export function sortedEdges(state: RunState): TraceEdge[] {
-  return Object.values(state.edges).sort((a, b) => a.depth - b.depth);
+  return Object.values(state.edges).sort((a, b) => {
+    const depth = a.depth - b.depth;
+    if (depth !== 0) return depth;
+    if (a.usd === null && b.usd !== null) return 1;
+    if (a.usd !== null && b.usd === null) return -1;
+    if (a.usd !== null && b.usd !== null && a.usd !== b.usd) return b.usd - a.usd;
+    return 0;
+  });
 }
