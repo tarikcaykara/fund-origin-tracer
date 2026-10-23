@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script><style>@keyframes cfpulse{0%{box-shadow:0 0 0 0 color-mix(in oklab,var(--selection) 45%,transparent)}100%{box-shadow:0 0 0 7px transparent}}</style></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;background:var(--background)">
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;background:var(--card);flex-wrap:wrap">
+    <div style="display:flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden">
+      <span style="padding:4px 10px;background:{{ fitBg }};color:{{ fitFg }};font-weight:500">Fit all</span>
+      <span style="padding:4px 10px;border-left:1px solid var(--border-strong);background:{{ focBg }};color:{{ focFg }}">Focus selection</span>
+      <sc-if value="{{ chips }}" hint-placeholder-val="{{ true }}"><span style="padding:4px 10px;border-left:1px solid var(--border-strong)">100%</span></sc-if>
+    </div>
+    <div style="display:flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden">
+      <span style="padding:4px 10px;background:{{ dChipBg }};font-weight:{{ dChipFw }}">Chips</span>
+      <span style="padding:4px 10px;border-left:1px solid var(--border-strong);background:{{ dDotBg }};font-weight:{{ dDotFw }}">Dots</span>
+    </div>
+    <sc-if value="{{ streaming }}" hint-placeholder-val="{{ false }}">
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:3px;background:var(--selection-muted);color:var(--selection);font:500 11px 'IBM Plex Mono',monospace"><span style="width:7px;height:7px;border-radius:50%;background:var(--selection)"></span>streaming · {{ newN }} new</span>
+    </sc-if>
+    <span style="color:var(--muted-foreground)">{{ info }}</span>
+    <span style="flex:1"></span>
+    <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">money flows →</span>
+  </div>
+  <sc-if value="{{ chips }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative;height:28px;border-bottom:1px solid var(--border);background:var(--muted)">
+      <sc-for list="{{ colHeads }}" as="c" hint-placeholder-count="8">
+        <div style="position:absolute;top:0;height:28px;display:flex;align-items:center;gap:6px;left:{{ c.x }}px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)"><span style="color:var(--foreground);font-weight:600">{{ c.label }}</span><span>{{ c.n }}</span></div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <div style="position:relative;height:{{ H }}px;overflow:hidden;background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:16px 16px">
+    <svg width="{{ W }}" height="{{ H }}" style="position:absolute;left:0;top:0">
+      <path d="{{ g.dAll }}" fill="none" stroke="var(--border-strong)" stroke-width="1"></path>
+      <path d="{{ g.dStopped }}" fill="none" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"></path>
+      <path d="{{ g.dPath }}" fill="none" stroke="var(--selection)" stroke-width="2"></path>
+      <path d="{{ g.dSel }}" fill="none" stroke="var(--selection)" stroke-width="4"></path>
+    </svg>
+    <sc-for list="{{ g.nodes }}" as="n" hint-placeholder-count="64">
+      <div title="{{ n.id }}" style="position:absolute;left:{{ n.x }}px;top:{{ n.y }}px;display:flex;align-items:center;gap:4px;white-space:nowrap;opacity:{{ n.op }}">
+        <div style="width:{{ n.w }}px;height:{{ n.h }}px;display:flex;align-items:center;gap:4px;padding:{{ n.pad }};justify-content:{{ n.jc }};background:{{ n.bg }};border:{{ n.bd }};border-radius:3px;font:500 10.5px/1 'IBM Plex Mono',monospace;color:{{ n.color }};overflow:hidden;animation:{{ n.anim }}">
+          <sc-if value="{{ n.glyph }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px">{{ n.glyph }}</span></sc-if><span style="flex:1;overflow:hidden;text-overflow:ellipsis">{{ n.text }}</span><span style="font-size:9px;font-weight:600;color:{{ n.tagC }};letter-spacing:.02em">{{ n.tag }}</span>
+        </div>
+        <span style="font:500 10.5px 'IBM Plex Mono',monospace;color:{{ n.color }};background:var(--background)">{{ n.dotText }}</span>
+      </div>
+    </sc-for>
+    <sc-for list="{{ labels }}" as="e" hint-placeholder-count="3">
+      <div style="position:absolute;left:{{ e.lx }}px;top:{{ e.ly }}px;transform:translate(-50%,-50%);padding:2px 6px;background:{{ e.bg }};color:{{ e.fg }};border:1px solid var(--selection);border-radius:3px;font:600 10.5px 'IBM Plex Mono',monospace;white-space:nowrap">{{ e.label }}</div>
+    </sc-for>
+    <sc-if value="{{ showTip }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:{{ tip.x }}px;top:{{ tip.y }}px;width:250px;background:var(--card);border:1px solid var(--border-strong);border-radius:4px;box-shadow:var(--shadow-popover);padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12px;z-index:3">
+        <div style="display:flex;align-items:center;gap:6px;color:var(--category-exchange);font-weight:600"><span>■</span><span>Binance 14</span><span style="margin-left:auto;font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">Exchange</span></div>
+        <div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">0x28c6…1d60 · bundled label</div>
+        <div style="font:400 11px 'IBM Plex Mono',monospace">169,651.35 USDT → 0xae8c…174a</div>
+        <div style="font-size:11px;color:var(--muted-foreground)">EN · Stopped: entity reached (trace through entities is off)</div>
+        <div style="font-size:11px;color:var(--muted-foreground);border-top:1px solid var(--border);padding-top:6px">Click to select · double-click to focus</div>
+      </div>
+    </sc-if>
+    <div style="position:absolute;right:12px;top:12px;display:flex;flex-direction:column;border:1px solid var(--border-strong);border-radius:4px;background:var(--card);font:500 14px 'IBM Plex Mono',monospace;color:var(--foreground)">
+      <span style="width:30px;height:30px;display:flex;align-items:center;justify-content:center">+</span><span style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border)">−</span><span style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);font-size:12px">⤢</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--border);font-size:12px;background:var(--card)">
+    <sc-for list="{{ legend }}" as="l" hint-placeholder-count="9">
+      <span style="display:inline-flex;align-items:center;gap:4px;color:{{ l.color }};font-weight:500"><span>{{ l.g }}</span><span>{{ l.t }}</span></span>
+    </sc-for>
+    <span style="width:1px;height:14px;background:var(--border-strong)"></span>
+    <span style="font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ tagLegend }}</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1032,&quot;height&quot;:720},&quot;w&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1032,&quot;tsType&quot;:&quot;number&quot;},&quot;h&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:620,&quot;tsType&quot;:&quot;number&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chips&quot;,&quot;dots&quot;],&quot;default&quot;:&quot;chips&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;running&quot;,&quot;paused&quot;,&quot;completed&quot;,&quot;cancelled&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;completed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;selection&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;transfer&quot;,&quot;address&quot;,&quot;pair&quot;,&quot;stopped&quot;],&quot;default&quot;:&quot;transfer&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showTip&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.FOT||!window.FOTH){ this.t=setInterval(()=>{ if(window.FOT&&window.FOTH){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const F=window.FOT,H=window.FOTH; if(!F||!H) return {W:+(this.props.w||1032),H:+(this.props.h||620),chips:true};
+    const W=+(this.props.w||1032), HH=+(this.props.h||620), chips=(this.props.density||'chips')==='chips', run=this.props.run||'completed', sel=this.props.selection||'transfer';
+    const d=F.d1, st=d.selTransfer;
+    const A1231='0x1231deb6f5749ef6ce6943a275a1d3e7486f4eae';
+    const PATH=['0xa803f9eb3d0043a2fa02e604a5a1d903ad36d4f4','0x2cff890f0378a11913b6129b2e97417a2c302680','0x8f613010e9906d240cc11363bb3d14b02e34527f',A1231];
+    const stopT=d.transfers.find(t=>t.id==='e2190e8586d9e320d');
+    const partial=run!=='completed';
+    let G=d;
+    if(partial){const mc=4;G={...d,maxCol:mc,rowsPerCol:d.rowsPerCol.slice(d.maxCol-mc),nodes:d.nodes.filter(n=>n.hop<=mc).map(n=>({...n,col:mc-n.hop}))};}
+    let selPath=[],selPair=null,hi=new Set(),ends=new Set();
+    if(sel==='transfer'){selPath=d.selPath;selPair=[st.from,st.to];PATH.forEach(x=>hi.add(x));ends=new Set([st.from,st.to]);}
+    if(sel==='address'){selPath=d.transfers.filter(t=>t.from===A1231||t.to===A1231).map(t=>t.id);hi.add(A1231);ends.add(A1231);}
+    if(sel==='pair'){const p=d.pairAcross;selPair=[p.from,p.to];selPath=p.transfers.map(t=>t.id);hi=new Set([p.from,p.to]);ends=new Set([p.from,p.to]);}
+    if(sel==='stopped'){selPair=[stopT.from,stopT.to];selPath=[stopT.id];hi=new Set([stopT.from,stopT.to]);ends=new Set([stopT.from]);}
+    const nc=G.maxCol; const nodeW=chips?Math.max(112,Math.min(132,Math.round((W-28)/(nc+1)*0.9))):12;
+    const g=H.layout(G,{W,H:HH,padX:14,padY:12,nodeW,nodeH:chips?20:12,selPath,selPair});
+    const TAG={'entity':'EN','max depth':'MD','no candidates':'NC','cycle':'CY'};
+    const trunc=(s,k)=>s.length>k?s.slice(0,k-1)+'…':s;
+    const maxChars=Math.max(8,Math.floor((nodeW-34)/6.4));
+    const failId=G.nodes.filter(n=>n.hop===4)[1]?.id;
+    const newIds=new Set(G.nodes.filter(n=>n.hop===3).slice(0,3).map(n=>n.id));
+    g.nodes.forEach(n=>{const queued=partial&&n.hop===4;
+      n.text=chips?(n.label?trunc(n.label,maxChars):n.short):'';
+      n.tag=chips?(n.seed?'SEED':queued?(run==='running'?'QUEUED':run==='paused'?'PAUSED':run==='failed'&&n.id===failId?'✕ FAIL':'—'):((n.common?'⧉':'')+(TAG[n.stop]||''))):'';
+      n.tagC=run==='failed'&&n.id===failId?'var(--risk-high)':'var(--muted-foreground)';
+      if(!n.cat)n.color='var(--foreground)';
+      n.bg=ends.has(n.id)?'var(--selection-muted)':(queued?'transparent':'var(--card)');
+      n.bd=hi.has(n.id)?'1.5px solid var(--selection)':queued?(run==='failed'&&n.id===failId?'1.5px solid var(--risk-high)':'1px dashed var(--border-strong)'):(n.label?'1px solid '+n.color:'1px solid var(--border-strong)');
+      if(!chips){n.bg=n.cat?n.color:(hi.has(n.id)?'var(--selection)':'var(--card)');n.bd=n.cat?'none':(hi.has(n.id)?'none':'1.5px solid var(--muted-foreground)');}
+      n.pad=chips?'0 5px':'0';n.jc=chips?'flex-start':'center';
+      n.op=queued&&run==='cancelled'?.45:1;
+      n.anim=run==='running'&&newIds.has(n.id)?'cfpulse 1.4s ease-out infinite':'none';
+      n.dotText=!chips&&(n.label||hi.has(n.id)||n.seed)?(n.label?trunc(n.label,11):n.short):'';
+      if(!chips)n.glyph='';
+    });
+    const colHeads=[];for(let c=0;c<=G.maxCol;c++){colHeads.push({x:Math.round(g.colX(c))+4,label:c===G.maxCol?'SEED':'HOP '+(G.maxCol-c),n:G.rowsPerCol[c]+(partial&&c===0?(run==='running'?' queued':run==='paused'?' waiting':run==='cancelled'?' not expanded':' · 1 failed'):'')});}
+    let lab=g.edges.filter(e=>e.onPath||e.sel);
+    if(lab.length>5)lab=lab.sort((a,b)=>b.usd-a.usd).slice(0,5);
+    const labels=lab.map(e=>({label:e.label,lx:e.mx,ly:e.my-(chips?12:9),bg:e.sel?'var(--selection)':'var(--card)',fg:e.sel?'var(--selection-foreground)':'var(--selection)'}));
+    const b=g.pos['0x28c6c06298d514db089934071355e5743bf21d60'];
+    const tip={x:b?Math.min(W-262,b.x+40):0,y:b?b.y+26:0};
+    const showTip=(this.props.showTip===true||this.props.showTip==='true')&&!!b;
+    const nE=g.edges.length;
+    const info=partial?G.nodes.length+' addresses so far · '+nE+' pairs':(chips?'64 addresses · 72 pairs · amounts on the selection; hover any edge':'64 addresses · labels on entities and selection');
+    const on={bg:'var(--foreground)',fg:'var(--background)'},off={bg:'transparent',fg:'var(--foreground)'};
+    const focus=this.props.focus===true||this.props.focus==='true';
+    return {W,H:HH,chips,g,colHeads,labels,tip,showTip,legend:H.legend,streaming:run==='running',newN:3,info,
+      fitBg:focus?off.bg:on.bg,fitFg:focus?off.fg:on.fg,focBg:focus?on.bg:off.bg,focFg:focus?on.fg:off.fg,
+      dChipBg:chips?'var(--muted)':'transparent',dChipFw:chips?600:400,dDotBg:chips?'transparent':'var(--muted)',dDotFw:chips?400:600,
+      tagLegend:chips?'SEED seed · EN entity · MD max depth · NC no candidates · CY cycle · ⧉ common source · ┄ stopped':'■ labelled entity · ○ unlabeled · ┄ stopped · switch to Chips for addresses'};
+  }
+}
+</script>
+</body>
+</html>

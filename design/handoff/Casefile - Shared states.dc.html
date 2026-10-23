@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script><style>body{margin:0;background:#DCD9D2;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#1F4FD1;text-decoration:none}a:hover{text-decoration:underline}*{box-sizing:border-box}@keyframes cfshim{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}}</style></helmet>
+<header style="padding:44px 56px 8px;display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#67635B">CASEFILE · fund-origin-tracer</span><h1 style="margin:0;font:700 36px/1.1 'IBM Plex Sans',sans-serif;color:#1C1B18;letter-spacing:-.02em">Shared states</h1><p style="margin:0;font:400 16px/1.5 'IBM Plex Sans',sans-serif;color:#3A3833;max-width:900px">Tokens, loading skeletons, interaction states and toasts used across every page. Light on the left, dark on the right.</p></header>
+
+<sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+<section style="padding:28px 56px;display:flex;flex-direction:column;gap:20px">
+  <h2 style="margin:0;font:600 18px 'IBM Plex Sans',sans-serif;color:#1C1B18">{{ th.name }}</h2>
+  <div style="{{ th.style }}">
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;max-width:1440px;padding:24px;border-radius:6px;background:var(--background);color:var(--foreground);box-shadow:0 2px 24px rgba(0,0,0,.12)">
+
+    <div id="{{ th.id1 }}" style="grid-column:1 / -1;display:flex;flex-direction:column;gap:10px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">TOKENS · CSS VARIABLES</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12"><div style="width:120px;display:flex;flex-direction:column;gap:4px"><span style="height:36px;border-radius:3px;border:1px solid var(--border-strong);background:{{ t.v }}"></span><span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ t.k }}</span></div></sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;padding-top:6px">
+        <sc-for list="{{ legend }}" as="l" hint-placeholder-count="9"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid {{ l.color }};border-radius:3px;color:{{ l.color }};font-weight:600;font-size:13px"><span>{{ l.g }}</span>{{ l.t }}<span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">--category-{{ l.k }}</span></span></sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;padding-top:6px;font:600 12px 'IBM Plex Mono',monospace">
+        <span style="padding:6px 10px;border:1.5px solid var(--risk-high);color:var(--risk-high);border-radius:4px">▮▮▮ RISK HIGH</span><span style="padding:6px 10px;border:1.5px solid var(--risk-medium);color:var(--risk-medium);border-radius:4px">▮▮▯ RISK MEDIUM</span><span style="padding:6px 10px;border:1.5px solid var(--risk-low);color:var(--risk-low);border-radius:4px">▮▯▯ RISK LOW</span>
+        <span style="width:1px;background:var(--border-strong)"></span>
+        <span style="color:var(--risk-high)">▲ HIGH</span><span style="color:var(--risk-medium)">◆ MED</span><span style="color:var(--risk-low)">▽ LOW</span><span style="color:var(--muted-foreground)">ⓘ INFO</span>
+        <span style="width:1px;background:var(--border-strong)"></span>
+        <span style="color:var(--selection)">● Running</span><span style="color:var(--risk-medium)">❚❚ Paused</span><span style="color:var(--risk-low)">■ Completed</span><span style="color:var(--muted-foreground)">□ Cancelled</span><span style="color:var(--risk-high)">✕ Failed</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">BUTTONS</span>
+      <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:10px;align-items:center;font-size:12px">
+        <span style="color:var(--muted-foreground)">default</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">Open report</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border-strong);font-size:13px;background:var(--card)">Export ▾</span>
+        <span style="color:var(--muted-foreground)">hover</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px;opacity:.86">Open report</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--muted-foreground);font-size:13px;background:var(--muted)">Export ▾</span>
+        <span style="color:var(--muted-foreground)">focus</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px;outline:2px solid var(--selection);outline-offset:2px">Open report</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border-strong);font-size:13px;background:var(--card);outline:2px solid var(--selection);outline-offset:2px">Export ▾</span>
+        <span style="color:var(--muted-foreground)">disabled</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--border-strong);color:var(--muted-foreground);font-weight:600;font-size:13px">Start trace</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border);font-size:13px;color:var(--faint-foreground)">Export ▾</span>
+        <span style="color:var(--muted-foreground)">danger</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--destructive);color:var(--destructive-foreground);font-weight:600;font-size:13px">Delete</span><span style="height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--risk-high);color:var(--risk-high);font-size:13px">■ Cancel</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">ADDRESS · COPY ON CLICK</span>
+      <div style="display:grid;grid-template-columns:70px 1fr;gap:12px;align-items:center;font-size:12px">
+        <span style="color:var(--muted-foreground)">default</span><span style="font:400 13px 'IBM Plex Mono',monospace;text-decoration:underline dotted var(--border-strong);text-underline-offset:3px">0x28c6…1d60</span>
+        <span style="color:var(--muted-foreground)">hover</span><span style="display:flex;align-items:center;gap:8px;position:relative"><span style="font:400 13px 'IBM Plex Mono',monospace;background:var(--muted);padding:1px 4px;border-radius:2px;text-decoration:underline solid var(--foreground);text-underline-offset:3px">0x28c6…1d60</span><span style="font:400 10.5px 'IBM Plex Mono',monospace;background:var(--foreground);color:var(--background);padding:2px 6px;border-radius:3px">0x28c6c06298d514db0899…1d60 · click to copy</span></span>
+        <span style="color:var(--muted-foreground)">focus</span><span style="font:400 13px 'IBM Plex Mono',monospace;outline:2px solid var(--selection);outline-offset:2px;border-radius:2px;justify-self:start;padding:0 2px">0x28c6…1d60</span>
+        <span style="color:var(--muted-foreground)">copied</span><span style="display:flex;align-items:center;gap:8px"><span style="font:400 13px 'IBM Plex Mono',monospace;background:var(--success-muted);padding:1px 4px;border-radius:2px">0x28c6…1d60</span><span style="font:600 11px 'IBM Plex Mono',monospace;color:var(--risk-low)">✓ copied</span></span>
+      </div>
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground);padding-top:6px">INPUTS</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="height:34px;border:1px solid var(--border-strong);border-radius:4px;display:flex;align-items:center;padding:0 10px;font:400 12px 'IBM Plex Mono',monospace;color:var(--faint-foreground);background:var(--muted)">Address</span>
+        <span style="height:34px;border:1px solid var(--selection);border-radius:4px;display:flex;align-items:center;padding:0 10px;font:400 12px 'IBM Plex Mono',monospace;background:var(--muted);box-shadow:0 0 0 3px var(--selection-muted)">0x28c6c06298d5<span style="width:1px;height:16px;background:var(--foreground)"></span></span>
+        <span style="height:34px;border:1px solid var(--risk-high);border-radius:4px;display:flex;align-items:center;padding:0 10px;font:400 12px 'IBM Plex Mono',monospace;background:var(--destructive-muted);color:var(--risk-high)">0x28c6c06298 · ✕ not a valid address</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">GRAPH NODE CHIPS</span>
+      <div style="display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:center;font-size:12px">
+        <span style="color:var(--muted-foreground)">default</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;background:var(--card);border:1px solid var(--border-strong);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace">0x8f61…527f</span>
+        <span style="color:var(--muted-foreground)">entity</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;background:var(--card);border:1px solid var(--category-exchange);color:var(--category-exchange);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace"><span style="font-size:9px">■</span>Binance 14<span style="margin-left:auto;font-size:9px;color:var(--muted-foreground)">EN</span></span>
+        <span style="color:var(--muted-foreground)">hover</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;background:var(--muted);border:1px solid var(--foreground);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace;box-shadow:var(--shadow-popover)">0x8f61…527f</span>
+        <span style="color:var(--muted-foreground)">on path</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;background:var(--card);border:1.5px solid var(--selection);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace">0x2cff…2680<span style="margin-left:auto;font-size:9px;color:var(--muted-foreground)">⧉</span></span>
+        <span style="color:var(--muted-foreground)">selected</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;background:var(--selection-muted);border:1.5px solid var(--selection);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace;outline:2px solid var(--selection);outline-offset:2px">0x1231…4eae</span>
+        <span style="color:var(--muted-foreground)">queued</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;border:1px dashed var(--border-strong);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace">0x922c…39b9<span style="margin-left:auto;font-size:9px;color:var(--muted-foreground)">QUEUED</span></span>
+        <span style="color:var(--muted-foreground)">fetch failed</span><span style="width:120px;height:20px;display:flex;align-items:center;gap:4px;padding:0 4px;border:1.5px solid var(--risk-high);border-radius:3px;font:500 10.5px 'IBM Plex Mono',monospace">0x922c…39b9<span style="margin-left:auto;font-size:9px;color:var(--risk-high)">✕ FAIL</span></span>
+        <span style="color:var(--muted-foreground)">dot (768)</span><span style="display:flex;gap:10px;align-items:center"><span style="width:12px;height:12px;border-radius:2px;background:var(--category-exchange)"></span><span style="width:12px;height:12px;border-radius:2px;border:1.5px solid var(--muted-foreground)"></span><span style="width:12px;height:12px;border-radius:2px;background:var(--selection)"></span><span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">entity · unlabeled · selected</span></span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">TABLE ROWS · TABS</span>
+      <div style="display:grid;grid-template-columns:44px 1fr 1fr;font:400 12px 'IBM Plex Mono',monospace">
+        <span style="padding:6px 8px;border-bottom:1px solid var(--border)">2</span><span style="padding:6px 8px;border-bottom:1px solid var(--border)">0x1231…4eae</span><span style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right">41.979 USDT</span>
+        <span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--muted)">2</span><span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--muted)">0x8f61…527f <span style="color:var(--muted-foreground)">hover</span></span><span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--muted);text-align:right">41.979 USDT</span>
+        <span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--selection-muted);box-shadow:inset 3px 0 0 var(--selection)">2</span><span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--selection-muted)">0x1231…4eae <span style="color:var(--muted-foreground)">selected</span></span><span style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--selection-muted);text-align:right">41.979 USDT</span>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);font-size:13px;padding-top:6px">
+        <span style="padding:8px 12px;border-bottom:2px solid var(--foreground);font-weight:600">Graph</span><span style="padding:8px 12px;color:var(--foreground);background:var(--muted)">Transfers <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">hover</span></span><span style="padding:8px 12px;color:var(--muted-foreground);outline:2px solid var(--selection);outline-offset:-2px;border-radius:3px">Exposure</span>
+      </div>
+      <span style="font-size:12px;color:var(--muted-foreground)">Focus rings are a 2px accent outline, shown for keyboard focus only.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:16px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">TOASTS · BOTTOM RIGHT, 4 S</span>
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:{{ t.bg }};color:{{ t.fg }};border:{{ t.bd }};border-radius:4px;box-shadow:var(--shadow-popover);font-size:13px">
+          <span style="font:600 12px 'IBM Plex Mono',monospace">{{ t.i }}</span><span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-weight:600">{{ t.t }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.s }}</span></span><span style="margin-left:auto;font-size:12px;font-weight:600;text-decoration:underline">{{ t.a }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div id="{{ th.id2 }}" style="grid-column:1 / -1;display:flex;flex-direction:column;gap:10px">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">LOADING SKELETONS · WORKSPACE OPENING A SAVED INVESTIGATION</span>
+      <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--background)">
+        <div style="padding:16px 20px;background:var(--card);border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
+          <span style="width:120px;height:10px;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span>
+          <span style="width:360px;height:20px;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span>
+          <div style="display:flex;gap:8px"><span style="width:90px;height:20px;background:var(--border);border-radius:3px;animation:cfshim 1.2s infinite"></span><span style="width:70px;height:20px;background:var(--border);border-radius:3px;animation:cfshim 1.2s infinite"></span><span style="width:110px;height:20px;background:var(--border);border-radius:3px;animation:cfshim 1.2s infinite"></span><span style="width:420px;height:12px;align-self:center;background:var(--border);border-radius:2px;animation:cfshim 1.2s infinite"></span></div>
+        </div>
+        <div style="display:flex;gap:24px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--border)"><span style="width:50px;height:12px;background:var(--border-strong);border-radius:2px"></span><span style="width:80px;height:12px;background:var(--border);border-radius:2px"></span><span style="width:70px;height:12px;background:var(--border);border-radius:2px"></span><span style="width:110px;height:12px;background:var(--border);border-radius:2px"></span><span style="width:150px;height:12px;background:var(--border);border-radius:2px"></span><span style="width:50px;height:12px;background:var(--border);border-radius:2px"></span></div>
+        <div style="display:grid;grid-template-columns:1fr 360px;min-height:320px">
+          <div style="position:relative;background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:16px 16px;display:grid;grid-template-columns:repeat(8,1fr);gap:18px;padding:28px 18px;align-content:center">
+            <sc-for list="{{ skelCols }}" as="c" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:6px;justify-content:center"><sc-for list="{{ c.rows }}" as="r" hint-placeholder-count="4"><span style="height:18px;border-radius:3px;background:var(--border);animation:cfshim 1.2s infinite"></span></sc-for></div></sc-for>
+            <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:6px 10px;background:var(--card);border:1px solid var(--border-strong);border-radius:4px;font:500 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">Loading result · 64 addresses · 84 transfers</span>
+          </div>
+          <div style="border-left:1px solid var(--border);background:var(--card);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <span style="width:80px;height:10px;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span><span style="width:180px;height:24px;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span>
+            <sc-for list="{{ skelRows }}" as="r" hint-placeholder-count="8"><span style="height:12px;width:{{ r.w }}%;background:var(--border);border-radius:2px;animation:cfshim 1.2s infinite"></span></sc-for>
+          </div>
+        </div>
+        <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:6px;background:var(--card);border-top:1px solid var(--border)">
+          <span style="padding-top:12px;font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">TABLE TABS (TRANSFERS, HISTORY)</span>
+          <sc-for list="{{ skelTable }}" as="r" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:40px 150px 120px 120px 1fr 100px 120px;gap:12px;padding:6px 0;border-bottom:1px solid var(--border)"><sc-for list="{{ r }}" as="c" hint-placeholder-count="7"><span style="height:10px;width:{{ c }}%;background:var(--border);border-radius:2px;animation:cfshim 1.2s infinite"></span></sc-for></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+</sc-for>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.CFT||!window.FOTH){ this.t=setInterval(()=>{ if(window.CFT&&window.FOTH){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const T=window.CFT,H=window.FOTH;
+    const themes=[{name:'Light',id1:'S1',id2:'S2',style:T?T.light:{}},{name:'Dark',id1:'S3',id2:'S4',style:T?T.dark:{}}];
+    const tokens=['--background','--card','--muted','--foreground','--muted-foreground','--faint-foreground','--border','--border-strong','--selection','--selection-muted','--warning','--destructive-muted'].map(k=>({k,v:'var('+k+')'}));
+    const toasts=[{i:'⧉',t:'Copied to clipboard',s:'0x28c6c06298d514db089934071355e5743bf21d60',a:''},{i:'↓',t:'Exported transfers.csv',s:'84 rows · bd9a3f4e',a:'Show'},{i:'⧉',t:'Copied freeze-request list',s:'4 exchange wallets · Coinbase, Binance',a:''},{i:'✕',t:'Export failed',s:'Result is still loading. Try again.',a:'Retry',err:true}]
+      .map(x=>({...x,bg:x.err?'var(--destructive-muted)':'var(--foreground)',fg:x.err?'var(--destructive-muted-foreground)':'var(--background)',bd:x.err?'1px solid var(--destructive-border)':'none'}));
+    const skelCols=[8,7,6,5,4,3,2,1].map(n=>({rows:Array.from({length:n},()=>1)}));
+    const skelRows=[90,70,84,60,78,66,88,52].map(w=>({w}));
+    const skelTable=[0,1,2,3,4].map(i=>[60,80,70,70,50+i*6,60,70]);
+    return {themes,tokens,legend:H?H.legend:[],toasts,skelCols,skelRows,skelTable};
+  }
+}
+</script>
+</body>
+</html>

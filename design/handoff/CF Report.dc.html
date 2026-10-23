@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script></helmet>
+<div style="{{ themeStyle }}">
+<div style="position:relative;width:{{ w }}px;font-family:'IBM Plex Sans',system-ui,sans-serif;background:{{ outerBg }};color:var(--foreground)">
+  <sc-if value="{{ screen }}" hint-placeholder-val="{{ true }}">
+    <dc-import name="CF Topbar" w="{{ w }}" page="report" theme="{{ theme }}" hint-size="100%,44px"></dc-import>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px {{ sidePad }}px;border-bottom:1px solid var(--border);background:var(--card);flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--muted-foreground)">‹ Back to investigation</span><span style="flex:1"></span>
+      <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}"><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">Paper</span><span style="display:flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden;font-size:12px"><span style="padding:4px 10px;background:var(--foreground);color:var(--background)">A4</span><span style="padding:4px 10px;border-left:1px solid var(--border-strong)">Letter</span></span></sc-if>
+      <span style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:13px">Export JSON</span>
+      <span style="height:32px;display:inline-flex;align-items:center;padding:0 14px;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">Print / Save PDF</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ print }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;background:#2B2A27;color:#E8E6E1;font-size:13px"><span style="font-weight:600">Print preview</span><span style="font:400 12px 'IBM Plex Mono',monospace;opacity:.7">A4 · portrait · 6 pages · margins 18 mm · background graphics off</span><span style="flex:1"></span><span style="padding:4px 12px;border:1px solid #55524C;border-radius:4px">Cancel</span><span style="padding:4px 12px;border-radius:4px;background:#E8E6E1;color:#1C1B18;font-weight:600">Save as PDF</span></div>
+  </sc-if>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:{{ outerPad }}">
+    <sc-for list="{{ pages }}" as="pg" hint-placeholder-count="1">
+      <div style="width:{{ pageW }};min-height:{{ pageH }};background:{{ pageBg }};color:{{ pageFg }};box-shadow:{{ pageShadow }};padding:{{ pagePad }};display:flex;flex-direction:column;gap:{{ gap }}px;position:relative;font-size:{{ fs }}px">
+        <sc-if value="{{ pg.runHead }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:space-between;font:400 {{ smallFs }}px 'IBM Plex Mono',monospace;color:var(--muted-foreground);border-bottom:1px solid var(--border);padding-bottom:6px"><span>fund-origin-tracer · Evidence report · Source of funds on Ethereum</span><span>run bd9a3f4e</span></div></sc-if>
+        <sc-if value="{{ pg.summary }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px;padding-bottom:{{ gapS }}px;border-bottom:2px solid var(--foreground)">
+            <span style="font:600 {{ smallFs }}px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--muted-foreground)">EVIDENCE REPORT · SOURCE OF FUNDS</span>
+            <span style="font-weight:700;font-size:{{ h1 }}px;letter-spacing:-.015em;line-height:1.15">Source of funds on Ethereum</span>
+            <span style="font:400 {{ monoFs }}px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground)">run bd9a3f4e-bf0b-401f-a53c-ee83934c8e57 · generated 2026-10-21 18:52 UTC · fund-origin-tracer (self-hosted)</span>
+          </div>
+          <div style="display:grid;grid-template-columns:{{ sumCols }};gap:12px">
+            <div style="border:2px solid var(--risk-medium);padding:10px 12px;display:flex;flex-direction:column;gap:4px"><span style="font:600 {{ smallFs }}px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">RISK LEVEL</span><span style="font:700 {{ h2 }}px 'IBM Plex Mono',monospace;color:var(--risk-medium)">▮▮▯ MEDIUM</span><span style="color:var(--muted-foreground)">2 medium, 2 low, 1 info flag</span></div>
+            <div style="border:1px solid var(--border-strong);padding:10px 12px;display:flex;flex-direction:column;gap:4px"><span style="font:600 {{ smallFs }}px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">EXCHANGE EXPOSURE</span><span style="font:600 {{ h2 }}px 'IBM Plex Mono',monospace">$6,615,527.76</span><span style="color:var(--muted-foreground)">indirect, Coinbase and Binance, ≥3 hops</span></div>
+            <div style="border:1px solid var(--border-strong);padding:10px 12px;display:flex;flex-direction:column;gap:4px"><span style="font:600 {{ smallFs }}px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">TRACE SIZE</span><span style="font:600 {{ h2 }}px 'IBM Plex Mono',monospace">64 · 84</span><span style="color:var(--muted-foreground)">addresses · transfers, depth 6 reached</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <span style="font-weight:600;font-size:{{ h3 }}px;padding-bottom:6px">1. Flags</span>
+            <sc-for list="{{ flags }}" as="f" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:{{ flagCols }};gap:10px;padding:6px 0;border-top:1px solid var(--border)"><span style="font:600 {{ smallFs }}px 'IBM Plex Mono',monospace;color:{{ f.c }}">{{ f.tag }}</span><span><span style="font-weight:600">{{ f.title }}.</span> <span style="color:var(--muted-foreground)">{{ f.detail }}</span></span></div></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.params }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:{{ twoCols }};gap:{{ gap }}px">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">2. Parameters and seeds</span>
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font:400 {{ monoFs }}px/1.5 'IBM Plex Mono',monospace"><span style="color:var(--muted-foreground)">chain</span><span>ethereum</span><span style="color:var(--muted-foreground)">direction</span><span>backward (source of funds)</span><span style="color:var(--muted-foreground)">max depth</span><span>6</span><span style="color:var(--muted-foreground)">max branches</span><span>3</span><span style="color:var(--muted-foreground)">max edges</span><span>120</span><span style="color:var(--muted-foreground)">min USD</span><span>0</span><span style="color:var(--muted-foreground)">through entities</span><span>false</span><span style="color:var(--muted-foreground)">follow unpriced</span><span>false</span><span style="color:var(--muted-foreground)">timeout</span><span>600 s</span><span style="color:var(--muted-foreground)">seed s1 (tx)</span><span style="word-break:break-all">0xe7f7c8836a109082c31d9587904304caa1f004ab056bf5e3b4e40d08d2078f0b</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">3. Data sources</span>
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font:400 {{ monoFs }}px/1.5 'IBM Plex Mono',monospace"><span style="color:var(--muted-foreground)">explorer</span><span>etherscan-v2</span><span style="color:var(--muted-foreground)">prices</span><span>defillama</span><span style="color:var(--muted-foreground)">labels</span><span>bundled 2026-10-20 · local: none</span><span style="color:var(--muted-foreground)">OFAC SDN</span><span>fetched 2026-10-20 20:39:49 UTC</span><span style="color:var(--muted-foreground)">started</span><span>2026-10-21 18:51:52 UTC</span><span style="color:var(--muted-foreground)">finished</span><span>2026-10-21 18:51:58 UTC</span><span style="color:var(--muted-foreground)">requests</span><span>242 API calls · 338 cache hits</span><span style="color:var(--muted-foreground)">policy</span><span>v1 · not overridden</span><span style="color:var(--muted-foreground)">warning</span><span>listing_truncated: at least one address listing hit the page cap</span></div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.exposure }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">4. Exposure</span>
+            <div style="display:grid;grid-template-columns:{{ expCols }};font:400 {{ monoFs }}px 'IBM Plex Mono',monospace;border-top:1px solid var(--foreground)">
+              <sc-for list="{{ expHead }}" as="h" hint-placeholder-count="5"><span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground);text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+              <sc-for list="{{ expRows }}" as="r" hint-placeholder-count="5"><sc-for list="{{ r }}" as="c" hint-placeholder-count="5"><span style="padding:4px 4px;border-bottom:1px solid var(--border);text-align:{{ c.al }};font-weight:{{ c.fw }}">{{ c.v }}</span></sc-for></sc-for>
+            </div>
+            <span style="color:var(--muted-foreground);font-size:{{ smallFs }}px">By entity: Coinbase $6,442,980.81 (1×, ≥7 hops) · Binance $172,546.94 (4×, ≥3 hops) · Wrapped Ether $2,287.87 (3×, ≥7 hops) · Across $1,418.97 (4×, ≥5 hops). Terminal value total $6,686,051.83.</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.touch }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">5. Exchange touchpoints</span>
+            <div style="display:grid;grid-template-columns:{{ tpCols }};font:400 {{ monoFs }}px 'IBM Plex Mono',monospace;border-top:1px solid var(--foreground)">
+              <sc-for list="{{ tpHead }}" as="h" hint-placeholder-count="6"><span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground);text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+              <sc-for list="{{ tpRows }}" as="r" hint-placeholder-count="5"><sc-for list="{{ r }}" as="c" hint-placeholder-count="6"><span style="padding:4px 4px;border-bottom:1px solid var(--border);text-align:{{ c.al }}">{{ c.v }}</span></sc-for></sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.linked }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">6. Linked wallets</span>
+            <span style="color:var(--muted-foreground)">No wallet is shared across seeds (one seed). Common sources within the trace:</span>
+            <div style="display:grid;grid-template-columns:{{ lkCols }};font:400 {{ monoFs }}px 'IBM Plex Mono',monospace;border-top:1px solid var(--foreground)">
+              <span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground)">ADDRESS</span><span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground)">ROLE</span><span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground);text-align:right">COUNTERPARTIES</span><span style="padding:4px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground);text-align:right">USD</span>
+              <sc-for list="{{ linked }}" as="l" hint-placeholder-count="4"><span style="padding:4px 4px;border-bottom:1px solid var(--border)">{{ l.s }}</span><span style="padding:4px 4px;border-bottom:1px solid var(--border)">common source</span><span style="padding:4px 4px;border-bottom:1px solid var(--border);text-align:right">{{ l.n }}</span><span style="padding:4px 4px;border-bottom:1px solid var(--border);text-align:right">{{ l.usd }}</span></sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.tx }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:600;font-size:{{ h3 }}px">{{ pg.txTitle }}</span>
+            <div style="display:grid;grid-template-columns:{{ txCols }};font:400 {{ txFs }}px 'IBM Plex Mono',monospace;border-top:1px solid var(--foreground)">
+              <sc-for list="{{ txHead }}" as="h" hint-placeholder-count="7"><span style="padding:2px 4px;border-bottom:1px solid var(--border-strong);font-weight:600;color:var(--muted-foreground);text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+              <sc-for list="{{ pg.rows }}" as="r" hint-placeholder-count="20"><sc-for list="{{ r }}" as="c" hint-placeholder-count="7"><span style="padding:2.5px 4px;border-bottom:1px solid var(--border);text-align:{{ c.al }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.v }}</span></sc-for></sc-for>
+            </div>
+            <sc-if value="{{ pg.txMore }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted-foreground)">{{ txMoreText }}</span></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pg.method }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px;line-height:1.55"><span style="font-weight:600;font-size:{{ h3 }}px">8. Methodology</span>
+            <span>Starting from the seed transaction, the tracer lists earlier incoming transfers of each address and scores every candidate on four factors: same asset, amount proximity, time proximity and a dust penalty. The highest-scoring candidates are followed, up to 3 branches per address. Every dropped candidate is recorded with its reason (exceeds max branches, same tx, unpriced, self transfer).</span>
+            <span>A branch stops at a labelled entity (trace through entities is off), at max depth 6, when no candidate remains, on a cycle, or on a fetch error. Each stop reason is kept on the edge and counted in the unresolved exposure.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;line-height:1.55"><span style="font-weight:600;font-size:{{ h3 }}px">9. Limitations</span>
+            <span>Tracing is heuristic: funds are fungible and a followed transfer is the best-scoring candidate, not proof that specific coins moved. Labels cover only the bundled set of 2026-10-20 and no local labels. Tokens without a USD price were not followed. One address listing hit the explorer page cap (listing_truncated), so older or newer transfers may be missing. $66,817.24 across 34 branches ends at unlabeled addresses.</span>
+          </div>
+          <div style="padding:10px 12px;border:1px solid var(--border-strong);background:var(--muted);line-height:1.55;font-size:{{ smallFs }}px"><span style="font-weight:600">Disclaimer.</span> This report is generated automatically from public blockchain data, third-party labels and the OFAC SDN list as of the timestamps above. It supports, and does not replace, an analyst's judgement and is not a legal determination of ownership, sanctions status or wrongdoing.</div>
+        </sc-if>
+        <sc-if value="{{ pg.foot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ footInset }};right:{{ footInset }};bottom:22px;display:flex;justify-content:space-between;font:400 {{ smallFs }}px 'IBM Plex Mono',monospace;color:var(--muted-foreground);border-top:1px solid var(--border);padding-top:6px"><span>Powered by Etherscan.io APIs · Tronscan · DefiLlama · OFAC SDN</span><span>page {{ pg.n }} of 6</span></div></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ screen }}" hint-placeholder-val="{{ true }}"><footer style="padding:12px 20px;border-top:1px solid var(--border);font:400 11px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground);text-align:center;background:var(--card)">Powered by Etherscan.io APIs · Tronscan · DefiLlama · OFAC SDN</footer></sc-if>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1200},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;screen&quot;,&quot;print&quot;],&quot;default&quot;:&quot;screen&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;w&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1440&quot;,&quot;768&quot;,&quot;390&quot;],&quot;default&quot;:&quot;1440&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.FOT||!window.CFT){ this.t=setInterval(()=>{ if(window.FOT&&window.CFT){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const P=this.props,mode=P.mode||'screen',theme=mode==='print'?'light':(P.theme||'light');
+    const print=mode==='print';const w=print?1700:+(P.w||1440);const mobile=w<=500,desk=w>=1000;
+    const T=window.CFT;const o={w,theme,themeStyle:T?{...T.theme(theme)}:{},screen:!print,print,notMobile:!mobile,sidePad:mobile?16:20};
+    o.outerBg=print?'#8E8B85':'var(--background)';o.outerPad=print?'32px':mobile?'0':desk?'28px 0 40px':'20px 0 32px';
+    o.pageW=print?'794px':mobile?'100%':desk?'900px':'720px';o.pageH=print?'1123px':'auto';
+    o.pageBg='var(--card)';o.pageShadow=print?'var(--shadow-popover)':mobile?'none':'var(--shadow-page)';
+    o.pagePad=print?'56px 60px 64px':mobile?'20px 16px':desk?'48px 56px':'32px 32px';
+    o.pageFg='var(--foreground)';
+    const pt=v=>+(v*4/3).toFixed(2);o.fs=print?pt(10):14;o.monoFs=print?pt(8.5):mobile?11:12;o.smallFs=print?pt(8.5):mobile?11:12;o.txFs=print?pt(8):mobile?10.5:11;o.h1=print?pt(20):mobile?22:30;o.h2=print?pt(13):mobile?16:18;o.h3=print?pt(11):16;o.gap=print?14:mobile?18:24;o.gapS=print?8:12;o.footInset='60px';
+    o.sumCols=mobile?'1fr':'repeat(3,1fr)';o.twoCols=mobile?'1fr':'1fr 1fr';o.flagCols=print?'58px 1fr':mobile?'1fr':'70px 1fr';
+    if(!window.FOT||!T)return {...o,pages:[]};
+    const d=window.FOT.d1;
+    o.flags=d.flags.map(f=>({...f,tag:T.SEV[f.sev].tag,c:T.SEV[f.sev].c}));
+    const E=d.exposure;o.expCols=mobile?'1.2fr 1fr .6fr':'1.4fr .6fr 1.2fr .8fr 1fr';
+    const L=(v,al,fw)=>({v,al:al||'left',fw:fw||400});
+    o.expHead=(mobile?[['CATEGORY'],['INDIRECT USD','right'],['HOPS','right']]:[['CATEGORY'],['DIRECT','right'],['INDIRECT USD','right'],['COUNT','right'],['MIN HOPS','right']]).map(h=>({t:h[0],al:h[1]||'left'}));
+    const H=window.FOTH;
+    o.expRows=E.byCategory.map(c=>mobile?[L(H.CAT[c.cat].g+' '+c.cat,'left',600),L(c.iU,'right'),L('≥'+c.min,'right')]:[L(H.CAT[c.cat].g+' '+c.cat,'left',600),L(c.dU,'right'),L(c.iU,'right'),L(c.iN,'right'),L('≥'+c.min,'right')]).concat([mobile?[L('○ unresolved','left',600),L(E.unresolved.usd,'right'),L('—','right')]:[L('○ unresolved','left',600),L('—','right'),L(E.unresolved.usd,'right'),L(E.unresolved.n,'right'),L('—','right')]]);
+    o.tpCols=mobile?'1fr 1fr':'.9fr 1fr 1fr 1.3fr 1fr .5fr';
+    o.tpHead=(mobile?[['ENTITY'],['USD','right']]:[['ENTITY'],['EXCHANGE WALLET'],['COUNTERPARTY'],['AMOUNT','right'],['USD','right'],['HOP','right']]).map(h=>({t:h[0],al:h[1]||'left'}));
+    o.tpRows=d.touchpoints.map(t=>mobile?[L('■ '+t.entity+' '+t.exS),L(t.usd,'right')]:[L('■ '+t.entity),L(t.exS),L(t.cpS),L(t.amount+' '+t.sym,'right'),L(t.usd,'right'),L(t.depth,'right')]);
+    o.lkCols='1fr 1fr .8fr .8fr';o.linked=d.linked;
+    o.txCols=mobile?'.3fr 1.4fr 1fr':'.3fr 1.1fr .8fr .8fr 1.1fr .8fr .7fr';
+    o.txHead=(mobile?[['HOP'],['FROM → TO'],['AMOUNT','right']]:[['HOP'],['TIME (UTC)'],['FROM'],['TO'],['AMOUNT','right'],['USD','right'],['STATUS']]).map(h=>({t:h[0],al:h[1]||'left'}));
+    const TX=d.transfers.slice().sort((a,b)=>a.hop-b.hop||b.usdN-a.usdN);
+    const row=t=>mobile?[L(t.hop),L(t.fromS+' → '+t.toS),L(t.amount+' '+t.sym,'right')]:[L(t.hop),L(t.time.replace(' UTC','')),L(t.fromS),L(t.toS),L(t.amount+' '+t.sym,'right'),L(t.usd,'right'),L(t.status==='expanded'?'expanded':t.stop)];
+    if(print){
+      const pg=(n,f)=>({n,runHead:n>1,foot:true,summary:false,params:false,exposure:false,touch:false,linked:false,tx:false,method:false,txMore:false,rows:[],txTitle:'',...f});
+      o.pages=[pg(1,{summary:true}),pg(2,{params:true,exposure:true}),pg(3,{touch:true,linked:true}),pg(4,{tx:true,txTitle:'7. Transfers (1–46 of 84)',rows:TX.slice(0,46).map(row)}),pg(5,{tx:true,txTitle:'7. Transfers (47–84 of 84)',rows:TX.slice(46).map(row)}),pg(6,{method:true})];
+    } else {
+      o.pages=[{n:1,runHead:false,foot:false,summary:true,params:true,exposure:true,touch:true,linked:true,tx:true,method:true,txTitle:'7. Transfers',rows:TX.slice(0,mobile?10:20).map(row),txMore:true}];
+      o.txMoreText='Showing '+(mobile?10:20)+' of 84 · all transfers are included when printed or exported';
+    }
+    return o;
+  }
+}
+</script>
+</body>
+</html>

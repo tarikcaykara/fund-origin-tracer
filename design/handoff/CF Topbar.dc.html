@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><script src="cf-theme.js"></script></helmet>
+<div style="position:relative;z-index:20">
+<sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}">
+  <div style="height:44px;display:flex;align-items:center;gap:28px;padding:0 20px;border-bottom:1px solid var(--border);background:var(--card)">
+    <span style="font:600 14px 'IBM Plex Mono',monospace;letter-spacing:-.01em;color:var(--foreground)">fund-origin-tracer</span>
+    <nav style="display:flex;gap:4px;font-size:13px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3"><span style="padding:4px 8px;border-radius:3px;color:{{ n.c }};font-weight:{{ n.fw }};background:{{ n.bg }}">{{ n.t }}</span></sc-for>
+    </nav>
+    <div style="flex:1"></div>
+    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:4px;width:280px;color:var(--faint-foreground);font-size:12px;background:var(--background)"><span>Search address, tx or label</span><span style="flex:1"></span><span style="font:500 11px 'IBM Plex Mono',monospace;border:1px solid var(--border-strong);border-radius:3px;padding:0 4px">⌘K</span></div>
+    </sc-if>
+    <span style="font-size:12px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--muted-foreground);background:linear-gradient(90deg,var(--muted-foreground) 50%,transparent 50%)"></span>{{ themeLabel }}</span>
+  </div>
+</sc-if>
+<sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+  <div style="height:48px;display:flex;align-items:center;gap:10px;padding:0 6px 0 16px;border-bottom:1px solid var(--border);background:var(--card)">
+    <span style="font:600 13px 'IBM Plex Mono',monospace;color:var(--foreground)">fund-origin-tracer</span>
+    <span style="flex:1"></span>
+    <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--foreground);border-radius:4px;background:{{ burgerBg }}">{{ burger }}</span>
+  </div>
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;right:0;top:48px;height:900px;background:var(--overlay)">
+      <div style="background:var(--card);border-bottom:1px solid var(--border-strong);box-shadow:var(--shadow-popover);display:flex;flex-direction:column;padding:8px 0">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3"><div style="min-height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:16px;color:var(--foreground);font-weight:{{ n.fw }};box-shadow:{{ n.bar }}">{{ n.t }}<span style="flex:1"></span><span style="color:var(--faint-foreground)">›</span></div></sc-for>
+        <div style="height:1px;background:var(--border);margin:8px 16px"></div>
+        <div style="min-height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:14px;color:var(--muted-foreground)">Theme<span style="flex:1"></span><span style="display:flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden;font-size:12px"><span style="padding:6px 12px;background:{{ tLight }};color:{{ tLightFg }}">Light</span><span style="padding:6px 12px;background:{{ tDark }};color:{{ tDarkFg }}">Dark</span><span style="padding:6px 12px">System</span></span></div>
+        <div style="padding:8px 16px 10px;font:400 11px/1.5 'IBM Plex Mono',monospace;color:var(--muted-foreground)">Phone view is read-only. Start traces on a tablet or desktop.</div>
+      </div>
+    </div>
+  </sc-if>
+</sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:60},&quot;w&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1440&quot;,&quot;768&quot;,&quot;390&quot;],&quot;default&quot;:&quot;1440&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;page&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;workspace&quot;,&quot;history&quot;,&quot;report&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals(){
+    const w=+(this.props.w||1440), page=this.props.page||'home', dark=this.props.theme==='dark', open=this.props.menuOpen===true||this.props.menuOpen==='true';
+    const items=[['home','Home'],['history','History']];
+    if(page==='workspace'||page==='report') items.splice(1,0,[page,page==='report'?'Evidence report':'Investigation']);
+    const nav=items.map(([k,t])=>({t,c:k===page?'var(--foreground)':'var(--muted-foreground)',fw:k===page?600:400,bg:k===page?'var(--muted)':'transparent',bar:k===page?'inset 3px 0 0 var(--foreground)':'none'}));
+    return {desk:w>500,wide:w>1000,mobile:w<=500,nav,themeLabel:dark?'Dark':'Light',menuOpen:open,burger:open?'✕':'☰',burgerBg:open?'var(--muted)':'transparent',
+      tLight:dark?'transparent':'var(--foreground)',tLightFg:dark?'var(--foreground)':'var(--background)',tDark:dark?'var(--foreground)':'transparent',tDarkFg:dark?'var(--background)':'var(--foreground)'};
+  }
+}
+</script>
+</body>
+</html>

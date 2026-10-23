@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="cf-theme.js"></script></helmet>
+<div style="{{ themeStyle }}">
+<div style="position:relative;overflow:hidden;width:{{ w }}px;min-height:{{ minH }}px;font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--background);color:var(--foreground);display:flex;flex-direction:column">
+  <dc-import name="CF Topbar" w="{{ w }}" page="history" theme="{{ theme }}" hint-size="100%,44px"></dc-import>
+  <div style="padding:{{ pad }};display:flex;flex-direction:column;gap:14px;flex:1">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-weight:600;font-size:22px;letter-spacing:-.01em">History</span><span style="font-size:13px;color:var(--muted-foreground)">Past investigations stored on this instance.</span><span style="flex:1"></span><sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}"><span style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">+ New investigation</span></sc-if></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid {{ sBd }};border-radius:4px;flex:{{ sFlex }};min-width:200px;max-width:420px;background:var(--card);font-size:13px;color:{{ sC }};box-shadow:{{ sRing }}">⌕ <span>{{ sText }}</span><span style="flex:1"></span><sc-if value="{{ filtered }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted-foreground)">×</span></sc-if></div>
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="2"><span style="height:34px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border:1px solid {{ f.bd }};border-radius:4px;font-size:13px;background:{{ f.bg }}"><span style="color:var(--muted-foreground)">{{ f.k }}</span><span style="font-weight:{{ f.fw }}">{{ f.v }}</span><span style="color:var(--muted-foreground)">▾</span></span></sc-for>
+      <sc-if value="{{ filtered }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--selection);padding:0 6px">Clear filters</span></sc-if>
+    </div>
+    <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:{{ cols }};background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;font-size:13px">
+          <sc-for list="{{ head }}" as="h" hint-placeholder-count="8"><span style="padding:8px 10px;background:var(--muted);border-bottom:1px solid var(--border-strong);font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:{{ h.c }}">{{ h.t }}</span></sc-for>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="2">
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="8"><span style="padding:10px 10px;border-bottom:1px solid var(--border);font-family:{{ c.ff }};font-weight:{{ c.fw }};color:{{ c.c }};background:{{ r.bg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.v }}</span></sc-for>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:4px">
+          <sc-for list="{{ mrows }}" as="r" hint-placeholder-count="2"><div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--border);min-height:60px"><div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:500;font-size:14px">{{ r.title }}</span><span style="font:600 10.5px 'IBM Plex Mono',monospace;color:var(--risk-medium)">▮▮▯ MED</span></div><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ r.meta }}</span></div></sc-for>
+        </div>
+      </sc-if>
+      <div style="display:flex;align-items:center;gap:10px;font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)"><span>{{ pageNote }}</span><span style="flex:1"></span><span style="padding:4px 8px;border:1px solid var(--border-strong);border-radius:3px;opacity:.5">‹ Prev</span><span style="padding:4px 8px;border:1px solid var(--foreground);border-radius:3px;color:var(--foreground)">1</span><span style="padding:4px 8px;border:1px solid var(--border-strong);border-radius:3px;opacity:.5">Next ›</span><sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}"><span>25 per page ▾</span></sc-if></div>
+    </sc-if>
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:72px 24px;text-align:center;background:var(--card);border:1px dashed var(--border-strong);border-radius:4px">
+        <span style="width:44px;height:44px;border:1.5px dashed var(--border-strong);border-radius:4px;display:flex;align-items:center;justify-content:center;font:600 16px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">0</span>
+        <span style="font-weight:600;font-size:16px">No investigations yet</span>
+        <span style="font-size:13px;color:var(--muted-foreground);max-width:420px;line-height:1.5">Traces you start appear here with their parameters, status and risk level. Run a recorded demo to see a finished one.</span>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center"><span style="height:36px;display:inline-flex;align-items:center;padding:0 14px;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">▶ Run a demo</span><sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}"><span style="height:36px;display:inline-flex;align-items:center;padding:0 14px;border-radius:4px;border:1px solid var(--border-strong);font-size:13px">New investigation</span></sc-if></div>
+      </div>
+    </sc-if>
+  </div>
+  <footer style="padding:12px 20px;border-top:1px solid var(--border);font:400 11px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground);text-align:center;background:var(--card)">Powered by Etherscan.io APIs · Tronscan · DefiLlama · OFAC SDN</footer>
+  <sc-if value="{{ confirm }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:var(--overlay);display:flex;align-items:{{ dlgAlign }};justify-content:center;padding:{{ dlgPad }};z-index:40">
+      <div role="dialog" style="width:{{ dlgW }};background:var(--card);border:1px solid var(--border-strong);border-radius:6px;box-shadow:var(--shadow-popover);display:flex;flex-direction:column">
+        <div style="padding:18px 20px 6px;display:flex;flex-direction:column;gap:8px"><span style="font-weight:600;font-size:16px">Delete this investigation?</span><span style="font-size:13px;color:var(--muted-foreground);line-height:1.5">“Source of funds on Ethereum” and its stored result (64 addresses, 84 transfers, 5 flags) will be removed from this instance. Exported files and reports you downloaded are not affected.</span></div>
+        <div style="margin:10px 20px;padding:10px 12px;background:var(--muted);border-radius:4px;font:400 12px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground)">run bd9a3f4e-bf0b-401f-a53c-ee83934c8e57<br>Ethereum · ← source · created 2026-10-21 18:51 UTC</div>
+        <div style="padding:12px 20px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><span style="height:{{ btnH }}px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border:1px solid var(--border-strong);border-radius:4px;font-size:13px;flex:{{ btnFlex }};box-shadow:0 0 0 3px var(--selection-muted)">Cancel</span><span style="height:{{ btnH }}px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border-radius:4px;background:var(--destructive);color:var(--destructive-foreground);font-weight:600;font-size:13px;flex:{{ btnFlex }}">Delete investigation</span></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:700},&quot;w&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1440&quot;,&quot;768&quot;,&quot;390&quot;],&quot;default&quot;:&quot;1440&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;filtered&quot;,&quot;empty&quot;,&quot;confirm&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.CFT){ this.t=setInterval(()=>{ if(window.CFT){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const P=this.props,w=+(P.w||1440),theme=P.theme||'light',state=P.state||'list';
+    const desk=w>=1000,mobile=w<=500;const T=window.CFT;
+    const o={w,theme,themeStyle:T?{...T.theme(theme)}:{},mobile,notMobile:!mobile,minH:mobile?760:desk?640:720};
+    o.pad=desk?'28px 32px':'20px 16px';
+    const filtered=state==='filtered';o.filtered=filtered;
+    o.sText=filtered?'linked':'Search title, seed or address';o.sC=filtered?'var(--foreground)':'var(--faint-foreground)';o.sBd=filtered?'var(--foreground)':'var(--border-strong)';o.sRing=filtered?'0 0 0 3px var(--selection-muted)':'none';o.sFlex=mobile?'1 1 100%':'1';
+    o.filters=[['Chain',filtered?'Ethereum':'All'],['Status',filtered?'Completed':'All']].map(([k,v])=>({k,v,bd:filtered?'var(--foreground)':'var(--border-strong)',bg:filtered?'var(--muted)':'var(--card)',fw:filtered?600:400}));
+    const all=[{title:'Source of funds on Ethereum',chain:'Ethereum',dir:'← Source',seeds:'1 · 0xe7f7…8f0b',status:'■ Completed',risk:'▮▮▯ MEDIUM',created:'2026-10-21 18:51 UTC'},{title:'Linked wallets across two payments',chain:'Ethereum',dir:'← Source',seeds:'2 · 0x8e46…e998 +1',status:'■ Completed',risk:'▮▮▯ MEDIUM',created:'2026-10-21 18:52 UTC'}];
+    let R=state==='empty'?[]:filtered?[all[1]]:all.slice().reverse();
+    o.hasRows=R.length>0;o.isEmpty=!o.hasRows;
+    const cols=desk?[['TITLE','2fr'],['CHAIN','100px'],['DIRECTION','100px'],['SEEDS','150px'],['STATUS','120px'],['RISK','120px'],['CREATED ↓','170px'],['','90px']]:[['TITLE','1.6fr'],['STATUS','110px'],['RISK','104px'],['CREATED ↓','100px'],['','44px']];
+    o.cols=cols.map(c=>c[1]).join(' ');o.head=cols.map(c=>({t:c[0],c:c[0].includes('↓')?'var(--foreground)':'var(--muted-foreground)'}));
+    const mono="'IBM Plex Mono',monospace",sans="'IBM Plex Sans',sans-serif";
+    o.rows=R.map((r,i)=>{const hov=state==='confirm'?r.title==='Source of funds on Ethereum':(i===0&&state==='list');const map={TITLE:[r.title,sans,500,'var(--foreground)'],CHAIN:[r.chain,sans,400,'var(--foreground)'],DIRECTION:[r.dir,sans,400,'var(--foreground)'],SEEDS:[r.seeds,mono,400,'var(--muted-foreground)'],STATUS:[r.status,sans,500,'var(--risk-low)'],RISK:[r.risk,mono,600,'var(--risk-medium)'],'CREATED ↓':[desk?r.created:r.created.slice(5,16),mono,400,'var(--muted-foreground)'],'':[hov?(desk?'Open · 🗑':'🗑'):'⋯',sans,400,hov?'var(--risk-high)':'var(--muted-foreground)']};
+      return {bg:hov?'var(--muted)':'var(--card)',cells:cols.map(c=>{const m=map[c[0]];return {v:m[0],ff:m[1],fw:m[2],c:m[3]};})};});
+    o.rows.forEach(r=>{const last=r.cells[r.cells.length-1];if(last.v.includes('🗑'))last.v=desk?'Open · Delete':'Delete';});
+    o.mrows=R.map(r=>({title:r.title,meta:r.chain+' · '+r.dir.toLowerCase()+' · '+r.seeds.split(' ·')[0]+' seed · '+r.created.slice(5,16)}));
+    o.pageNote=R.length?('1–'+R.length+' of '+R.length+(filtered?' matching · 2 total':'')):'';
+    o.confirm=state==='confirm';o.dlgW=mobile?'100%':'460px';o.dlgAlign=mobile?'flex-end':'center';o.dlgPad=mobile?'0':'24px';o.btnH=mobile?44:36;o.btnFlex=mobile?'1 1 100%':'0 0 auto';
+    return o;
+  }
+}
+</script>
+</body>
+</html>

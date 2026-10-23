@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;color:var(--foreground);background:var(--background)">
+  <sc-if value="{{ provisional }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--selection-muted);color:var(--selection);font-size:12px"><span style="font:600 10.5px 'IBM Plex Mono',monospace">{{ provTag }}</span><span>{{ provText }}</span></div>
+  </sc-if>
+
+  <sc-if value="{{ isTransfers }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);font-size:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;border:1px solid var(--border-strong);border-radius:4px;width:{{ searchW }};color:var(--faint-foreground);background:var(--background)">⌕ Filter by address, tx or asset</div>
+      <sc-for list="{{ tChips }}" as="c" hint-placeholder-count="3"><span style="padding:4px 8px;border:1px solid {{ c.bd }};border-radius:3px;font:500 11px 'IBM Plex Mono',monospace;color:{{ c.fg }}">{{ c.t }}</span></sc-for>
+      <span style="flex:1"></span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ tCount }}</span>
+    </div>
+    <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:{{ tCols }};font:400 12px 'IBM Plex Mono',monospace;background:var(--card)">
+        <sc-for list="{{ tHead }}" as="h" hint-placeholder-count="9"><span style="padding:8px 8px;border-bottom:1px solid var(--border-strong);font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:{{ h.c }};text-align:{{ h.al }};background:var(--muted);position:sticky;top:0">{{ h.t }}</span></sc-for>
+        <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="20">
+          <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="9"><span style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:{{ c.al }};color:{{ c.c }};background:{{ r.bg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:{{ c.sh }}">{{ c.v }}</span></sc-for>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground);border-top:1px solid var(--border);background:var(--card)"><span>{{ tPageNote }}</span><span style="flex:1"></span><span style="padding:2px 8px;border:1px solid var(--border-strong);border-radius:3px">‹ Prev</span><span style="padding:2px 8px;border:1px solid var(--border-strong);border-radius:3px;color:var(--foreground)">Next ›</span></div>
+    </sc-if>
+    <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;padding:8px 16px 16px">
+        <sc-for list="{{ tMob }}" as="r" hint-placeholder-count="8">
+          <div style="display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--border);min-height:56px">
+            <div style="display:flex;justify-content:space-between;font:500 13px 'IBM Plex Mono',monospace"><span>{{ r.amount }} {{ r.sym }}</span><span style="color:var(--muted-foreground);font-weight:400;font-size:12px">{{ r.usd }}</span></div>
+            <div style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ r.fromS }} → {{ r.toS }}</div>
+            <div style="display:flex;gap:8px;font:400 11px 'IBM Plex Mono',monospace;color:var(--faint-foreground)"><span>hop {{ r.hop }}</span><span>{{ r.stat }}</span><span style="margin-left:auto">{{ r.timeS }}</span></div>
+          </div>
+        </sc-for>
+        <span style="padding:12px 0;text-align:center;font-size:13px;color:var(--selection)">Load 20 more</span>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isExposure }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:{{ expCols }};gap:20px;padding:20px">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:10px"><span style="font-weight:600;font-size:14px">By category</span><span style="font-size:12px;color:var(--muted-foreground)">value reaching labelled categories at the end of traced branches</span></div>
+        <div style="display:grid;grid-template-columns:{{ catCols }};font:400 12px 'IBM Plex Mono',monospace;background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+          <sc-for list="{{ catHead }}" as="h" hint-placeholder-count="6"><span style="padding:8px 10px;background:var(--muted);border-bottom:1px solid var(--border-strong);font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground);text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+          <sc-for list="{{ catRows }}" as="r" hint-placeholder-count="4">
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="6"><span style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:{{ c.al }};color:{{ c.c }};font-family:{{ c.ff }};font-weight:{{ c.fw }};background:{{ r.bg }}">{{ c.v }}</span></sc-for>
+          </sc-for>
+        </div>
+        <sc-for list="{{ unresolvedReasons }}" as="u" hint-placeholder-count="2"><div style="display:flex;justify-content:space-between;padding:0 10px;font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)"><span>↳ {{ u.reason }} · {{ u.n }} branches</span><span>{{ u.usd }}</span></div></sc-for>
+        <div style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground);padding:4px 10px">Terminal value total {{ terminal }} · 0 unpriced transfers</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div style="font-weight:600;font-size:14px">By entity</div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:4px">
+          <sc-for list="{{ entities }}" as="x" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;font-size:13px;gap:8px"><span style="color:{{ x.color }};font-weight:600">{{ x.glyph }} {{ x.entity }} <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ x.catT }}</span></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ x.usd }}</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:6px;background:var(--muted);display:flex"><span style="width:{{ x.pct }}%;background:{{ x.color }}"></span></span><span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground);width:118px;text-align:right">{{ x.n }}× · ≥{{ x.min }} hops · {{ x.share }}</span></div>
+            </div>
+          </sc-for>
+          <div style="display:flex;flex-direction:column;gap:4px;padding-top:10px;border-top:1px dashed var(--border-strong)">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted-foreground)"><span>○ Unresolved <span style="font:400 10.5px 'IBM Plex Mono',monospace">unlabeled ends</span></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ unresolved.usd }}</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:6px;background:var(--muted);display:flex"><span style="width:{{ unresolvedPct }}%;background:repeating-linear-gradient(45deg,var(--muted-foreground) 0 2px,transparent 2px 4px)"></span></span><span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground);width:118px;text-align:right">{{ unresolved.n }} branches · {{ unresolvedShare }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLinked }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:80px 24px;text-align:center">
+        <span style="width:44px;height:44px;border:1.5px dashed var(--border-strong);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted-foreground)">⧉</span>
+        <span style="font-weight:600;font-size:16px">No linked wallets found</span>
+        <span style="font-size:13px;color:var(--muted-foreground);max-width:440px;line-height:1.5">No common funder or common destination is shared across seeds: this investigation has one seed. The 4 common sources inside the trace are listed under Flags → Common source within the trace.</span>
+        <span style="margin-top:6px;height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:13px">Add seeds and re-run</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showLinked }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);font-size:12px;flex-wrap:wrap">
+        <span style="padding:4px 8px;border:1px solid var(--foreground);border-radius:3px;font:500 11px 'IBM Plex Mono',monospace">across seeds {{ acrossN }}</span><span style="padding:4px 8px;border:1px solid var(--border-strong);border-radius:3px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">within trace {{ withinN }}</span>
+        <span style="color:var(--muted-foreground)">Seeds: <span style="font-family:'IBM Plex Mono',monospace;color:var(--foreground)">s1 {{ seed1 }}</span> · <span style="font-family:'IBM Plex Mono',monospace;color:var(--foreground)">s2 {{ seed2 }}</span></span>
+      </div>
+      <div style="display:flex;flex-direction:column;padding:12px 16px 16px;gap:8px">
+        <sc-for list="{{ linked }}" as="l" hint-placeholder-count="5">
+          <div style="background:var(--card);border:{{ l.bd }};border-radius:4px;display:flex;flex-direction:column">
+            <div style="display:grid;grid-template-columns:{{ linkCols }};gap:12px;align-items:center;padding:10px 12px;font-size:13px">
+              <span style="font:600 13px 'IBM Plex Mono',monospace;display:flex;gap:8px;align-items:center"><span style="color:var(--muted-foreground)">{{ l.caret }}</span>{{ l.s }}</span>
+              <span style="display:flex;gap:4px;flex-wrap:wrap"><span style="font:500 10.5px 'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid {{ l.roleC }};color:{{ l.roleC }};border-radius:3px">⧉ {{ l.role }}</span><sc-for list="{{ l.seedsL }}" as="s" hint-placeholder-count="2"><span style="font:500 10.5px 'IBM Plex Mono',monospace;padding:2px 6px;background:var(--muted);border-radius:3px">{{ s }}</span></sc-for></span>
+              <sc-if value="{{ l.wide }}" hint-placeholder-val="{{ true }}"><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ l.totals }}</span></sc-if>
+              <span style="font:500 12px 'IBM Plex Mono',monospace;text-align:right">{{ l.usd }}</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground);text-align:right">{{ l.cpN }} in trace · hop ≥{{ l.minDepth }}</span>
+            </div>
+            <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}">
+              <div style="border-top:1px solid var(--border);padding:10px 12px 12px 34px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:baseline;gap:8px;font-size:13px"><span style="font-weight:600">Who else did this wallet pay</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ l.otherN }} outgoing outside the trace · showing 8 by amount</span></div>
+                <div style="display:grid;grid-template-columns:{{ otherCols }};font:400 12px 'IBM Plex Mono',monospace">
+                  <sc-for list="{{ l.other }}" as="o" hint-placeholder-count="8"><span style="padding:4px 0;border-top:1px solid var(--border)">→ {{ o.to }}</span><span style="padding:4px 0;border-top:1px solid var(--border);text-align:right">{{ o.amount }}</span><sc-if value="{{ l.wide }}" hint-placeholder-val="{{ true }}"><span style="padding:4px 0 4px 16px;border-top:1px solid var(--border);color:var(--muted-foreground)">{{ o.time }}</span><span style="padding:4px 0;border-top:1px solid var(--border);color:var(--selection);text-align:right">{{ o.tx }} ↗</span></sc-if></sc-for>
+                </div>
+                <div style="display:flex;gap:8px;font-size:12px"><span style="padding:4px 10px;border:1px solid var(--border-strong);border-radius:4px">Trace forward from {{ l.s }}</span><span style="padding:4px 10px;border:1px solid var(--border-strong);border-radius:4px">Select in graph</span></div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isTouch }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card);flex-wrap:wrap">
+      <span style="font-weight:600;font-size:14px">Origin exchange wallets</span><span style="font-size:12px;color:var(--muted-foreground)">where the traced funds left an exchange; the exchange can identify the account holder</span>
+      <span style="flex:1"></span>
+      <span style="height:32px;display:inline-flex;align-items:center;gap:8px;padding:0 12px;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">⧉ Copy freeze-request list</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px 16px 18px">
+      <sc-for list="{{ tpGroups }}" as="gq" hint-placeholder-count="2">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--muted);border-bottom:1px solid var(--border)"><span style="color:var(--category-exchange);font-weight:600;font-size:13px">■ {{ gq.entity }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ gq.n }} transfers · {{ gq.walletsN }} wallets</span><span style="flex:1"></span><span style="font:500 12px 'IBM Plex Mono',monospace">{{ gq.usd }}</span></div>
+          <sc-for list="{{ gq.rows }}" as="t" hint-placeholder-count="2">
+            <div style="display:grid;grid-template-columns:{{ tpCols }};gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font:400 12px 'IBM Plex Mono',monospace;align-items:center">
+              <span><span style="color:var(--muted-foreground);font-size:10.5px">EXCHANGE </span>{{ t.exS }}</span><span><span style="color:var(--muted-foreground);font-size:10.5px">TO </span>{{ t.cpS }}</span><span style="text-align:right">{{ t.amount }} {{ t.sym }}</span><sc-if value="{{ wideTp }}" hint-placeholder-val="{{ true }}"><span style="text-align:right;color:var(--muted-foreground)">{{ t.usd }}</span><span style="color:var(--muted-foreground)">hop {{ t.depth }}</span><span style="color:var(--muted-foreground)">{{ t.time }}</span><span style="color:var(--selection)">{{ t.txS }} ↗</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px;border:1px dashed var(--border-strong);border-radius:4px;font-size:12px;color:var(--muted-foreground)"><span style="font-weight:600;color:var(--foreground)">Arrival exchange wallets · 0</span><span>This is a source-of-funds trace; arrivals appear on destination-of-funds traces.</span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isFlags }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);font-size:12px;flex-wrap:wrap"><span style="font-weight:600;font-size:14px">5 flags</span><span style="color:var(--muted-foreground)">sorted by severity · each flag lists the rule and the evidence it matched</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px 16px 18px">
+      <sc-for list="{{ flags }}" as="f" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:{{ flagCols }};gap:14px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:4px;align-items:start">
+          <span style="font:600 11px 'IBM Plex Mono',monospace;color:{{ f.c }};padding-top:2px">{{ f.tag }}</span>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><span style="font-weight:600;font-size:14px">{{ f.title }}</span><span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--faint-foreground)">{{ f.id }}</span></div>
+            <span style="font-size:13px;color:var(--muted-foreground);line-height:1.5">{{ f.detail }}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;font:500 11px 'IBM Plex Mono',monospace">
+              <sc-for list="{{ f.ev }}" as="e" hint-placeholder-count="3"><span style="padding:2px 6px;border:1px solid var(--border-strong);border-radius:3px;color:{{ e.c }};text-decoration:underline dotted;text-underline-offset:3px">{{ e.t }}</span></sc-for>
+              <sc-if value="{{ f.moreA }}" hint-placeholder-val="{{ false }}"><span style="padding:2px 6px;color:var(--muted-foreground)">+{{ f.moreN }} more</span></sc-if>
+            </div>
+          </div>
+          <span style="font-size:12px;color:var(--selection);white-space:nowrap;padding-top:2px">{{ f.sel }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1032,&quot;height&quot;:800},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;transfers&quot;,&quot;exposure&quot;,&quot;linked&quot;,&quot;touchpoints&quot;,&quot;flags&quot;],&quot;default&quot;:&quot;transfers&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;w&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1032,&quot;tsType&quot;:&quot;number&quot;},&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;running&quot;,&quot;paused&quot;,&quot;completed&quot;,&quot;cancelled&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;completed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.FOT||!window.FOTH){ this.t=setInterval(()=>{ if(window.FOT&&window.FOTH){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const tab=this.props.tab||'transfers', w=+(this.props.w||1032), run=this.props.run||'completed', empty=this.props.empty===true||this.props.empty==='true';
+    const mobile=w<=500, tablet=w>500&&w<900;
+    const base={isTransfers:tab==='transfers',isExposure:tab==='exposure',isLinked:tab==='linked',isTouch:tab==='touchpoints',isFlags:tab==='flags',mobile,notMobile:!mobile,showEmpty:empty,showLinked:!empty};
+    const F=window.FOT,H=window.FOTH; if(!F||!H) return base;
+    const d=F.d1, out={...base};
+    const partial=run!=='completed';
+    const PROV={running:['● LIVE','Provisional: the trace is still running and this view updates as transfers arrive.'],paused:['❚❚ PAUSED','Provisional: paused at 24 of 120 edges. Resume to continue.'],cancelled:['□ CANCELLED','Partial result: cancelled at 24 of 120 edges. Values cover hops 0–4 only.'],failed:['✕ FAILED','Partial result: the trace failed at hop 4. Values cover what was fetched before the error.']};
+    out.provisional=partial;if(partial){out.provTag=PROV[run][0];out.provText=PROV[run][1];}
+    const TAG={'entity':'EN','max depth':'MD','no candidates':'NC','cycle':'CY'};
+    if(tab==='transfers'){
+      let T=d.transfers.slice();if(partial)T=T.filter(t=>t.hop<=3);
+      T.sort((a,b)=>a.hop-b.hop||b.usdN-a.usdN);
+      const n=T.length;const per=mobile?8:(tablet?16:22);
+      out.searchW=mobile?'100%':'300px';
+      const ex=T.filter(t=>t.status==='expanded').length;
+      out.tChips=[{t:'all '+n,bd:'var(--foreground)',fg:'var(--foreground)'},{t:'expanded '+ex,bd:'var(--border-strong)',fg:'var(--muted-foreground)'},{t:'stopped '+(n-ex),bd:'var(--border-strong)',fg:'var(--muted-foreground)'}];
+      out.tCount='sorted by hop ↑ then USD ↓';
+      const cols=tablet?[['HOP',1,'right','44px'],['FROM → TO',2,'left','1fr'],['AMOUNT',3,'right','150px'],['USD',4,'right','100px'],['STATUS',5,'left','110px']]
+        :[['HOP ↑',1,'right','52px'],['TIME (UTC)',6,'left','150px'],['FROM',7,'left','118px'],['TO',8,'left','118px'],['AMOUNT',3,'right','1fr'],['USD ↓',4,'right','110px'],['SCORE',9,'right','60px'],['STATUS',5,'left','120px'],['TX',10,'left','118px']];
+      out.tCols=cols.map(c=>c[3]).join(' ');
+      out.tHead=cols.map(c=>({t:c[0],al:c[2],c:c[0].includes('↑')||c[0].includes('↓')?'var(--foreground)':'var(--muted-foreground)'}));
+      const sel=d.selTransfer.id;
+      const val=(t,k)=>({1:t.hop,2:t.fromS+' → '+t.toS,3:t.amount+' '+t.sym,4:t.usd,5:t.status==='expanded'?'expanded':'■ '+(TAG[t.stop]||'')+' '+t.stop,6:t.time.replace(' UTC',''),7:t.fromS,8:t.toS,9:t.score===''?'—':t.score,10:t.txS})[k];
+      out.tRows=T.slice(0,per).map((t,i)=>{const isNew=run==='running'&&i>=per-3;const isSel=t.id===sel;return {bg:isSel?'var(--selection-muted)':isNew?'var(--selection-muted)':'var(--card)',cells:cols.map((c,j)=>({v:val(t,c[1]),al:c[2],c:c[1]===5&&t.status!=='expanded'||c[1]===6?'var(--muted-foreground)':c[1]===10?'var(--selection)':'var(--foreground)',sh:j===0&&(isSel||isNew)?'inset 3px 0 0 var(--selection)':'none'}))};});
+      out.tPageNote='1–'+Math.min(per,n)+' of '+n+(run==='running'?' · 3 new rows highlighted':'');
+      out.tMob=T.slice(0,8).map(t=>({...t,stat:t.status==='expanded'?'expanded':'■ '+t.stop,timeS:t.time.slice(5,16)}));
+    }
+    if(tab==='exposure'){
+      const E=d.exposure;out.expCols=mobile||tablet?'1fr':'minmax(0,1.25fr) minmax(0,1fr)';
+      out.catCols=mobile?'1fr auto auto':'1.3fr .8fr 1fr .8fr 1fr .8fr';
+      const hd=mobile?[['CATEGORY','left'],['USD','right'],['MIN HOPS','right']]:[['CATEGORY','left'],['DIRECT','right'],['DIRECT USD','right'],['INDIRECT','right'],['INDIRECT USD','right'],['MIN HOPS','right']];
+      out.catHead=hd.map(h=>({t:h[0],al:h[1]}));
+      const mono="'IBM Plex Mono',monospace",sans="'IBM Plex Sans',sans-serif";
+      const row=(name,color,fw,dn,du,inn,iu,mh,bg)=>({bg,cells:(mobile?[[name,'left',color,sans,fw],[iu,'right','var(--foreground)',mono,400],[mh,'right','var(--muted-foreground)',mono,400]]:[[name,'left',color,sans,fw],[dn,'right','var(--muted-foreground)',mono,400],[du,'right','var(--muted-foreground)',mono,400],[inn,'right','var(--foreground)',mono,400],[iu,'right','var(--foreground)',mono,500],[mh,'right','var(--muted-foreground)',mono,400]]).map(c=>({v:c[0],al:c[1],c:c[2],ff:c[3],fw:c[4]}))});
+      out.catRows=E.byCategory.map(c=>row(H.CAT[c.cat].g+' '+H.CAT[c.cat].t,'var(--category-'+c.cat+')',600,c.dN,c.dU,c.iN,c.iU,'≥'+c.min,'var(--card)')).concat([row('○ Unresolved','var(--muted-foreground)',600,'—','—',E.unresolved.n,E.unresolved.usd,'—','var(--muted)')]);
+      out.unresolvedReasons=E.unresolved.byReason;out.terminal=E.terminalUsd;out.unresolved=E.unresolved;
+      const tot=E.terminalN;const maxU=Math.max(...E.byEntity.map(x=>x.usdN));
+      out.entities=E.byEntity.map(x=>({...x,color:'var(--category-'+x.cat+')',glyph:H.CAT[x.cat].g,catT:H.CAT[x.cat].t,pct:Math.max(1,Math.round(x.usdN/maxU*100)),share:(x.usdN/tot*100).toFixed(x.usdN/tot<.01?2:1)+'%'}));
+      out.unresolvedPct=Math.max(1,Math.round(E.unresolved.usdN/maxU*100));out.unresolvedShare=(E.unresolved.usdN/tot*100).toFixed(1)+'%';
+    }
+    if(tab==='linked'){
+      const L=F.d3.linked;out.acrossN=L.filter(l=>l.across).length;out.withinN=L.length-out.acrossN;
+      out.seed1=F.d3.meta.seeds[0].s;out.seed2=F.d3.meta.seeds[1].s;
+      out.linkCols=mobile?'1fr auto':tablet?'150px 1fr 110px 120px':'150px 330px 1fr 120px 150px';
+      out.otherCols=mobile||tablet?'1fr auto':'140px 160px 1fr 120px';
+      out.linked=L.slice(0,mobile?4:6).map((l,i)=>({...l,open:i===0,caret:i===0?'▾':'▸',bd:i===0?'1.5px solid var(--selection)':'1px solid var(--border)',roleC:l.across?'var(--selection)':'var(--muted-foreground)',role:l.across?'common funder · across seeds':'common source · within trace',seedsL:l.seeds,wide:!mobile&&!tablet}));
+      if(mobile)out.linked.forEach(l=>{l.wide=false;});
+    }
+    if(tab==='touchpoints'){
+      out.tpCols=mobile?'1fr':tablet?'1fr 1fr 1fr':'150px 150px 1fr 110px 60px 170px 110px';out.wideTp=!mobile&&!tablet;
+      const g={};d.touchpoints.forEach(t=>{(g[t.entity]=g[t.entity]||[]).push(t)});
+      out.tpGroups=Object.entries(g).map(([e,rows])=>{const u=rows.reduce((s,t)=>s+parseFloat(t.usd.replace(/[$,]/g,'')),0);return {entity:e,n:rows.length,walletsN:new Set(rows.map(r=>r.ex)).size,usd:'$'+u.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),rows};});
+    }
+    if(tab==='flags'){
+      out.flagCols=mobile?'1fr':'64px 1fr auto';
+      out.flags=d.flags.map(f=>{const S=window.CFT?window.CFT.SEV[f.sev]:{tag:f.sev,c:'var(--foreground)'};const ev=f.ev.slice(0,mobile?2:4).map(e=>({t:e.label?(H.CAT[e.cat].g+' '+e.label):e.s,c:e.cat?'var(--category-'+e.cat+')':'var(--foreground)'}));return {...f,tag:S.tag,c:S.c,ev,moreA:f.nA>ev.length,moreN:f.nA-ev.length,sel:'Select '+f.nA+' addr · '+f.nE+' edges in graph →'};});
+    }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

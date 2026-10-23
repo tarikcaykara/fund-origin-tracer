@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script><style>@keyframes cfspin{to{transform:rotate(360deg)}}@keyframes cfshim{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}</style></helmet>
+<aside style="background:var(--card);display:flex;flex-direction:column;min-width:0;color:var(--foreground);height:100%">
+  <sc-if value="{{ sheet }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:center;padding:8px 0 2px"><span style="width:36px;height:4px;border-radius:2px;background:var(--border-strong)"></span></div></sc-if>
+  <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)">
+    <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">{{ kind }}</span>
+    <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ sub }}</span>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;color:var(--muted-foreground)">‹ ›</span><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted-foreground)">×</span>
+  </div>
+
+  <sc-if value="{{ isAddress }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font:600 16px 'IBM Plex Mono',monospace">{{ ad.short }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">⧉ copy · ↗ etherscan</span></div>
+      <div style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--faint-foreground);word-break:break-all">{{ ad.id }}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;font:500 10.5px 'IBM Plex Mono',monospace">
+        <sc-for list="{{ ad.badges }}" as="b" hint-placeholder-count="3"><span style="padding:2px 6px;border:1px solid {{ b.c }};color:{{ b.c }};border-radius:3px">{{ b.t }}</span></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;font-weight:600">Labels</span>
+        <sc-if value="{{ ad.hasLabel }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+            <span style="color:{{ ad.color }};font-weight:600">{{ ad.glyph }} {{ ad.label }}</span><span style="font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ ad.catT }}</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">entity {{ ad.entity }} · {{ ad.origin }} labels 2026-10-20</span><span></span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--selection)">source: etherscan.io/address/{{ ad.short }} ↗</span><span></span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ ad.noLabel }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:8px 10px;border:1px dashed var(--border-strong);border-radius:4px;font-size:12px;color:var(--muted-foreground);line-height:1.5">No label. Checked bundled labels (2026-10-20), local labels (none loaded) and OFAC SDN (fetched 2026-10-20 20:39 UTC): no match.</div>
+        </sc-if>
+        <span style="font-size:12px;color:var(--muted-foreground);line-height:1.45">{{ ad.note }}</span>
+      </div>
+    </div>
+    <div style="padding:12px 16px 6px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:600;font-size:13px">Transfers in this trace</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ ad.n }} · by USD ▾</span></div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;font:400 12px 'IBM Plex Mono',monospace">
+      <sc-for list="{{ ad.tx }}" as="t" hint-placeholder-count="10">
+        <div style="display:grid;grid-template-columns:16px 1fr auto;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);align-items:center">
+          <span style="color:var(--muted-foreground)">{{ t.dir }}</span><span style="display:flex;flex-direction:column;gap:1px"><span>{{ t.cpS }} <span style="color:var(--muted-foreground)">{{ t.stopTag }}</span></span><span style="font-size:10.5px;color:var(--faint-foreground)">{{ t.time }}</span></span><span style="text-align:right">{{ t.amount }} {{ t.sym }}<br><span style="color:var(--muted-foreground);font-size:10.5px">{{ t.usd }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ ad.more }}" hint-placeholder-val="{{ false }}"><span style="padding:8px 16px;font-size:12px;color:var(--selection)">Show all {{ ad.n }} transfers</span></sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isPair }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px">
+        <div style="padding:8px;border:1px solid var(--category-bridge);border-radius:4px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--category-bridge);font-weight:600">⇄ Across Protocol: Ethereum Spoke Pool V2</span><span style="font:500 12px 'IBM Plex Mono',monospace">0x5c7b…35c5</span><span style="font-size:10.5px;color:var(--muted-foreground)">bridge · EN stopped</span></div>
+        <span style="text-align:center;color:var(--selection)">→</span>
+        <div style="padding:8px;border:1px solid var(--border-strong);border-radius:4px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--muted-foreground)">unlabeled</span><span style="font:500 12px 'IBM Plex Mono',monospace">0x20c5…22d6</span><span style="font-size:10.5px;color:var(--muted-foreground)">hop 4</span></div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="font:600 22px 'IBM Plex Mono',monospace">3× · 400.6957 USDT</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ pairUsd }}</span></div>
+      <span style="font-size:12px;color:var(--muted-foreground);line-height:1.45">All transfers between these two addresses in this trace. Each stopped at the bridge because trace through entities is off.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto auto;column-gap:10px;padding:0 16px;font:400 12px 'IBM Plex Mono',monospace">
+      <span style="padding:8px 0;color:var(--faint-foreground)">time · tx</span><span style="padding:8px 0;color:var(--faint-foreground);text-align:right">amount</span><span style="padding:8px 0;color:var(--faint-foreground);text-align:right">score</span>
+      <sc-for list="{{ pairTx }}" as="t" hint-placeholder-count="3">
+        <span style="padding:6px 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:1px"><span>{{ t.time }}</span><span style="color:var(--selection)">{{ t.txS }} ↗</span></span><span style="padding:6px 0;border-top:1px solid var(--border);text-align:right">{{ t.amount }} {{ t.sym }}<br><span style="color:var(--muted-foreground)">{{ t.usd }}</span></span><span style="padding:6px 0;border-top:1px solid var(--border);text-align:right">{{ t.score }}</span>
+      </sc-for>
+    </div>
+    <div style="padding:12px 16px;display:flex;gap:8px"><span style="height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid var(--border-strong);border-radius:4px;font-size:12px">Select both addresses</span><span style="height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid var(--border-strong);border-radius:4px;font-size:12px">⧉ Copy tx hashes</span></div>
+  </sc-if>
+
+  <sc-if value="{{ isTransfer }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="font:600 26px 'IBM Plex Mono',monospace;letter-spacing:-.02em">{{ tr.amt }}</span><span style="font:600 14px 'IBM Plex Mono',monospace">{{ tr.sym }}</span><span style="font:400 13px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ tr.usd }}</span></div>
+      <div style="display:grid;grid-template-columns:30px 1fr auto;align-items:center;row-gap:6px;font:400 13px 'IBM Plex Mono',monospace">
+        <span style="color:var(--muted-foreground);font-family:'IBM Plex Sans';font-size:11px">from</span><span style="text-decoration:underline dotted var(--border-strong);text-underline-offset:3px">{{ tr.fromS }}</span><span style="font-size:11px;color:var(--muted-foreground)">⧉ copy · ↗ etherscan</span>
+        <span style="color:var(--muted-foreground);font-family:'IBM Plex Sans';font-size:11px">to</span><span style="text-decoration:underline dotted var(--border-strong);text-underline-offset:3px">{{ tr.toS }}</span><span style="font-size:11px;color:var(--muted-foreground)">⧉ copy · ↗ etherscan</span>
+      </div>
+      <div style="display:grid;grid-template-columns:96px 1fr;row-gap:6px;font-size:13px">
+        <span style="color:var(--muted-foreground)">Followed</span><span style="font-family:'IBM Plex Mono',monospace">{{ tr.fromS }} <span style="color:var(--muted-foreground)">(backward)</span></span>
+        <span style="color:var(--muted-foreground)">Time</span><span style="font-family:'IBM Plex Mono',monospace">{{ tr.time }}</span>
+        <span style="color:var(--muted-foreground)">Transaction</span><span style="font-family:'IBM Plex Mono',monospace"><a href="#">{{ tr.txS }} ↗</a></span>
+        <span style="color:var(--muted-foreground)">Depth</span><span style="font-family:'IBM Plex Mono',monospace">{{ tr.hop }}</span>
+        <span style="color:var(--muted-foreground)">Status</span><span><span style="font:500 11px 'IBM Plex Mono',monospace;padding:1px 6px;border:1px solid {{ tr.stC }};color:{{ tr.stC }};border-radius:3px">{{ tr.status }}</span> <span style="color:var(--muted-foreground);font-size:12px">{{ tr.statusNote }}</span></span>
+      </div>
+    </div>
+    <sc-if value="{{ stoppedBox }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border);background:var(--muted)">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font:600 10.5px 'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid var(--border-strong);border-radius:3px">MD</span><span style="font-weight:600">Stopped: max depth 6 reached</span></div>
+        <span style="font-size:12px;color:var(--muted-foreground);line-height:1.5">{{ tr.fromS }} was not expanded. Expanding fetches its earlier transfers and follows up to 3 more branches with the same limits.</span>
+        <sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:10px"><span style="height:34px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:4px;background:var(--foreground);color:var(--background);font-weight:600;font-size:13px">Expand further ← 1 hop</span><span style="font-size:12px;color:var(--muted-foreground)">≈ 3–8 API calls</span></div>
+        </sc-if>
+        <sc-if value="{{ expanding }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px"><span style="height:34px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:4px;background:var(--border-strong);color:var(--foreground);font-weight:600;font-size:13px"><span style="width:12px;height:12px;border:2px solid var(--muted-foreground);border-top-color:var(--foreground);border-radius:50%;animation:cfspin .8s linear infinite"></span>Expanding…</span><span style="font-size:12px;color:var(--selection)">Cancel</span></div>
+            <div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">listing {{ tr.fromS }} · page 1 of ≤5 · 2 API calls · 0 cache hits</div>
+            <div style="height:3px;background:var(--border-strong);border-radius:2px;overflow:hidden"><div style="width:35%;height:100%;background:var(--selection)"></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:4px">
+              <span style="height:12px;width:80%;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span><span style="height:12px;width:64%;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span><span style="height:12px;width:72%;background:var(--border-strong);border-radius:2px;animation:cfshim 1.2s infinite"></span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:600;font-size:13px">Why selected</span><span style="font-size:12px;color:var(--muted-foreground)">{{ tr.rankNote }}</span><span style="flex:1"></span><span style="font:600 18px 'IBM Plex Mono',monospace">{{ tr.score }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">score</span></div>
+      <sc-if value="{{ hasBreakdown }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;height:8px;border-radius:2px;overflow:hidden;background:var(--muted)"><span style="width:50%;background:var(--selection)"></span><span style="width:25%;background:var(--selection);opacity:.7;border-left:1px solid var(--card)"></span><span style="width:22%;background:var(--selection);opacity:.45;border-left:1px solid var(--card)"></span></div>
+        <sc-for list="{{ breakdown }}" as="b" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:1fr 120px 28px;align-items:center;gap:10px;font-size:13px">
+            <span>{{ b.k }}</span><span style="height:4px;background:var(--muted);border-radius:2px;overflow:hidden;display:flex"><span style="width:{{ b.pct }}%;background:var(--foreground)"></span></span><span style="font-family:'IBM Plex Mono',monospace;text-align:right">{{ b.v }}</span>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ noBreakdown }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--muted-foreground)">Per-factor breakdown is stored for the selected transfer only in this recording.</span></sc-if>
+    </div>
+    <div style="padding:16px 16px 8px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:600;font-size:13px">Dropped candidates</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ tr.dropNote }}</span><span style="flex:1"></span><span style="font-size:11px;color:var(--muted-foreground)">sort: score ▾</span></div>
+      <sc-if value="{{ hasDropped }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font:500 10.5px 'IBM Plex Mono',monospace">
+          <span style="padding:2px 6px;border:1px solid var(--foreground);border-radius:3px">all 30</span><span style="padding:2px 6px;border:1px solid var(--border-strong);border-radius:3px;color:var(--muted-foreground)">exceeds max branches 28</span><span style="padding:2px 6px;border:1px solid var(--border-strong);border-radius:3px;color:var(--muted-foreground)">same tx 1</span><span style="padding:2px 6px;border:1px solid var(--border-strong);border-radius:3px;color:var(--muted-foreground)">unpriced 1</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto 34px;font:400 12px 'IBM Plex Mono',monospace;border-top:1px solid var(--border)">
+          <sc-for list="{{ dropped }}" as="d" hint-placeholder-count="10">
+            <div style="display:contents">
+              <div style="padding:4px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:1px"><span>{{ d.amount }} <span style="color:var(--muted-foreground)">{{ d.usd }}</span></span><span style="color:var(--muted-foreground);font-size:10.5px">{{ d.cp }} · {{ d.reason }}</span></div>
+              <div style="padding:4px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center"><span style="font-size:10.5px;padding:1px 4px;border-radius:2px;background:var(--muted);color:var(--muted-foreground)">{{ d.code3 }}</span></div>
+              <div style="padding:4px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;font-weight:500">{{ d.score }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:12px;color:var(--selection);padding:4px 0">{{ moreText }}</span>
+      </sc-if>
+      <sc-if value="{{ noDropped }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--muted-foreground);line-height:1.5">No candidates were evaluated: this edge was not expanded.</span></sc-if>
+    </div>
+  </sc-if>
+</aside>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:408,&quot;height&quot;:900},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;address&quot;,&quot;pair&quot;,&quot;transfer&quot;,&quot;stopped&quot;,&quot;expanding&quot;],&quot;default&quot;:&quot;transfer&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;addr&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1231&quot;,&quot;binance&quot;],&quot;default&quot;:&quot;1231&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;side&quot;,&quot;sheet&quot;],&quot;default&quot;:&quot;side&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;rows&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:10,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.FOT||!window.FOTH){ this.t=setInterval(()=>{ if(window.FOT&&window.FOTH){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const F=window.FOT,H=window.FOTH; const v=this.props.variant||'transfer';
+    const base={isAddress:v==='address',isPair:v==='pair',isTransfer:v==='transfer'||v==='stopped'||v==='expanding',sheet:this.props.mode==='sheet'};
+    if(!F||!H) return base;
+    const d=F.d1, rows=+(this.props.rows||10);
+    const TAG={'entity':'EN','max depth':'MD','no candidates':'NC','cycle':'CY'};
+    const C3={exceeds_max_branches:'branches',same_tx:'same tx',unpriced:'unpriced',self_transfer:'self'};
+    const out={...base};
+    if(v==='address'){
+      const which=this.props.addr||'1231';
+      const A=which==='binance'?d.addrBinance:d.addr1231;const node=d.nodes.find(n=>n.id===A.id);
+      const me=A.id;const tx=A.transfers.slice().sort((a,b)=>b.usdN-a.usdN);
+      const badges=[{t:'hop '+node.hop,c:'var(--border-strong)'}];
+      if(node.stop)badges.push({t:(TAG[node.stop]||'')+' stopped: '+node.stop,c:'var(--muted-foreground)'});
+      if(which==='1231')badges.push({t:'◆ funnel flag',c:'var(--risk-medium)'});
+      badges.push({t:'○ not sanctioned',c:'var(--risk-low)'});
+      const cat=node.cat;
+      out.ad={id:me,short:node.short,badges,hasLabel:!!node.label,noLabel:!node.label,label:node.label,entity:node.entity,origin:node.src,color:cat?'var(--category-'+cat+')':'var(--foreground)',glyph:cat?H.CAT[cat].g:'',catT:cat?H.CAT[cat].t:'',
+        note:which==='1231'?'Linked to 13 distinct addresses within 24 hours. 16 incoming, 1 outgoing in this trace.':'Exchange origin: Binance can identify the account holder. Listed in Exchange touchpoints.',
+        n:tx.length,more:tx.length>rows,tx:tx.slice(0,rows).map(t=>({...t,dir:t.to===me?'←':'→',cpS:t.to===me?t.fromS:t.toS,stopTag:TAG[t.stop]||''}))};
+      out.kind='ADDRESS';out.sub=which==='1231'?'hop 3 · funnel':'exchange origin';
+    }
+    if(v==='pair'){out.kind='ADDRESS PAIR';out.sub='3 transfers';out.pairTx=d.pairAcross.transfers;out.pairUsd='$'+d.pairAcross.transfers.reduce((s,t)=>s+t.usdN,0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+    if(out.isTransfer){
+      if(v==='transfer'){const st=d.selTransfer;
+        out.tr={amt:'41.979',sym:'USDT',usd:'$41.98',fromS:st.fromS,toS:st.toS,time:st.time,txS:st.txS,hop:2,status:'expanded',stC:'var(--border-strong)',statusNote:'→ 3 earlier transfers followed',score:97,rankNote:'Rank 1 among candidates',dropNote:'132 · 30 stored'};
+        out.breakdown=st.breakdown.map(b=>({...b,pct:b.v*2}));out.hasBreakdown=true;out.noBreakdown=false;
+        out.dropped=st.dropped.slice(0,rows).map(x=>({...x,code3:C3[x.code]||x.code}));out.hasDropped=true;out.noDropped=false;out.moreText='Show '+(30-Math.min(rows,30))+' more stored candidates';
+        out.kind='TRANSFER';out.sub='hop 2 · on selected path';out.stoppedBox=false;
+      } else {const t=d.transfers.find(x=>x.id==='e2190e8586d9e320d');
+        out.tr={amt:t.amount,sym:t.sym,usd:t.usd,fromS:t.fromS,toS:t.toS,time:t.time,txS:t.txS,hop:t.hop,status:v==='expanding'?'expanding':'stopped',stC:v==='expanding'?'var(--selection)':'var(--muted-foreground)',statusNote:v==='expanding'?'fetching earlier transfers':'max depth',score:t.score||'—',rankNote:'Selected when its parent was expanded',dropNote:'not expanded yet'};
+        out.hasBreakdown=false;out.noBreakdown=true;out.hasDropped=false;out.noDropped=true;out.stoppedBox=true;out.idle=v==='stopped';out.expanding=v==='expanding';
+        out.kind='TRANSFER';out.sub='hop '+t.hop+' · stopped edge';}
+    }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

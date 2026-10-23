@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="trace-data.js"></script><script src="cf-helpers.js"></script><script src="cf-theme.js"></script><style>@keyframes cfdot{0%,100%{opacity:1}50%{opacity:.3}}</style></helmet>
+<div style="{{ themeStyle }}">
+<div style="position:relative;overflow:hidden;width:{{ w }}px;font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--background);color:var(--foreground)">
+  <dc-import name="CF Topbar" w="{{ w }}" page="workspace" theme="{{ theme }}" menu-open="{{ menuOpen }}" hint-size="100%,44px"></dc-import>
+
+  <div style="padding:{{ hdPad }};display:flex;flex-direction:{{ hdDir }};gap:{{ hdGap }}px;align-items:{{ hdAlign }};border-bottom:1px solid var(--border);background:var(--card);flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;width:{{ hdW }}">
+      <sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;color:var(--muted-foreground);display:flex;gap:6px"><span>Investigations</span><span>/</span><span style="font-family:'IBM Plex Mono',monospace">{{ runShort }}</span></div></sc-if>
+      <div style="display:flex;align-items:center;gap:10px">
+        <h2 style="margin:0;font-weight:600;font-size:{{ titleSize }}px;line-height:1.2;letter-spacing:-.01em;border-bottom:1px dashed var(--border-strong)">{{ title }}</h2>
+        <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:var(--faint-foreground)">✎ Rename</span></sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px">
+        <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:3px;background:var(--muted);font-weight:600;color:{{ runC }}"><span style="font-size:10.5px;animation:{{ runAnim }}">{{ runSq }}</span>{{ runT }}</span>
+        <span style="height:22px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid var(--border);border-radius:3px">Ethereum</span>
+        <span style="height:22px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid var(--border);border-radius:3px">← Source of funds</span>
+        <sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><span style="height:22px;display:inline-flex;align-items:center;padding:0 8px;border:1px dashed var(--border-strong);border-radius:3px;color:var(--muted-foreground)">demo recording</span></sc-if>
+        <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ stats }}</span>
+      </div>
+      <sc-if value="{{ showProgress }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;max-width:560px"><div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:20%;height:100%;background:{{ runC }}"></div></div><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">24 / 120 edges · max depth 6</span></div>
+      </sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:relative">
+      <sc-for list="{{ ctl }}" as="b" hint-placeholder-count="2"><span style="height:34px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border:1px solid {{ b.bd }};border-radius:4px;font-size:13px;font-weight:500;background:{{ b.bg }};color:{{ b.fg }}">{{ b.t }}</span></sc-for>
+      <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1.5px solid {{ riskC }};border-radius:4px;color:{{ riskC }}">
+        <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.02em">{{ riskM }}</span><span style="font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.06em">{{ riskT }}</span>
+      </div>
+      <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <span style="height:34px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:13px;font-weight:500;background:{{ exBg }}">Export <span style="color:var(--muted-foreground)">▾</span></span>
+        <span style="height:34px;display:inline-flex;align-items:center;padding:0 14px;border-radius:4px;font-size:13px;font-weight:600;background:var(--foreground);color:var(--background)">Open report</span>
+      </sc-if>
+      <sc-if value="{{ exportOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;right:110px;top:40px;width:260px;background:var(--card);border:1px solid var(--border-strong);border-radius:4px;box-shadow:var(--shadow-popover);padding:4px;z-index:10;display:flex;flex-direction:column;font-size:13px">
+          <sc-for list="{{ exportItems }}" as="x" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:3px;background:{{ x.bg }};border-top:{{ x.bt }}"><span style="font:600 10.5px 'IBM Plex Mono',monospace;width:34px;color:var(--muted-foreground)">{{ x.f }}</span><span>{{ x.t }}</span><span style="margin-left:auto;font:400 11px 'IBM Plex Mono',monospace;color:var(--faint-foreground)">{{ x.n }}</span></div></sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-for list="{{ banners }}" as="bn" hint-placeholder-count="1">
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 20px;background:{{ bn.bg }};border-bottom:1px solid {{ bn.bd }};font-size:12px;color:{{ bn.fg }};flex-wrap:wrap">
+      <span style="font:600 11px 'IBM Plex Mono',monospace;padding-top:1px">{{ bn.tag }}</span><span style="flex:1;min-width:200px;line-height:1.5">{{ bn.text }}</span>
+      <sc-for list="{{ bn.actions }}" as="a" hint-placeholder-count="1"><span style="font-weight:600;text-decoration:underline;text-underline-offset:2px">{{ a }}</span></sc-for>
+    </div>
+  </sc-for>
+
+  <div style="display:flex;align-items:flex-end;gap:{{ tabGap }};padding:{{ tabPad }};border-bottom:1px solid var(--border);background:var(--card);font-size:13px;white-space:nowrap;flex-wrap:{{ tabWrap }};row-gap:6px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6"><span style="padding:{{ t.pad }};border-bottom:{{ t.bb }};font-weight:{{ t.fw }};color:{{ t.c }};background:{{ t.bg }};border-radius:{{ t.rad }}">{{ t.t }} <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted-foreground)">{{ t.n }}</span></span></sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:{{ bodyCols }};min-height:{{ bodyMinH }}px;position:relative">
+    <div style="min-width:0;border-right:{{ contentBr }}">
+      <sc-if value="{{ isGraph }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+          <dc-import name="CF Graph" w="{{ contentW }}" h="{{ graphH }}" density="{{ density }}" run="{{ run }}" selection="{{ graphSel }}" show-tip="{{ showTip }}" hint-size="100%,700px"></dc-import>
+        </sc-if>
+        <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+            <div style="padding:10px 12px;border:1px dashed var(--border-strong);border-radius:4px;font-size:13px;color:var(--muted-foreground);line-height:1.5">The graph is read-only on phones. This is the highest-value path from the seed back to an exchange.</div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ chain }}" as="c" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:18px 1fr;column-gap:12px">
+                  <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:{{ c.rad }};background:{{ c.dot }};border:1.5px solid {{ c.dotBd }};margin-top:4px"></span><span style="flex:1;width:1.5px;background:{{ c.line }}"></span></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;padding-bottom:14px;min-height:56px">
+                    <span style="font-weight:600;font-size:14px;color:{{ c.color }}">{{ c.title }}</span>
+                    <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ c.addr }}</span>
+                    <span style="font:500 12px 'IBM Plex Mono',monospace">{{ c.out }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="padding:10px;border:1px solid var(--border);border-radius:4px;background:var(--card);display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'IBM Plex Mono',monospace">64</span><span style="font-size:12px;color:var(--muted-foreground)">addresses</span></div>
+              <div style="padding:10px;border:1px solid var(--border);border-radius:4px;background:var(--card);display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'IBM Plex Mono',monospace">84</span><span style="font-size:12px;color:var(--muted-foreground)">transfers · 72 pairs</span></div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ isOther }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="CF Tab Content" tab="{{ tab }}" w="{{ contentW }}" run="{{ run }}" empty="{{ empty }}" hint-size="100%,700px"></dc-import>
+      </sc-if>
+    </div>
+    <sc-if value="{{ sidePanel }}" hint-placeholder-val="{{ false }}">
+      <dc-import name="CF Detail Panel" variant="{{ panel }}" addr="{{ addr }}" rows="{{ rows }}" mode="side" hint-size="408px,800px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ sheetPanel }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;top:0;bottom:0;right:0;width:{{ sheetW }};border-left:1px solid var(--border-strong);box-shadow:var(--shadow-sheet);overflow:hidden;z-index:4;background:var(--card)">
+        <dc-import name="CF Detail Panel" variant="{{ panel }}" addr="{{ addr }}" rows="{{ rows }}" mode="{{ sheetMode }}" hint-size="100%,100%"></dc-import>
+      </div>
+    </sc-if>
+  </div>
+
+  <footer style="padding:12px 20px;border-top:1px solid var(--border);font:400 11px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--card)"><span>Powered by Etherscan.io APIs · Tronscan · DefiLlama · OFAC SDN</span><sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><span>labels 2026-10-20 · OFAC fetched 2026-10-20 20:39 UTC</span></sc-if></footer>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:{{ tL }};right:{{ tR }};bottom:{{ tB }};display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--foreground);color:var(--background);border-radius:4px;box-shadow:var(--shadow-popover);font-size:13px;z-index:30;max-width:360px">
+      <span style="font:600 12px 'IBM Plex Mono',monospace">{{ toastIcon }}</span><span style="display:flex;flex-direction:column;gap:1px"><span style="font-weight:600">{{ toastT }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;opacity:.7">{{ toastS }}</span></span><span style="margin-left:8px;opacity:.6">×</span>
+    </div>
+  </sc-if>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1000},&quot;w&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1440&quot;,&quot;768&quot;,&quot;390&quot;],&quot;default&quot;:&quot;1440&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;graph&quot;,&quot;transfers&quot;,&quot;exposure&quot;,&quot;linked&quot;,&quot;touchpoints&quot;,&quot;flags&quot;],&quot;default&quot;:&quot;graph&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;running&quot;,&quot;paused&quot;,&quot;completed&quot;,&quot;cancelled&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;completed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;panel&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;address&quot;,&quot;pair&quot;,&quot;transfer&quot;,&quot;stopped&quot;,&quot;expanding&quot;],&quot;default&quot;:&quot;transfer&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;addr&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1231&quot;,&quot;binance&quot;],&quot;default&quot;:&quot;1231&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;toast&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;copied&quot;,&quot;exported&quot;,&quot;freeze&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;exportOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showTip&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.FOT||!window.CFT){ this.t=setInterval(()=>{ if(window.FOT&&window.CFT&&window.FOTH){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const P=this.props, w=+(P.w||1440), theme=P.theme||'light', tab=P.tab||'graph', run=P.run||'completed', panel=P.panel||'none';
+    const desk=w>=1000, tab768=w>500&&w<1000, mobile=w<=500;
+    const T=window.CFT; const themeStyle=T?{...T.theme(theme)}:{};
+    const out={w,theme,tab,run,panel,addr:P.addr||'1231',empty:P.empty===true||P.empty==='true',themeStyle,desk,mobile,notMobile:!mobile,menuOpen:P.menuOpen===true||P.menuOpen==='true',isGraph:tab==='graph',isOther:tab!=='graph'};
+    if(!T||!window.FOT) return out;
+    const d3=tab==='linked'&&!out.empty;
+    const R=T.RUN[run];
+    out.title=d3?'Linked wallets across two payments':'Source of funds on Ethereum';
+    out.runShort=d3?'d3 · 2 seeds':'bd9a3f4e';out.titleSize=desk?22:18;
+    out.hdDir=mobile?'column':'row';out.hdGap=mobile?10:16;out.hdAlign=mobile?'stretch':'flex-start';out.hdW=mobile?'100%':'auto';out.hdPad=desk?'16px 20px 12px':mobile?'12px 16px':'12px 16px';
+    out.runT=R.t;out.runSq=R.sq;out.runC=R.c;out.runAnim=run==='running'?'cfdot 1.2s infinite':'none';
+    const S={running:'24 expanded · 9 queued · 151 API calls · 212 cache hits · 0:03',paused:'24 expanded · 9 queued · 151 API calls · paused after 0:03',cancelled:'24 expanded · 9 not expanded · 151 API calls · cancelled after 0:03',failed:'24 expanded · 1 failed · 158 API calls · failed after 0:04',completed:d3?'117 transfers · 63 expanded · 0 queued · 336 API calls · 528 cache hits · 7s':'84 transfers · 39 expanded · 0 queued · 242 API calls · 338 cache hits · 5s'};
+    out.stats=mobile?S[run].split(' · ').slice(0,2).join(' · '):S[run];
+    out.showProgress=run!=='completed';
+    const btn=(t,kind)=>({t,bd:kind==='p'?'var(--foreground)':kind==='d'?'var(--risk-high)':'var(--border-strong)',bg:kind==='p'?'var(--foreground)':'var(--card)',fg:kind==='p'?'var(--background)':kind==='d'?'var(--risk-high)':'var(--foreground)'});
+    const C={running:[btn('❚❚ Pause'),btn('■ Cancel','d')],paused:[btn('▶ Resume','p'),btn('■ Cancel','d')],cancelled:[btn('↻ Re-run')],failed:[btn('↻ Retry failed','p')],completed:[]};
+    out.ctl=mobile&&run!=='running'&&run!=='paused'?[]:C[run];
+    const risk=T.RISK.medium;out.riskC=risk.c;out.riskM=risk.m;out.riskT=(mobile?'':'RISK ')+risk.t+(run!=='completed'&&desk?' · provisional':'');
+    out.exportOpen=P.exportOpen===true||P.exportOpen==='true';out.exBg=out.exportOpen?'var(--muted)':'var(--card)';
+    out.exportItems=[['JSON','Full result','bd9a3f4e.json'],['CSV','Transfers','84 rows'],['CSV','Addresses','64 rows'],['CSV','Exposure','12 rows'],['CSV','Exchange touchpoints','5 rows']].map((x,i)=>({f:x[0],t:x[1],n:x[2],bg:i===1?'var(--muted)':'transparent',bt:i===1?'1px solid var(--border)':'none'}));
+    const B=[];
+    if(run==='completed')B.push({tag:'△ listing_truncated',text:'At least one address listing hit the page cap; older or newer transfers may be missing. Raise EXPLORER_MAX_PAGES for deeper listings.',bg:'var(--warning)',bd:'var(--warning-border)',fg:'var(--warning-foreground)',actions:[]});
+    if(run==='cancelled')B.push({tag:'□ Cancelled',text:'Cancelled by you after 24 of 120 edges. Partial results are kept; 9 queued edges were not expanded and carry the stop reason "cancelled".',bg:'var(--muted)',bd:'var(--border-strong)',fg:'var(--foreground)',actions:['Re-run with same limits']});
+    if(run==='failed')B.push({tag:'✕ Trace failed',text:'Etherscan returned HTTP 429 (rate limit) for 0x922c…39b9 after 5 retries. The edge carries the stop reason "fetch_failed"; 24 expanded edges are kept.',bg:'var(--destructive-muted)',bd:'var(--destructive-border)',fg:'var(--destructive-muted-foreground)',actions:['Retry failed','Copy error']});
+    if(run==='paused')B.push({tag:'❚❚ Paused',text:'No API calls are made while paused. 9 edges are queued at hop 4.',bg:'var(--warning)',bd:'var(--warning-border)',fg:'var(--warning-foreground)',actions:['Resume']});
+    out.banners=mobile?B.map(b=>({...b,text:b.text.split('. ')[0]+'.'})):B;
+    const counts=d3?{transfers:117,linked:10,touchpoints:3,flags:7}:{transfers:run==='completed'?84:41,linked:out.empty?0:4,touchpoints:run==='completed'?5:4,flags:run==='completed'?5:3};
+    const tabsDef=[['graph',mobile?'Path':'Graph',''],['transfers','Transfers',counts.transfers],['exposure','Exposure',''],['linked',mobile||tab768?'Linked':'Linked wallets',counts.linked],['touchpoints',desk?'Exchange touchpoints':'Touchpoints',counts.touchpoints],['flags','Flags',counts.flags]];
+    out.tabs=tabsDef.map(([k,t,n])=>{const a=k===tab;return mobile?{t,n,pad:'6px 12px',bb:'none',fw:a?600:400,c:a?'var(--background)':'var(--foreground)',bg:a?'var(--foreground)':'transparent',rad:'9999px'}:{t,n,pad:desk?'10px 14px':'8px 10px',bb:a?'2px solid var(--foreground)':'2px solid transparent',fw:a?600:400,c:a?'var(--foreground)':'var(--muted-foreground)',bg:'transparent',rad:'0'};});
+    out.tabWrap=mobile?'wrap':'nowrap';out.tabPad=mobile?'8px 10px':desk?'0 20px':'0 8px';out.tabGap=mobile?'4px':'0';
+    const side=desk&&panel!=='none';
+    out.sidePanel=side;out.sheetPanel=!desk&&panel!=='none';
+    out.bodyCols=side?'minmax(0,1fr) 408px':'minmax(0,1fr)';out.contentBr=side?'1px solid var(--border)':'none';
+    out.contentW=side?w-409:w;
+    out.graphH=desk?620:560;out.density=desk?'chips':'dots';
+    out.graphSel=panel==='none'?'transfer':panel==='expanding'?'stopped':panel;
+    out.showTip=P.showTip===true||P.showTip==='true';
+    out.sheetW=mobile?'100%':'380px';out.sheetMode=mobile?'sheet':'side';out.rows=mobile?6:desk?12:8;
+    out.bodyMinH=mobile?(panel!=='none'?760:300):desk?740:680;
+    const toast=P.toast||'none';out.hasToast=toast!=='none';
+    const TT={copied:['⧉','Copied to clipboard','0x28c6c06298d514db089934071355e5743bf21d60'],exported:['↓','Exported transfers.csv','84 rows · 18.4 KB'],freeze:['⧉','Copied freeze-request list','4 exchange wallets · Coinbase, Binance']};
+    if(out.hasToast){out.toastIcon=TT[toast][0];out.toastT=TT[toast][1];out.toastS=TT[toast][2];}
+    out.tL=mobile?'12px':'auto';out.tR=mobile?'12px':'20px';out.tB=mobile?'60px':'56px';
+    if(mobile&&window.FOT){const d=window.FOT.d1;const Tt=id=>d.transfers.find(t=>t.id===id);const t1=Tt('e189f910f5e621bb2'),t2=Tt('e060f2b0d1104c47b'),t3=Tt('e3a432c49aef572a9');
+      out.chain=[{title:'■ Binance 14',addr:t1.fromS+' · exchange origin · hop 3',out:'↓ '+t1.amount+' '+t1.sym,color:'var(--category-exchange)',dot:'var(--category-exchange)',dotBd:'var(--category-exchange)',rad:'2px',line:'var(--border-strong)'},
+        {title:'unlabeled',addr:t2.fromS+' · hop 2',out:'↓ '+t2.amount+' '+t2.sym,color:'var(--muted-foreground)',dot:'transparent',dotBd:'var(--muted-foreground)',rad:'50%',line:'var(--border-strong)'},
+        {title:'⧉ common source',addr:t3.fromS+' · hop 1 · $53,184 to 3 addresses',out:'↓ '+t3.amount+' '+t3.sym,color:'var(--foreground)',dot:'transparent',dotBd:'var(--foreground)',rad:'50%',line:'var(--border-strong)'},
+        {title:'SEED subject',addr:t3.toS+' · tx '+t3.txS,out:'',color:'var(--foreground)',dot:'var(--foreground)',dotBd:'var(--foreground)',rad:'50%',line:'transparent'}];}
+    return out;
+  }
+}
+</script>
+</body>
+</html>

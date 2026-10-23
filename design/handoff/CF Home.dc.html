@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="cf-theme.js"></script></helmet>
+<div style="{{ themeStyle }}">
+<div style="position:relative;overflow:hidden;width:{{ w }}px;font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--background);color:var(--foreground)">
+  <dc-import name="CF Topbar" w="{{ w }}" page="home" theme="{{ theme }}" menu-open="{{ menuOpen }}" hint-size="100%,44px"></dc-import>
+  <sc-if value="{{ noKey }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:10px 20px;display:flex;align-items:flex-start;gap:12px;background:var(--warning);border-bottom:1px solid var(--warning-border);font-size:13px;color:var(--warning-foreground);flex-wrap:wrap;line-height:1.5">
+      <span style="font:600 12px 'IBM Plex Mono',monospace;padding-top:1px">△ No explorer API key</span>
+      <span style="flex:1;min-width:220px">Ethereum, Polygon and Arbitrum need <span style="font-family:'IBM Plex Mono',monospace;background:var(--muted);padding:1px 4px;border-radius:3px">ETHERSCAN_API_KEY</span>. TRON works without a key. Recorded demos run offline.</span>
+      <span style="text-decoration:underline;font-weight:600">Setup guide</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ demosTop }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:{{ pad }};display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--muted-foreground)">START WITH A RECORDED DEMO</span><span style="font-size:13px;color:var(--muted-foreground)">Replay a recorded scenario without spending any API quota.</span></div>
+      <div style="display:grid;grid-template-columns:{{ demoCols }};gap:16px">
+        <sc-for list="{{ demos }}" as="dm" hint-placeholder-count="3">
+          <div style="border:1px solid var(--border-strong);border-radius:6px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;gap:8px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)"><span>{{ dm.meta }}</span><span>{{ dm.size }}</span></div>
+            <div style="font-weight:600;font-size:16px">{{ dm.title }}</div>
+            <div style="font-size:13px;line-height:1.5;color:var(--muted-foreground);flex:1">{{ dm.text }}</div>
+            <span style="align-self:flex-start;height:36px;display:inline-flex;align-items:center;padding:0 14px;background:var(--foreground);color:var(--background);border-radius:4px;font-weight:600;font-size:13px">{{ dm.cta }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:grid;grid-template-columns:{{ mainCols }};gap:24px;padding:{{ pad2 }}">
+    <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
+      <div style="border:1px solid var(--border);border-radius:6px;background:var(--card);opacity:{{ formOp }}">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-weight:600;font-size:18px">New investigation</span><span style="font-size:13px;color:var(--muted-foreground)">Trace where funds came from, or where they went, starting from transactions or addresses.</span></div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:grid;grid-template-columns:{{ rowCols }};gap:20px">
+            <div style="display:flex;flex-direction:column;gap:6px;position:relative"><span style="font-size:12px;font-weight:500">Chain</span>
+              <div style="height:36px;border:1px solid {{ chainBd }};border-radius:4px;display:flex;align-items:center;padding:0 10px;gap:8px;font-size:13px;background:var(--muted);box-shadow:{{ chainRing }}"><span>Ethereum</span><span style="font:500 10.5px 'IBM Plex Mono',monospace;color:{{ keyC }};border:1px solid {{ keyC }};padding:1px 4px;border-radius:3px">{{ keyT }}</span><span style="flex:1"></span><span style="color:var(--muted-foreground)">▾</span></div>
+              <sc-if value="{{ chainOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;left:0;right:0;top:64px;background:var(--card);border:1px solid var(--border-strong);border-radius:4px;box-shadow:var(--shadow-popover);padding:4px;z-index:5;font-size:13px">
+                  <sc-for list="{{ chains }}" as="c" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:3px;background:{{ c.bg }}"><span style="width:14px">{{ c.chk }}</span><span>{{ c.t }}</span><span style="margin-left:auto;font:500 10.5px 'IBM Plex Mono',monospace;color:{{ c.kc }}">{{ c.k }}</span></div></sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:500">Direction</span>
+              <div style="display:flex;min-height:36px;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden;font-size:13px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--foreground);color:var(--background);font-weight:600;padding:6px">← Source of funds</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-left:1px solid var(--border-strong);padding:6px">Destination of funds →</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;gap:8px;flex-wrap:wrap"><span style="font-weight:500">Seeds <span style="color:var(--muted-foreground);font-weight:400">one per line, 1–20 tx hashes or addresses</span></span><span style="font-family:'IBM Plex Mono',monospace;color:{{ seedCountC }}">{{ seedCount }}</span></div>
+            <div style="border:1px solid {{ taBd }};border-radius:4px;background:var(--muted);font:400 13px/26px 'IBM Plex Mono',monospace;padding:6px 0;min-height:96px;box-shadow:{{ taRing }}">
+              <sc-for list="{{ lines }}" as="l" hint-placeholder-count="2">
+                <div style="display:flex;padding:0 10px;gap:12px;background:{{ l.bg }};box-shadow:{{ l.bar }};min-width:0">
+                  <span style="color:{{ l.nc }};width:14px;text-align:right;flex:none">{{ l.n }}</span>
+                  <span style="text-decoration:{{ l.deco }};text-underline-offset:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ l.v }}</span>
+                  <span style="margin-left:auto;color:{{ l.mc }};font-size:11px;white-space:nowrap;flex:none">{{ l.msg }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ placeholder }}" hint-placeholder-val="{{ false }}"><div style="padding:0 10px 0 36px;color:var(--faint-foreground)">Transaction hashes or addresses</div></sc-if>
+            </div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:4px">
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px;border-bottom:{{ advBb }}"><span>{{ advCaret }}</span><span style="font-weight:500">Advanced limits</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">depth 6 · branches 3 · edges 120 · min $0</span></div>
+            <sc-if value="{{ advOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 12px;display:grid;grid-template-columns:{{ advCols }};gap:14px">
+                <sc-for list="{{ limits }}" as="x" hint-placeholder-count="4"><label style="display:flex;flex-direction:column;gap:4px;font-size:12px"><span style="color:var(--muted-foreground)">{{ x.t }}</span><span style="height:32px;border:1px solid var(--border-strong);border-radius:4px;display:flex;align-items:center;padding:0 10px;font-family:'IBM Plex Mono',monospace;background:var(--muted)">{{ x.v }}</span></label></sc-for>
+                <div style="grid-column:1 / -1;display:grid;grid-template-columns:{{ togCols }};gap:14px">
+                  <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px"><span style="width:30px;height:18px;border-radius:9999px;background:var(--border-strong);position:relative;flex:none"><span style="position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--card)"></span></span><span><span style="font-weight:500">Trace through entities</span><br><span style="color:var(--muted-foreground)">Off: stop at exchanges, bridges and other labelled entities.</span></span></div>
+                  <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px"><span style="width:30px;height:18px;border-radius:9999px;background:var(--border-strong);position:relative;flex:none"><span style="position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--card)"></span></span><span><span style="font-weight:500">Follow tokens without a USD price</span><br><span style="color:var(--muted-foreground)">Off: spam and airdrop tokens are not followed.</span></span></div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="height:38px;display:inline-flex;align-items:center;gap:10px;padding:0 18px;border-radius:4px;background:{{ startBg }};color:{{ startFg }};font-weight:600;font-size:13px">Start trace <span style="font:400 11px 'IBM Plex Mono',monospace;opacity:.7">⌘↵</span></span><span style="font-size:12px;color:{{ hintC }}">{{ startHint }}</span></div>
+        </div>
+      </div>
+    </sc-if>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div style="border:1px solid var(--border);border-radius:6px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:600;font-size:16px">Screen an address</div>
+        <div style="font-size:13px;color:var(--muted-foreground);line-height:1.5">Checks the Ethereum address against bundled labels, local labels and the OFAC SDN list. No explorer calls.</div>
+        <div style="display:flex;gap:8px"><span style="flex:1;min-width:0;height:{{ inH }}px;border:1px solid var(--border-strong);border-radius:4px;display:flex;align-items:center;padding:0 10px;font:400 12px 'IBM Plex Mono',monospace;background:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:{{ scrInC }}">{{ scrIn }}</span><span style="height:{{ inH }}px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--border-strong);border-radius:4px;font-weight:600;font-size:13px">Screen</span></div>
+        <sc-if value="{{ hasScreen }}" hint-placeholder-val="{{ false }}">
+          <div style="border:{{ scr.bd }};border-radius:4px;display:flex;flex-direction:column;background:{{ scr.bg }}">
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-wrap:wrap"><span style="color:{{ scr.lc }};font-weight:600;font-size:13px">{{ scr.label }}</span><span style="font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ scr.meta }}</span></div>
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap"><span style="font:600 11px 'IBM Plex Mono',monospace;padding:2px 6px;border:1.5px solid {{ scr.sc }};color:{{ scr.sfg }};background:{{ scr.sbg }};border-radius:3px">{{ scr.sdn }}</span><span style="color:var(--muted-foreground);font-size:12px">{{ scr.sdnNote }}</span></div>
+            <sc-if value="{{ scr.hit }}" hint-placeholder-val="{{ false }}"><div style="padding:0 12px 12px;font-size:12px;line-height:1.5;color:var(--foreground)">Do not process. Any trace that touches this address gets a high-severity sanctions flag.</div></sc-if>
+          </div>
+        </sc-if>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:6px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:10px;font-size:13px">
+        <div style="display:flex;justify-content:space-between"><span style="font-weight:600;font-size:16px">Recent</span><span style="color:var(--selection)">History →</span></div>
+        <sc-for list="{{ recent }}" as="r" hint-placeholder-count="2"><div style="display:flex;justify-content:space-between;gap:8px;min-height:{{ rowH }}px;align-items:center;border-top:1px solid var(--border)"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500;font-size:14px">{{ r.t }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ r.m }}</span></span><span style="font:600 11px 'IBM Plex Mono',monospace;color:var(--risk-medium)">▮▮▯ MED</span></div></sc-for>
+      </div>
+      <sc-if value="{{ demosSide }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid var(--border);border-radius:6px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:0;font-size:13px">
+          <span style="font-weight:600;font-size:16px;padding-bottom:4px">Recorded demos</span><span style="color:var(--muted-foreground);padding-bottom:8px">Replay without spending API quota.</span>
+          <sc-for list="{{ demos }}" as="dm" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:{{ rowH }}px;border-top:1px solid var(--border)"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500;font-size:14px">{{ dm.title }}</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--muted-foreground)">{{ dm.meta }}</span></span><span style="font-weight:600">{{ dm.cta2 }}</span></div></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--muted-foreground);line-height:1.5;padding:10px 12px;border:1px dashed var(--border-strong);border-radius:4px">Phone view is read-only. Start traces on a tablet or desktop.</div></sc-if>
+    </div>
+  </div>
+  <footer style="padding:12px 20px;border-top:1px solid var(--border);font:400 11px/1.6 'IBM Plex Mono',monospace;color:var(--muted-foreground);text-align:center;background:var(--card)">Powered by Etherscan.io APIs · Tronscan · DefiLlama · OFAC SDN</footer>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1000},&quot;w&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1440&quot;,&quot;768&quot;,&quot;390&quot;],&quot;default&quot;:&quot;1440&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;empty&quot;,&quot;ready&quot;,&quot;errors&quot;],&quot;default&quot;:&quot;empty&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;clean&quot;,&quot;labeled&quot;,&quot;sanctioned&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;chainOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){ if(!window.CFT){ this.t=setInterval(()=>{ if(window.CFT){clearInterval(this.t);this.forceUpdate();} },80); } }
+  componentWillUnmount(){ clearInterval(this.t); }
+  renderVals(){
+    const P=this.props,w=+(P.w||1440),theme=P.theme||'light',state=P.state||'empty',screen=P.screen||'none';
+    const desk=w>=1000,mobile=w<=500,tablet=!desk&&!mobile;
+    const T=window.CFT;const o={w,theme,themeStyle:T?{...T.theme(theme)}:{},mobile,menuOpen:P.menuOpen===true||P.menuOpen==='true'};
+    const empty=state==='empty';
+    o.noKey=empty;o.demosTop=empty&&!mobile;o.demosSide=!empty||mobile;o.showForm=!mobile;
+    o.pad=desk?'28px 32px 8px':'20px 16px 4px';o.pad2=desk?'16px 32px 32px':mobile?'16px':'16px';
+    o.demoCols=desk?'repeat(3,minmax(0,1fr))':'1fr';
+    o.mainCols=desk?'minmax(0,1fr) 420px':'minmax(0,1fr)';
+    o.rowCols=desk?'260px 1fr':'1fr';o.advCols=desk?'repeat(4,1fr)':'repeat(2,1fr)';o.togCols=desk?'1fr 1fr':'1fr';
+    o.formOp=1;o.inH=mobile?44:34;o.rowH=mobile?52:40;
+    o.demos=[{meta:'ETHEREUM · ← SOURCE OF FUNDS',size:'64 addr · 84 transfers',title:'Source of funds on Ethereum',text:'Backward trace of a 50k USDT transfer. The funds lead back through an intermediary wallet to a Binance hot wallet (exchange origin).'},
+      {meta:'TRON · DESTINATION OF FUNDS →',size:'',title:'Where withdrawn funds went on TRON',text:'Forward trace of a USDT-TRC20 withdrawal from a Binance hot wallet. The recipient moves the funds through deposit addresses that sweep into exchange wallets (Gate, Binance): the exchange arrivals are where a freeze request would go.'},
+      {meta:'ETHEREUM · ← SOURCE OF FUNDS',size:'75 addr · 117 transfers',title:'Linked wallets across two payments',text:'Backward trace of two unrelated-looking USDT payments. Both lead back to the same unlabeled funding wallet, which is flagged as a common source shared across seeds.'}].map(d=>({...d,cta:'▶ Run demo',cta2:mobile?'View ›':'▶ Run'}));
+    if(mobile)o.demos.forEach(d=>d.meta=d.meta.replace(' · ',' · ').toLowerCase());
+    o.keyT=empty?'no key':'key ok';o.keyC=empty?'var(--risk-medium)':'var(--risk-low)';
+    o.chainOpen=P.chainOpen===true||P.chainOpen==='true';o.chainBd=o.chainOpen?'var(--foreground)':'var(--border-strong)';o.chainRing=o.chainOpen?'0 0 0 3px var(--selection-muted)':'none';
+    o.chains=[['Ethereum',empty?'no key':'ETHERSCAN_API_KEY ✓'],['Polygon',empty?'no key':'ETHERSCAN_API_KEY ✓'],['Arbitrum',empty?'no key':'ETHERSCAN_API_KEY ✓'],['TRON','keyless ✓']].map(([t,k],i)=>({t,k,chk:i===0?'✓':'',bg:i===0?'var(--muted)':'transparent',kc:k.includes('no')?'var(--risk-medium)':'var(--risk-low)'}));
+    const L=(n,v,msg,bad)=>({n,v,msg,bg:bad?'var(--destructive-muted)':'transparent',bar:bad?'inset 2px 0 0 var(--risk-high)':'none',nc:bad?'var(--risk-high)':'var(--faint-foreground)',mc:bad?'var(--risk-high)':'var(--muted-foreground)',deco:bad?'underline wavy var(--risk-high)':'none'});
+    o.placeholder=empty;
+    if(empty){o.lines=[];o.seedCount='0 valid seeds';o.seedCountC='var(--muted-foreground)';}
+    if(state==='ready'){o.lines=[L(1,'0x8e463bd42d8cc09e3d05449676c631132dcb170147fc410d406e9049822fe998','✓ tx'),L(2,'0x1b59b93dcee5cc162d96a9140809d45e72f8946d265116489389b1e70fef8de5','✓ tx')];o.seedCount='2 valid';o.seedCountC='var(--risk-low)';}
+    if(state==='errors'){o.lines=[L(1,'0xe7f7c8836a109082c31d9587904304caa1f004ab056bf5e3b4e40d08d2078f0b','✓ tx'),L(2,'0x28c6c06298d514db089934071355e5743bf21d6','✕ 39 hex chars, expected 40 or 64',true),L(3,'0x28c6c06298d514db089934071355e5743bf21d60','✓ address'),L(4,'0xe7f7c8836a109082c31d9587904304caa1f004ab056bf5e3b4e40d08d2078f0b','✕ duplicate of line 1',true)];o.seedCount='2 valid · 2 invalid';o.seedCountC='var(--risk-high)';}
+    if(!desk&&o.lines)o.lines.forEach(l=>{if(l.v.length>40)l.v=l.v.slice(0,22)+'…'+l.v.slice(-8);});
+    o.taBd=state==='errors'?'var(--risk-high)':'var(--border-strong)';o.taRing=state==='ready'?'0 0 0 3px var(--selection-muted)':'none';
+    if(state==='ready'){o.taBd='var(--selection)';}
+    o.advOpen=state!=='empty';o.advCaret=o.advOpen?'▾':'▸';o.advBb=o.advOpen?'1px solid var(--border)':'none';
+    o.limits=[['Max depth','6'],['Max branches','3'],['Max edges','120'],['Min USD','0']].map(([t,v])=>({t,v}));
+    const can=state==='ready';o.startBg=can?'var(--foreground)':'var(--border-strong)';o.startFg=can?'var(--background)':'var(--muted-foreground)';
+    o.startHint={empty:'Add ETHERSCAN_API_KEY or run a recorded demo.',ready:'2 seeds · Ethereum · backward · about 5–10 s with default limits',errors:'Fix lines 2 and 4 to start.'}[state];
+    o.hintC=state==='errors'?'var(--risk-high)':'var(--muted-foreground)';
+    const SC={clean:{inp:'0x2cff890f0378a11913b6129b2e97417a2c302680',label:'○ No label',lc:'var(--foreground)',meta:'not in bundled or local labels',sdn:'○ NO SDN MATCH',sc:'var(--risk-low)',sfg:'var(--risk-low)',sbg:'transparent',sdnNote:'OFAC SDN fetched 2026-10-20 20:39 UTC',bd:'1px solid var(--border)',bg:'transparent',hit:false},
+      labeled:{inp:'0x28c6c06298d514db089934071355e5743bf21d60',label:'■ Binance 14',lc:'var(--category-exchange)',meta:'exchange · Binance · bundled',sdn:'○ NO SDN MATCH',sc:'var(--risk-low)',sfg:'var(--risk-low)',sbg:'transparent',sdnNote:'OFAC SDN fetched 2026-10-20 20:39 UTC',bd:'1px solid var(--border)',bg:'transparent',hit:false},
+      sanctioned:{inp:'0x098b716b8aaf21512996dc57eb0615e2383e2f96',label:'⊘ Ronin Bridge Exploiter',lc:'var(--category-sanctioned)',meta:'sanctioned · OFAC SDN',sdn:'⊘ SDN MATCH · LAZARUS GROUP',sc:'var(--risk-high)',sfg:'var(--background)',sbg:'var(--risk-high)',sdnNote:'OFAC SDN fetched 2026-10-20 20:39 UTC',bd:'1.5px solid var(--risk-high)',bg:'var(--destructive-muted)',hit:true}};
+    o.hasScreen=screen!=='none';o.scr=SC[screen]||SC.clean;
+    o.scrIn=screen==='none'?'Address':(mobile?o.scr.inp.slice(0,6)+'…'+o.scr.inp.slice(-4):o.scr.inp);o.scrInC=screen==='none'?'var(--faint-foreground)':'var(--foreground)';
+    o.recent=[{t:'Source of funds on Ethereum',m:'Ethereum · ← source · 1 seed · completed'},{t:'Linked wallets across two payments',m:'Ethereum · ← source · 2 seeds · completed'}];
+    return o;
+  }
+}
+</script>
+</body>
+</html>
