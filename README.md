@@ -29,7 +29,7 @@ Commercial know-your-transaction tools are expensive and return a risk score you
 - Explainable flags with severities, overridable per flag through a policy file.
 - USD values from DefiLlama; canonical stablecoins are priced 1:1 by contract address, so a spoofed "USDT" is never valued as a dollar. Candidates without a USD price are not followed by default (`followUnpriced` turns that on).
 - Live graph (React Flow + ELK) with pause, resume and cancel; expand any stopped edge by hand.
-- Exports: JSON and four CSVs (edges, convergences, exposure, touchpoints); a report page per run.
+- Exports: JSON and five CSVs (edges, addresses, convergences, exposure, touchpoints); a report page per run.
 - REST + SSE API, CLI, and a Docker image.
 - Recorded demo scenarios that replay offline, without API keys.
 
@@ -94,7 +94,7 @@ bun apps/cli/src/main.ts labels validate my-labels.json
 bun apps/cli/src/main.ts serve --port 3000
 ```
 
-Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 cancelled or timed out. `bun apps/cli/src/main.ts --help` prints the full usage.
+Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints|addresses`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 cancelled or timed out. `bun apps/cli/src/main.ts --help` prints the full usage.
 
 ## API
 

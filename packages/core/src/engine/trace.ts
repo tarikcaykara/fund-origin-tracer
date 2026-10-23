@@ -628,6 +628,9 @@ export async function runTrace(
 
     edge.dropped = retainDropped(droppedAll);
     edge.droppedTotal = droppedAll.length;
+    const byReason: Partial<Record<DropReason, number>> = {};
+    for (const d of droppedAll) byReason[d.reason] = (byReason[d.reason] ?? 0) + 1;
+    edge.droppedByReason = byReason;
     state.dropped += droppedAll.length;
 
     if (selected.length === 0) {

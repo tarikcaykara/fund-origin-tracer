@@ -19,7 +19,7 @@ Usage:
 Trace options:
   --max-depth <n>  --max-branches <n>  --max-edges <n>  --min-usd <n>  --timeout <sec>
   --through-entities  --follow-unpriced  --format summary|json|csv
-  --csv-kind edges|convergences|exposure|touchpoints
+  --csv-kind edges|convergences|exposure|touchpoints|addresses
   --out <file>  --quiet
 
 Global options:

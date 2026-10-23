@@ -172,6 +172,8 @@ export const TraceEdgeSchema = z.object({
     )
     .max(30),
   droppedTotal: z.number().int().min(0),
+  /** Count of every dropped candidate by reason (sums to droppedTotal); absent in older results. */
+  droppedByReason: z.partialRecord(DropReasonSchema, z.number().int().min(0)).optional(),
   seedId: z.string().nullable(),
 });
 export type TraceEdge = z.infer<typeof TraceEdgeSchema>;

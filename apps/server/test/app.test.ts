@@ -345,8 +345,14 @@ describe("history", () => {
     const body = (await (await env.app.request(`/api/runs?${qs}`)).json()) as {
       items: { id: string; result?: unknown }[];
       total: number;
+      totalAll: number;
     };
-    return { ids: body.items.map((i) => i.id), total: body.total, items: body.items };
+    return {
+      ids: body.items.map((i) => i.id),
+      total: body.total,
+      totalAll: body.totalAll,
+      items: body.items,
+    };
   };
 
   test("paginates newest first without result payloads", async () => {
@@ -368,6 +374,7 @@ describe("history", () => {
     expect((await ids(env, "chain=ethereum&status=completed")).ids).toEqual(["e", "a"]);
     expect((await ids(env, "q=brav")).ids).toEqual(["b"]);
     expect((await ids(env, "q=%25")).total).toBe(0);
+    expect((await ids(env, "chain=ethereum")).totalAll).toBe(5);
   });
 
   test("rejects bad query params", async () => {

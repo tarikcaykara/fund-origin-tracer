@@ -52,6 +52,7 @@ export type RunDetail = RunSummary & { result: AnalysisResult | null };
 export interface RunList {
   items: RunSummary[];
   total: number;
+  totalAll: number;
 }
 
 export interface RunListQuery {
@@ -176,4 +177,5 @@ export const CSV_KINDS: { kind: CsvKind; label: string }[] = [
   { kind: "convergences", label: "Linked wallets (CSV)" },
   { kind: "exposure", label: "Exposure (CSV)" },
   { kind: "touchpoints", label: "Exchange touchpoints (CSV)" },
+  { kind: "addresses", label: "Addresses (CSV)" },
 ];

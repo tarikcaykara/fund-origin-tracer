@@ -110,7 +110,7 @@ Candidates that survive the drops get a score; the highest `maxBranches` (defaul
 
 #### Dropped-candidate retention
 
-Per edge, `droppedTotal` is the full number of candidates dropped. `dropped` keeps at most **30** of them: first one example of each distinct reason (in the order of the drop table; for `exceeds_max_branches` the best-scored one), then the best-scored remaining candidates, then unscored ones in candidate order. The kept list is shown scored-first, highest score first.
+Per edge, `droppedTotal` is the full number of candidates dropped and `droppedByReason` breaks that number down by reason (the counts sum to `droppedTotal`). `dropped` keeps at most **30** of them: first one example of each distinct reason (in the order of the drop table; for `exceeds_max_branches` the best-scored one), then the best-scored remaining candidates, then unscored ones in candidate order. The kept list is shown scored-first, highest score first.
 
 #### Swap-through
 

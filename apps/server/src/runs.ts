@@ -299,11 +299,16 @@ export class RunManager {
     return this.db.investigations.get(runId) !== null;
   }
 
-  list(query: InvestigationListQuery): { items: InvestigationSummary[]; total: number } {
+  list(query: InvestigationListQuery): {
+    items: InvestigationSummary[];
+    total: number;
+    totalAll: number;
+  } {
     const page = this.db.investigations.list(query);
     // Overlay live status (paused) on the rows still in flight.
     return {
       total: page.total,
+      totalAll: page.totalAll,
       items: page.items.map((i) => {
         const run = this.runs.get(i.id);
         return run ? { ...i, status: run.status } : i;

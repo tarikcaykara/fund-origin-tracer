@@ -97,7 +97,7 @@ const ExpandSchema = z.object({
   maxDepth: z.number().int().min(1).max(50).default(DEFAULT_EXPAND_DEPTH),
 });
 
-const CsvKindSchema = z.enum(["edges", "convergences", "exposure", "touchpoints"]);
+const CsvKindSchema = z.enum(["edges", "convergences", "exposure", "touchpoints", "addresses"]);
 
 export interface AppDeps {
   runtime: Runtime;
@@ -285,7 +285,7 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
     const id = c.req.param("id");
     const kind = CsvKindSchema.safeParse(c.req.query("kind") ?? "edges");
     if (!kind.success)
-      throw badRequest("kind must be one of edges, convergences, exposure, touchpoints");
+      throw badRequest("kind must be one of edges, convergences, exposure, touchpoints, addresses");
     const csv = toCsv(kind.data as CsvKind, finishedResult(id));
     return c.body(csv, 200, {
       "Content-Type": "text/csv; charset=utf-8",

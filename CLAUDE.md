@@ -16,7 +16,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | `packages/core/src/engine/` | `trace.ts` (`runTrace`: seeds, scheduler, per-edge checks, expansion, swap-through), `score.ts` (scoring constants, drop reasons), `types.ts` (engine deps/output) |
 | `packages/core/src/analysis/` | `analyze.ts` (`analyze`), `reachability.ts`, `convergence.ts` (linked wallets + follow-up), `exposure.ts`, `touchpoints.ts`, `flags.ts` (policy flags, `riskLevelOf`), `shared.ts` |
 | `packages/core/src/policy/` | `default-policy.json` + `policy.ts` (`loadPolicy`, strict override schema) |
-| `packages/core/src/export/csv.ts` | `toCsv` (edges, convergences, exposure, touchpoints); also imported by the web app |
+| `packages/core/src/export/csv.ts` | `toCsv` (edges, addresses, convergences, exposure, touchpoints); also imported by the web app |
 | `packages/core/labels/` | Bundled label files per chain (every entry has a verified `source`) |
 | `packages/core/test/` | Offline unit tests; JSON captures in `test/fixtures/`, fakes in `test/helpers/` |
 | `apps/server` (`@fot/server`) | `config.ts` env→`AppConfig`; `db.ts` bun:sqlite (investigations, `SqliteCacheStore`, `SqliteKv`); `runtime.ts` shared limiter/key pool/labels/OFAC/policy + per-run providers; `execute.ts` `executeRun` (trace→analyze); `runs.ts` `RunManager` (live state, SSE fan-out, expand); `demo.ts` scenario files; `app.ts` Hono routes; `serve.ts` `startServer` |

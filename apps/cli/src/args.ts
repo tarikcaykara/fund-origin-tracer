@@ -88,7 +88,13 @@ export function buildRunParams(parsed: ReturnType<typeof parseCli>): RunParams {
 }
 
 export type OutputFormat = "summary" | "json" | "csv";
-export const CSV_KINDS: readonly CsvKind[] = ["edges", "convergences", "exposure", "touchpoints"];
+export const CSV_KINDS: readonly CsvKind[] = [
+  "edges",
+  "convergences",
+  "exposure",
+  "touchpoints",
+  "addresses",
+];
 
 export function outputOptions(values: ParsedValues): { format: OutputFormat; csvKind: CsvKind } {
   const format = values.format ?? "summary";

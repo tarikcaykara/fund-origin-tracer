@@ -149,10 +149,10 @@ History, newest first. Query:
 | `chain` | – | one of the four chains |
 | `status` | – | `running`, `completed`, `cancelled`, `timed_out`, `failed`, `interrupted` |
 
-Response `{items, total}`. Each item is a run row **without** the result:
+Response `{items, total, totalAll}`: `total` counts the rows matching `q`/`chain`/`status`, `totalAll` counts every stored investigation ignoring those filters. Each item is a run row **without** the result:
 
 ```json
-{"total":1,"items":[{"id":"d5a99a54-…","chain":"ethereum","direction":"backward",
+{"total":1,"totalAll":1,"items":[{"id":"d5a99a54-…","chain":"ethereum","direction":"backward",
   "seeds":[{"id":"s1","kind":"tx","value":"0xe7f7c883…"}],
   "params":{"chain":"ethereum","direction":"backward","maxDepth":6,"maxBranches":3,"maxEdges":120,"minUsd":0,"traceThroughEntities":false,"followUnpriced":false,"timeoutSec":600,"seeds":[…]},
   "status":"completed","riskLevel":"medium","title":"Source of funds on Ethereum","notes":null,
@@ -224,7 +224,7 @@ The `AnalysisResult` as a download (`Content-Disposition: attachment; filename="
 
 ### `GET /api/runs/:id/export.csv`
 
-Query `kind` = `edges` (default), `convergences`, `exposure` or `touchpoints`; anything else is `400`. UTF-8 with BOM, CRLF line ends, RFC 4180 quoting. Cells that start with `=`, `+`, `-`, `@`, tab or CR get a leading `'` to defuse spreadsheet formulas. `409 not_finished` while the run is in progress.
+Query `kind` = `edges` (default), `convergences`, `exposure`, `touchpoints` or `addresses`; anything else is `400`. UTF-8 with BOM, CRLF line ends, RFC 4180 quoting. Cells that start with `=`, `+`, `-`, `@`, tab or CR get a leading `'` to defuse spreadsheet formulas. `409 not_finished` while the run is in progress.
 
 Columns:
 
@@ -234,8 +234,11 @@ Columns:
 | `convergences` | `role,address,kinds,seed_ids,min_depth,counterparties,edge_count,totals,usd,other_counterparties` |
 | `exposure` | `category,entity,address,hops,symbol,amount,usd,tx_hash,explorer_url` |
 | `touchpoints` | `kind,entity,exchange_address,counterparty,symbol,amount,usd,timestamp_iso,tx_hash,explorer_url,depth,seed_ids` |
+| `addresses` | `address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out` |
 
 List-valued cells are joined with `;`.
+
+`addresses` has one row per graph address, in graph order. `labels` are joined with ` \| `; `min_depth` is the smallest depth of any edge touching the address; `usd_in`/`usd_out` sum the priced edges and are blank when none is priced. Edges in the result also carry `droppedByReason`, a `{reason: count}` map over **every** dropped candidate (sums to `droppedTotal`; absent in results stored before it existed).
 
 ```bash
 curl -s "localhost:3000/api/runs/$ID/export.csv?kind=touchpoints"

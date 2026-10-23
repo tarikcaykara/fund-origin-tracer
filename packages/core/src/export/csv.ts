@@ -10,6 +10,8 @@
  *   exposure      category,entity,address,hops,symbol,amount,usd,tx_hash,explorer_url
  *   touchpoints   kind,entity,exchange_address,counterparty,symbol,amount,usd,timestamp_iso,
  *                 tx_hash,explorer_url,depth,seed_ids
+ *   addresses     address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,
+ *                 transfers_in,transfers_out,usd_in,usd_out
  *
  * List-valued cells are joined with ";". Labels are the first label name of the address.
  */
@@ -17,7 +19,7 @@ import { seedReachability } from "../analysis/reachability.ts";
 import { CHAINS } from "../chains.ts";
 import type { AnalysisResult, Asset } from "../schema.ts";
 
-export type CsvKind = "edges" | "convergences" | "exposure" | "touchpoints";
+export type CsvKind = "edges" | "convergences" | "exposure" | "touchpoints" | "addresses";
 
 const BOM = "\uFEFF";
 
@@ -195,5 +197,57 @@ export function toCsv(kind: CsvKind, result: AnalysisResult): string {
           t.seedIds.join(";"),
         ]),
       );
+    case "addresses": {
+      const byId = new Map(result.graph.edges.map((e) => [e.id, e]));
+      const sumUsd = (ids: readonly string[]): { n: number; usd: number | null } => {
+        let total: number | null = null;
+        for (const id of ids) {
+          const u = byId.get(id)?.usd;
+          if (typeof u === "number") total = (total ?? 0) + u;
+        }
+        return { n: ids.length, usd: total };
+      };
+      return build(
+        [
+          "address",
+          "labels",
+          "categories",
+          "entities",
+          "sanctioned",
+          "seed_subject",
+          "seed_ids",
+          "min_depth",
+          "transfers_in",
+          "transfers_out",
+          "usd_in",
+          "usd_out",
+        ],
+        result.graph.addresses.map((a) => {
+          const inn = sumUsd(a.inEdgeIds);
+          const out = sumUsd(a.outEdgeIds);
+          const depths = [...a.inEdgeIds, ...a.outEdgeIds]
+            .map((id) => byId.get(id)?.depth)
+            .filter((d): d is number => d !== undefined);
+          const categories = Array.from(new Set(a.labels.map((l) => l.category)));
+          const entities = Array.from(
+            new Set(a.labels.flatMap((l) => (l.entity ? [l.entity] : []))),
+          );
+          return [
+            a.address,
+            a.labels.map((l) => l.name).join(" | "),
+            categories.join(";"),
+            entities.join(";"),
+            a.sanctioned ? "true" : "false",
+            a.isSeedSubject ? "true" : "false",
+            a.seedIds.join(";"),
+            depths.length > 0 ? Math.min(...depths) : "",
+            inn.n,
+            out.n,
+            usd(inn.usd),
+            usd(out.usd),
+          ];
+        }),
+      );
+    }
   }
 }

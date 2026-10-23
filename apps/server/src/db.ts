@@ -252,7 +252,11 @@ export class Investigations {
     return row?.result_json ? (JSON.parse(row.result_json) as AnalysisResult) : null;
   }
 
-  list(query: InvestigationListQuery = {}): { items: InvestigationSummary[]; total: number } {
+  list(query: InvestigationListQuery = {}): {
+    items: InvestigationSummary[];
+    total: number;
+    totalAll: number;
+  } {
     const where: string[] = [];
     const args: (string | number)[] = [];
     const arg = (v: string | number): string => {
@@ -272,6 +276,9 @@ export class Investigations {
     const { total } = this.sqlite
       .query(`SELECT COUNT(*) AS total FROM investigations ${clause}`)
       .get(...args) as { total: number };
+    const { totalAll } = this.sqlite
+      .query("SELECT COUNT(*) AS totalAll FROM investigations")
+      .get() as { totalAll: number };
     const limit = arg(Math.min(100, Math.max(1, query.limit ?? 50)));
     const offset = arg(Math.max(0, query.offset ?? 0));
     const rows = this.sqlite
@@ -279,7 +286,7 @@ export class Investigations {
         `SELECT ${SUMMARY_COLUMNS} FROM investigations ${clause} ORDER BY created_at DESC, id DESC LIMIT ${limit} OFFSET ${offset}`,
       )
       .all(...args) as InvestigationDbRow[];
-    return { items: rows.map(toSummary), total };
+    return { items: rows.map(toSummary), total, totalAll };
   }
 
   delete(id: string): boolean {

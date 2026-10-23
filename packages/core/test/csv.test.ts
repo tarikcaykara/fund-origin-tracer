@@ -201,9 +201,23 @@ describe("toCsv", () => {
     expect(touch[1]?.slice(10)).toEqual(["0", "s1"]);
   });
 
+  test("addresses: one row per graph address with degree and usd sums", async () => {
+    const result = await sample();
+    const rows = parseCsv(toCsv("addresses", result));
+    expect(rows[0]?.join(",")).toBe(
+      "address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out",
+    );
+    expect(rows.slice(1).map((r) => r[0])).toEqual(result.graph.addresses.map((a) => a.address));
+    const binance = rows.find((r) => r[0] === addr(20));
+    expect(binance?.slice(1, 6)).toEqual(["Binance 1", "exchange", "Binance", "false", "false"]);
+    expect(binance?.slice(8, 10)).toEqual(["0", "1"]);
+    expect(binance?.[10]).toBe("");
+    expect(binance?.[11]).toBe("7");
+  });
+
   test("empty collections give just the header row", async () => {
     const empty = await runAnalysis([]);
-    for (const kind of ["edges", "convergences", "exposure", "touchpoints"] as const) {
+    for (const kind of ["edges", "convergences", "exposure", "touchpoints", "addresses"] as const) {
       const csv = toCsv(kind, empty);
       expect(csv.startsWith(BOM)).toBe(true);
       expect(parseCsv(csv)).toHaveLength(1);

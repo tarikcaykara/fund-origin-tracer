@@ -300,6 +300,11 @@ describe("candidate selection and drops", () => {
     expect(root.dropped).toHaveLength(30);
     expect(root.dropped[0]?.reason).toBe("exceeds_max_branches");
     expect(root.dropped[1]?.reason).toBe("zero_value");
+    expect(root.droppedByReason).toEqual({ exceeds_max_branches: 1, zero_value: 40 });
+    const counted = Object.values(root.droppedByReason ?? {}).reduce((a, b) => a + b, 0);
+    expect(counted).toBe(root.droppedTotal);
+    // 40 zero-value drops counted although fewer are stored as samples.
+    expect(root.dropped.filter((d) => d.reason === "zero_value").length).toBeLessThan(40);
   });
 
   test("drops unpriced candidates by default; followUnpriced follows them", async () => {
