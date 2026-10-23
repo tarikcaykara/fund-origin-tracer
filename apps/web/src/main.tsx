@@ -6,6 +6,7 @@ import { HistoryPage } from "@/pages/history.tsx";
 import { HomePage } from "@/pages/home.tsx";
 import { ReportPage } from "@/pages/report.tsx";
 import { WorkspacePage } from "@/pages/workspace.tsx";
+import { ThemeProvider } from "@/theme.tsx";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -25,6 +26,8 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element.");
 createRoot(root).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </StrictMode>,
 );

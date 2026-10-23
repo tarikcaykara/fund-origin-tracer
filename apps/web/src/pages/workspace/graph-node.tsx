@@ -22,7 +22,7 @@ export function AddressNodeView({ data, selected }: NodeProps<AddressFlowNode>) 
         height: NODE_HEIGHT,
         ...(data.sanctioned || !data.label
           ? {}
-          : { borderColor: `var(--cat-${data.label.category})` }),
+          : { borderColor: `var(--category-${data.label.category})` }),
       }}
     >
       <Handle type="target" position={Position.Left} isConnectable={false} />
@@ -32,7 +32,7 @@ export function AddressNodeView({ data, selected }: NodeProps<AddressFlowNode>) 
       {data.label ? (
         <div
           className="truncate text-xs font-medium"
-          style={{ color: `var(--cat-${data.label.category})` }}
+          style={{ color: `var(--category-${data.label.category})` }}
           title={`${data.label.category} · ${data.label.source}`}
         >
           {data.label.name}

@@ -30,6 +30,7 @@ Commercial know-your-transaction tools are expensive and return a risk score you
 - USD values from DefiLlama; canonical stablecoins are priced 1:1 by contract address, so a spoofed "USDT" is never valued as a dollar. Candidates without a USD price are not followed by default (`followUnpriced` turns that on).
 - Live graph (React Flow + ELK) with pause, resume and cancel; expand any stopped edge by hand.
 - Exports: JSON and five CSVs (edges, addresses, convergences, exposure, touchpoints); a report page per run.
+- Web UI with light, dark and system themes.
 - REST + SSE API, CLI, and a Docker image.
 - Recorded demo scenarios that replay offline, without API keys.
 

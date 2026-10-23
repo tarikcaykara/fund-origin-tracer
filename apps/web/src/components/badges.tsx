@@ -1,44 +1,180 @@
 import type { Label, LabelCategory, Severity, StopReason } from "@fot/core/schema";
 import type { InvestigationStatus } from "@/api.ts";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import {
+  CATEGORY_META,
+  RISK_META,
+  type RiskLevel,
+  SEVERITY_META,
+  STATUS_META,
+  STOP_TAGS,
+} from "@/meta.ts";
 import type { RunPhase } from "@/run-state.ts";
 
-const RISK_VARIANT = { high: "destructive", medium: "default", low: "secondary" } as const;
-
-export function RiskBadge({ level }: { level: "low" | "medium" | "high" | null | undefined }) {
-  if (!level) return <Badge variant="outline">Risk: pending</Badge>;
-  return <Badge variant={RISK_VARIANT[level]}>Risk: {level}</Badge>;
+export function StatusPill({
+  status,
+  live = false,
+}: {
+  status: InvestigationStatus | RunPhase;
+  live?: boolean;
+}) {
+  const meta = STATUS_META[status];
+  return (
+    <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full border border-border bg-muted px-2 type-mono-node">
+      <span aria-hidden="true" className="font-semibold" style={{ color: `var(${meta.token})` }}>
+        {meta.glyph}
+      </span>
+      <span>{meta.label}</span>
+      {live && status === "running" ? (
+        <span
+          aria-hidden="true"
+          className="size-1.5 rounded-full animate-live-dot"
+          style={{ backgroundColor: `var(${meta.token})` }}
+        />
+      ) : null}
+    </span>
+  );
 }
 
-const SEVERITY_VARIANT = {
-  high: "destructive",
-  medium: "default",
-  low: "secondary",
-  info: "outline",
-} as const;
+export function RiskMeter({
+  level,
+  short = false,
+}: {
+  level: RiskLevel | null | undefined;
+  short?: boolean;
+}) {
+  if (!level) return <span className="type-mono-node">— PENDING</span>;
+  const meta = RISK_META[level];
+  return (
+    <span className="type-mono-node" style={{ color: `var(${meta.token})` }}>
+      {meta.meter} {short ? meta.shortLabel : meta.label}
+    </span>
+  );
+}
+
+export function RiskChip({
+  level,
+  provisional = false,
+  size = "default",
+}: {
+  level: RiskLevel | null | undefined;
+  provisional?: boolean;
+  size?: "sm" | "default";
+}) {
+  if (!level) {
+    return (
+      <span className="inline-flex h-6 items-center rounded-sm border border-border-strong px-1.5 type-mono-node text-muted-foreground">
+        RISK PENDING
+      </span>
+    );
+  }
+  const meta = RISK_META[level];
+  return (
+    <span
+      className={
+        size === "sm"
+          ? "inline-flex min-h-5 items-center gap-1 rounded-sm border px-1.5 type-mono-node"
+          : "inline-flex h-6 items-center gap-1.5 rounded-sm border px-2 type-mono-node"
+      }
+      style={{
+        borderColor: `var(${meta.token})`,
+        borderWidth: "1.5px",
+        color: `var(${meta.token})`,
+      }}
+      data-risk={level}
+    >
+      <span aria-hidden="true">{meta.meter}</span>
+      <span>RISK {meta.label}</span>
+      {provisional ? <span>· PROVISIONAL</span> : null}
+    </span>
+  );
+}
+
+export function SeverityTag({ severity }: { severity: Severity }) {
+  const meta = SEVERITY_META[severity];
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-sm border border-current px-1.5 py-0.5 type-mono-node"
+      style={{ color: `var(${meta.token})` }}
+      data-severity={severity}
+    >
+      <span aria-hidden="true">{meta.glyph}</span> {meta.label}
+    </span>
+  );
+}
+
+export function CategoryTag({ category, label }: { category: LabelCategory; label?: string }) {
+  const meta = CATEGORY_META[category];
+  const Icon = meta.icon;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 type-body-sm font-medium"
+      style={{ color: `var(${meta.token})` }}
+    >
+      <Icon aria-hidden="true" className="size-3.5 shrink-0" />
+      {label ?? meta.label}
+    </span>
+  );
+}
+
+export function StopTag({ reason }: { reason: StopReason | null }) {
+  if (!reason) return <span className="text-muted-foreground">—</span>;
+  const tag = STOP_TAGS[reason];
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center rounded-sm border border-border-strong bg-muted px-1.5 py-0.5 font-mono text-3xs font-semibold"
+          aria-label={tag.text}
+        >
+          {tag.code}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{tag.text}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+export function SeedTag() {
+  return (
+    <Badge variant="outline" className="font-semibold">
+      SEED
+    </Badge>
+  );
+}
+
+export function DemoChip({ label = "DEMO" }: { label?: string }) {
+  return (
+    <Badge variant="outline" className="border-dashed border-border-strong text-muted-foreground">
+      {label}
+    </Badge>
+  );
+}
+
+export function RiskBadge({ level }: { level: RiskLevel | null | undefined }) {
+  return <RiskChip level={level} />;
+}
 
 export function SeverityBadge({ severity }: { severity: Severity }) {
-  return <Badge variant={SEVERITY_VARIANT[severity]}>{severity}</Badge>;
+  return <SeverityTag severity={severity} />;
 }
 
 export function StatusBadge({ status }: { status: InvestigationStatus | RunPhase }) {
-  const variant =
-    status === "completed"
-      ? "secondary"
-      : status === "failed" || status === "interrupted"
-        ? "destructive"
-        : status === "running" || status === "connecting"
-          ? "default"
-          : "outline";
-  return <Badge variant={variant}>{status.replace("_", " ")}</Badge>;
+  return <StatusPill status={status} live={status === "running"} />;
 }
 
 export function CategoryBadge({ category }: { category: LabelCategory }) {
-  return <Badge variant="outline">{category}</Badge>;
+  return <CategoryTag category={category} />;
 }
 
 export function StopReasonText({ reason }: { reason: StopReason | null }) {
-  return <span>{reason ? reason.replace("_", " ") : "—"}</span>;
+  return reason ? (
+    <span title={STOP_TAGS[reason].text}>{reason.replaceAll("_", " ")}</span>
+  ) : (
+    <span>—</span>
+  );
 }
 
 export function LabelList({ labels }: { labels: readonly Label[] }) {
@@ -46,7 +182,7 @@ export function LabelList({ labels }: { labels: readonly Label[] }) {
     <ul className="space-y-1">
       {labels.map((label) => (
         <li key={`${label.origin}:${label.name}`}>
-          <Badge variant="outline">{label.category}</Badge> {label.name}{" "}
+          <CategoryTag category={label.category} /> {label.name}{" "}
           <span className="text-xs text-muted-foreground">
             {label.origin} · {label.source}
           </span>

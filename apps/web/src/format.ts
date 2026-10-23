@@ -99,3 +99,23 @@ export function chainName(chain: ChainId): string {
 export function directionName(direction: "backward" | "forward"): string {
   return direction === "backward" ? "Source of funds" : "Destination of funds";
 }
+/** `2026-10-21 18:51 UTC` from an ISO string or epoch milliseconds. */
+export function formatUtcMinute(value: string | number): string {
+  return `${new Date(value).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
+/** `10-21 18:51` from an ISO string or epoch milliseconds. */
+export function formatCompactUtc(value: string | number): string {
+  return new Date(value).toISOString().slice(5, 16).replace("T", " ");
+}
+
+/** `m:ss` for durations under an hour and `h:mm:ss` thereafter. */
+export function formatClock(milliseconds: number): string {
+  const totalSeconds = Math.floor(Math.max(0, milliseconds) / 1000);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes}:${seconds}`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+}

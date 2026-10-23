@@ -10,6 +10,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { Selection } from "@/selection.ts";
 import { layoutGraph, NODE_HEIGHT, NODE_WIDTH } from "../../graph-layout.ts";
 import {
   buildGraphModel,
@@ -19,11 +20,6 @@ import {
   type TransferGroupData,
 } from "../../graph-model.ts";
 import { type AddressFlowNode, AddressNodeView } from "./graph-node.tsx";
-
-export type Selection =
-  | { kind: "edge"; edgeId: string }
-  | { kind: "address"; address: string }
-  | { kind: "pair"; from: string; to: string };
 
 const NODE_TYPES = { address: AddressNodeView };
 const LAYOUT_THROTTLE_MS = 500;
@@ -237,7 +233,7 @@ function GraphCanvas({
             <span key={category} className="inline-flex items-center gap-2">
               <span
                 className="size-2.5 rounded-full"
-                style={{ background: `var(--cat-${category})` }}
+                style={{ background: `var(--category-${category})` }}
               />
               {category}
             </span>
