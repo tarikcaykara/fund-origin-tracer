@@ -27,7 +27,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | `docs/` | `methodology.md` (scoring, drops, stops, flags), `api.md` (REST + SSE), `labels.md` (source policy, formats, coverage) |
 | `scripts/dev.ts` | Runs API (3000) and Vite (5173) together |
 | `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Two-stage image on `oven/bun:1.4.3-debian` (build the web app, then ship sources + prod deps + `apps/web/dist`, `packages/core/labels`, `fixtures/demo`); compose pins `PORT`/`DATA_DIR` inside the container and maps `${PORT:-3000}` |
-| `.github/workflows/ci.yml`, `.gitleaksignore` | CI: install, check, typecheck, test, build, gitleaks; `.gitleaksignore` holds fingerprints of reviewed false positives (TRON contract ids in `tokenId` fixture fields) |
+| `.github/workflows/ci.yml`, `.gitleaksignore` | CI: install, check, typecheck, test, build, gitleaks; the workflow grants `pull-requests: read` because gitleaks-action lists a PR's commits through the API (without it every PR fails with 403); `.gitleaksignore` holds fingerprints of reviewed false positives (TRON contract ids in `tokenId` fixture fields) |
 | `CONTRIBUTING.md`, `SECURITY.md` | Contributor workflow and secrets runbook; private vulnerability reporting |
 
 ## Gotchas
