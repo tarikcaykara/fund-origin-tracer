@@ -216,6 +216,13 @@ export class RunManager {
     if (this.runtime.config.demoOnly) {
       throw new ApiError(409, "demo_only", "This instance only serves recorded demo scenarios.");
     }
+    if (summary.demo !== null) {
+      throw new ApiError(
+        409,
+        "demo_run_not_expandable",
+        "Recorded demo runs replay fixed data and cannot be expanded; start a live trace from this address instead.",
+      );
+    }
     this.assertLiveCapacity(previous.chain);
 
     const throughEntities = edge.stopReason === "entity";

@@ -46,7 +46,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 - **`paused` is a live overlay status**, never persisted; `GET /api/runs?status=paused` is rejected.
 - **Docker: `env_file: .env` overrides the image `ENV`.** A dev `.env` with `DATA_DIR=./data` or `PORT=3100` would break the volume and port mapping, so `docker-compose.yml` sets `PORT` and `DATA_DIR` under `environment:` (which wins over `env_file`). The server runs from TypeScript sources; there is no server build step, only `apps/web/dist`.
 - **Transfer timestamps are unix seconds.** `Transfer.timestamp`, `TxDetail.timestamp` and `ExchangeTouchpoint.timestamp` are seconds; `AnalysisResult.startedAt`/`finishedAt` and run `createdAt` are ISO strings. Format transfers with `formatTimestamp`/`formatCompactTimestamp` (`apps/web/src/format.ts`); `new Date(timestamp)` renders 1970.
-- **Expand further on a demo run calls the live explorer API.** `RunManager.expand` (`apps/server/src/runs.ts`) uses the live providers whether or not the run is a demo, so it needs the chain's key and spends quota; `DEMO_ONLY=true` rejects it with `409 demo_only`.
+- **Demo runs cannot be expanded.** `RunManager.expand` (`apps/server/src/runs.ts`) refuses runs with a `demo` id (`409 demo_run_not_expandable`): a continuation would use the live providers, SQLite cache, label registry and OFAC set, mixing live data into a recorded replay. `DEMO_ONLY=true` refuses every expand with `409 demo_only`.
 
 ## Hard rules
 

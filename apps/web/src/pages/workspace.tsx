@@ -18,6 +18,7 @@ import { isLivePhase, type RunPhase, sortedEdges, transferOrder } from "@/run-st
 import type { Selection } from "@/selection.ts";
 import { useRunStream } from "@/use-run-stream.ts";
 import { WorkspaceBanners } from "./workspace/banners.tsx";
+import type { ExpandError } from "./workspace/detail-panel.tsx";
 import { ExposureTab } from "./workspace/exposure.tsx";
 import { FlagsTab } from "./workspace/flags.tsx";
 import { WorkspaceHeader } from "./workspace/header.tsx";
@@ -139,6 +140,7 @@ export function WorkspacePage() {
   const [tab, setTab] = useState("graph");
   const [selection, setSelection] = useState<Selection | null>(null);
   const [expanding, setExpanding] = useState(false);
+  const [expandError, setExpandError] = useState<ExpandError | null>(null);
   const [busy, setBusy] = useState(false);
   const [fullGraph, setFullGraph] = useState(false);
   const phone = useBreakpoint() === "phone";
@@ -147,6 +149,7 @@ export function WorkspacePage() {
     setTab("graph");
     setSelection(null);
     setExpanding(false);
+    setExpandError(null);
     setBusy(false);
     setFullGraph(false);
   }, [id]);
@@ -218,11 +221,16 @@ export function WorkspacePage() {
   const expand = useCallback(
     async (edgeId: string) => {
       setExpanding(true);
+      setExpandError(null);
       try {
         await api.expand(id, edgeId);
         restart();
       } catch (error) {
-        toast.error(errorMessage(error));
+        setExpandError(
+          error instanceof ApiError
+            ? { edgeId, code: error.code, message: error.message }
+            : { edgeId, code: "unexpected_error", message: errorMessage(error) },
+        );
         setExpanding(false);
       }
     },
@@ -320,14 +328,13 @@ export function WorkspacePage() {
   );
 
   const healthData = health.data;
-  const expandBlockedReason = healthData?.demoOnly
-    ? "This instance only serves recorded demo scenarios, so expanding is disabled."
-    : healthData && healthData.chains[run.chain] !== "ready"
-      ? `${chainName(run.chain)} is not ready (API key missing), so expanding is disabled.`
-      : undefined;
-  const expandNote = run.demo
-    ? "This run is a recorded demo: expanding calls the live explorer API."
-    : undefined;
+  const expandBlockedReason = run.demo
+    ? "Recorded demo runs replay fixed data, so they cannot be expanded. Start a live trace from this address to continue."
+    : healthData?.demoOnly
+      ? "This instance only serves recorded demo scenarios, so expanding is disabled."
+      : healthData && healthData.chains[run.chain] !== "ready"
+        ? `${chainName(run.chain)} is not ready (API key missing), so expanding is disabled.`
+        : undefined;
   const runError = state.error ? `${state.error.code}: ${state.error.message}` : run.error;
   const strip = <ProvisionalStrip phase={phase} hasResult={result !== null} />;
   // Result-only tabs: wait while live, explain when a finished run produced nothing.
@@ -348,7 +355,7 @@ export function WorkspacePage() {
       live={live}
       canExpand={canExpand}
       expanding={expanding}
-      expandNote={expandNote}
+      expandError={expandError}
       expandBlockedReason={expandBlockedReason}
       onExpand={onExpand}
       onSelect={onPanelSelect}

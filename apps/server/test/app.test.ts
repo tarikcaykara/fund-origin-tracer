@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { AnalysisResult, RunEvent } from "@fot/core";
+import { type AnalysisResult, EXPANDABLE_REASONS, type RunEvent } from "@fot/core";
 import { createTestEnv, liveBody, post, recordDemoScenario, type TestEnv } from "./helpers/env.ts";
 import { chainOfTransfers, fakeTransport, txHash } from "./helpers/fake-etherscan.ts";
 
@@ -260,6 +260,31 @@ describe("expand", () => {
     );
     expect(res.status).toBe(409);
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe("demo_only");
+  });
+
+  test("refuses recorded demo runs and leaves the stored result untouched", async () => {
+    const env = await createTestEnv();
+    const demoId = await recordDemoScenario(env.runtime, env.fixturesDir);
+    const { runId } = (await (
+      await env.app.request(...post("/api/runs", { demo: demoId }))
+    ).json()) as { runId: string };
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find(
+      (e) => e.stopReason !== null && EXPANDABLE_REASONS.has(e.stopReason),
+    );
+    expect(stopped).toBeDefined();
+
+    const res = await env.app.request(
+      ...post(`/api/runs/${runId}/expand`, { edgeId: stopped?.id }),
+    );
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe(
+      "demo_run_not_expandable",
+    );
+    const after = await getRun(env, runId);
+    expect(after.status).toBe("completed");
+    expect(after.result).toEqual(before);
   });
 });
 
