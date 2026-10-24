@@ -26,6 +26,7 @@ There is no authentication: run the server on a trusted network or behind your o
 | 409 | `not_finished` | Export or expand a run that has no result yet |
 | 409 | `edge_not_expandable` | The edge is not stopped, or its stop reason cannot be continued |
 | 409 | `demo_only` | `POST /api/runs/:id/expand` while `DEMO_ONLY=true` |
+| 409 | `demo_run_not_expandable` | `POST /api/runs/:id/expand` on a recorded demo run |
 | 429 | `too_many_runs` | More than 3 live runs at once |
 | 500 | `internal_error` | Unexpected server error (details are logged, not returned) |
 
@@ -193,9 +194,9 @@ Continues a stopped edge of a finished run ("Expand further").
 | `edgeId` | string | required | An edge of this run |
 | `maxDepth` | integer | 3 | 1–50; extra depth, relative to the edge |
 
-Allowed only when the run is not active, the edge has `status: "stopped"` and its `stopReason` is `max_depth`, `max_edges`, `timeout`, `cancelled` or `entity` (an `entity` continuation traces through that entity; mixers still stop). Returns `202 {"status":"running"}`. The run reverts to `running` and **keeps its id**: subscribe to `GET /api/runs/:id/events` **after** this call to watch the new edges arrive, then `result` and `done` again; the merged, re-analyzed result replaces the stored one. The continuation makes live explorer calls, so it needs the chain's API key even for a run that started as a demo.
+Allowed only when the run is not active, the run is not a recorded demo, the edge has `status: "stopped"` and its `stopReason` is `max_depth`, `max_edges`, `timeout`, `cancelled` or `entity` (an `entity` continuation traces through that entity; mixers still stop). Returns `202 {"status":"running"}`. The run reverts to `running` and **keeps its id**: subscribe to `GET /api/runs/:id/events` **after** this call to watch the new edges arrive, then `result` and `done` again; the merged, re-analyzed result replaces the stored one. The continuation makes live explorer calls, so it needs the chain's API key. Demo runs are refused with `409 demo_run_not_expandable`: a continuation would mix live explorer, price and OFAC data into a recorded replay; start a live trace from the address instead.
 
-Errors: `404 not_found`, `404 edge_not_found`, `409 run_active`, `409 not_finished`, `409 edge_not_expandable`, `409 demo_only`, `409 chain_not_ready`, `429 too_many_runs`.
+Errors: `404 not_found`, `404 edge_not_found`, `409 run_active`, `409 not_finished`, `409 edge_not_expandable`, `409 demo_only`, `409 demo_run_not_expandable`, `409 chain_not_ready`, `429 too_many_runs`.
 
 ```bash
 curl -s -i -XPOST localhost:3000/api/runs/$ID/expand -H 'content-type: application/json' -d '{"edgeId":"nope"}'
@@ -335,7 +336,7 @@ Recorded scenarios in `fixtures/demo/<id>/` (`scenario.json`, `http.json.gz`, `o
 - `POST /api/runs` with `{"demo":"<id>"}` replays the recorded explorer and price responses through the normal engine and analysis. Responses are served with a 40 ms delay each so the stream visibly animates; the engine runs with concurrency 1, and a demo takes a few seconds.
 - Demo runs use the **bundled labels and the OFAC snapshot recorded with the scenario** (your local labels and the live OFAC list are not applied), a fresh in-memory cache, and are saved in the history like any other run (the row's `demo` field holds the scenario id).
 - They do not count towards the 3-live-run limit and do not need `ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`.
-- Everything else (SSE, exports, patch, delete) behaves as for live runs. Only `expand` goes to the live APIs.
+- Everything else (SSE, exports, patch, delete) behaves as for live runs, except `expand`, which is refused with `409 demo_run_not_expandable` so a replay never mixes in live data.
 
 **`DEMO_ONLY=true`** is for hosting a public demo: live runs are refused with `403 demo_only` (and expand with `409 demo_only`), while demo runs, screening, history and exports keep working. `GET /api/health` reports `demoOnly: true`.
 

@@ -3,7 +3,7 @@ import type { LabelIndex } from "@/components/links.tsx";
 import { ModalLayer } from "@/components/modal-layer.tsx";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import type { Selection } from "@/selection.ts";
-import { DetailPanel } from "./detail-panel.tsx";
+import { DetailPanel, type ExpandError } from "./detail-panel.tsx";
 
 export function PanelHost({
   chain,
@@ -15,7 +15,7 @@ export function PanelHost({
   live,
   canExpand,
   expanding,
-  expandNote,
+  expandError,
   expandBlockedReason,
   onExpand,
   onSelect,
@@ -32,7 +32,7 @@ export function PanelHost({
   live: boolean;
   canExpand: boolean;
   expanding: boolean;
-  expandNote?: string | undefined;
+  expandError: ExpandError | null;
   expandBlockedReason?: string | undefined;
   onExpand: (edgeId: string) => void;
   onSelect: (selection: Selection | null) => void;
@@ -55,7 +55,7 @@ export function PanelHost({
       live={live}
       canExpand={canExpand}
       expanding={expanding}
-      expandNote={expandNote}
+      expandError={expandError}
       expandBlockedReason={expandBlockedReason}
       onExpand={onExpand}
       onSelect={onSelect}

@@ -47,6 +47,13 @@ const DROP_LABEL: Record<DropReason, string> = {
   exceeds_max_branches: "branches",
 };
 
+/** A refused or failed expand request, shown under that edge's Expand button. */
+export interface ExpandError {
+  edgeId: string;
+  code: string;
+  message: string;
+}
+
 export function DetailPanel({
   chain,
   selection,
@@ -56,7 +63,7 @@ export function DetailPanel({
   params,
   canExpand,
   expanding,
-  expandNote,
+  expandError,
   expandBlockedReason,
   onExpand,
   onSelect,
@@ -74,8 +81,8 @@ export function DetailPanel({
   params: RunParams;
   canExpand: boolean;
   expanding: boolean;
-  /** One-line caution shown above the Expand button, e.g. for recorded demos. */
-  expandNote?: string | undefined;
+  /** The last failed expand request; shown inline on its edge. */
+  expandError: ExpandError | null;
   /** When set, Expand is disabled and this explains why. */
   expandBlockedReason?: string | undefined;
   onExpand(edgeId: string): void;
@@ -210,7 +217,7 @@ export function DetailPanel({
             labels={labels}
             canExpand={canExpand}
             expanding={expanding}
-            expandNote={expandNote}
+            expandError={expandError}
             expandBlockedReason={expandBlockedReason}
             onExpand={onExpand}
           />
@@ -572,7 +579,7 @@ function TransferPanel({
   labels,
   canExpand,
   expanding,
-  expandNote,
+  expandError,
   expandBlockedReason,
   onExpand,
   live,
@@ -584,7 +591,7 @@ function TransferPanel({
   labels: LabelIndex;
   canExpand: boolean;
   expanding: boolean;
-  expandNote: string | undefined;
+  expandError: ExpandError | null;
   expandBlockedReason: string | undefined;
   live: boolean;
   onExpand(edgeId: string): void;
@@ -704,7 +711,7 @@ function TransferPanel({
           params={params}
           canExpand={canExpand && canContinue && expandBlockedReason === undefined}
           expanding={expanding}
-          expandNote={expandNote}
+          expandError={expandError}
           expandBlockedReason={expandBlockedReason}
           onExpand={onExpand}
         />
@@ -869,7 +876,7 @@ function StoppedSection({
   params,
   canExpand,
   expanding,
-  expandNote,
+  expandError,
   expandBlockedReason,
   onExpand,
 }: {
@@ -877,7 +884,7 @@ function StoppedSection({
   params: RunParams;
   canExpand: boolean;
   expanding: boolean;
-  expandNote: string | undefined;
+  expandError: ExpandError | null;
   expandBlockedReason: string | undefined;
   onExpand(edgeId: string): void;
 }) {
@@ -910,12 +917,16 @@ function StoppedSection({
           </div>
         ) : (
           <div className="space-y-1.5">
-            {expandNote ? <p className="text-xs text-muted-foreground">{expandNote}</p> : null}
             <Button type="button" disabled={!canExpand} onClick={() => onExpand(edge.id)}>
               Expand further {params.direction === "backward" ? "←" : "→"} 1 hop
             </Button>
             {expandBlockedReason ? (
               <p className="text-xs text-destructive-muted-foreground">{expandBlockedReason}</p>
+            ) : null}
+            {expandError?.edgeId === edge.id ? (
+              <p role="alert" className="text-xs text-destructive-muted-foreground">
+                <span className="font-mono">{expandError.code}</span>: {expandError.message}
+              </p>
             ) : null}
           </div>
         )
