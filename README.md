@@ -28,9 +28,9 @@ Commercial know-your-transaction tools are expensive and return a risk score you
 - Exposure to labeled entities by hop distance, and exchange touchpoints with a copyable freeze-request list.
 - Explainable flags with severities, overridable per flag through a policy file.
 - USD values from DefiLlama; canonical stablecoins are priced 1:1 by contract address, so a spoofed "USDT" is never valued as a dollar. Candidates without a USD price are not followed by default (`followUnpriced` turns that on).
-- Live graph (React Flow + ELK) with pause, resume and cancel; expand any stopped edge by hand.
-- Exports: JSON and five CSVs (edges, addresses, convergences, exposure, touchpoints); a report page per run.
-- Web UI with light, dark and system themes.
+- Live graph laid out in hop columns, with pause, resume and cancel; expand any stopped edge by hand. On phones the graph tab opens on a Path view (the highest-USD path from the seed) with a Full graph toggle.
+- Exports: JSON and five CSVs (edges, addresses, convergences, exposure, touchpoints), and a printable evidence report per run (A4 or Letter).
+- Web UI with light, dark and system themes; phones keep every feature in a mobile-first layout.
 - REST + SSE API, CLI, and a Docker image.
 - Recorded demo scenarios that replay offline, without API keys.
 
@@ -61,7 +61,7 @@ Requires [Bun](https://bun.sh) 1.4.3.
    bun run dev              # API on :3000, web UI on :5173
    ```
 
-3. Open <http://localhost:5173>. Without keys, use a **Run demo** card on the Home page: demos replay recorded API responses offline.
+3. Open <http://localhost:5173>. Without keys, use a **Run demo** card on the Home page: demos replay recorded API responses offline. **Expand further** on a demo run calls the live explorer API, so it needs that chain's key.
 
 For a production-style run (`bun run build`, then `bun run start`) the server serves the built UI on `PORT`.
 
