@@ -7,7 +7,7 @@
 
 Open-source crypto fund-flow tracer for compliance, fraud and incident-response teams: source and destination of funds, linked wallets and explainable exposure on Ethereum, Polygon, Arbitrum and TRON. Self-hosted, no black-box score.
 
-![Graph tab of the Ethereum source-of-funds demo](docs/screenshot.png)
+![The Ethereum source-of-funds demo: the trace streams in hop columns, then the address panel, exchange touchpoints, flags and the printable evidence report](docs/demo.gif)
 
 ## Why
 
