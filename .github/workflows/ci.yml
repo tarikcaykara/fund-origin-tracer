@@ -8,6 +8,8 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+  # gitleaks-action lists a pull request's commits through the API on pull_request events.
+  pull-requests: read
 jobs:
   check:
     runs-on: ubuntu-latest
