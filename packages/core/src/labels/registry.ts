@@ -5,14 +5,18 @@ import {
   labelsVersion as computeVersion,
   type LocalLabelFile,
 } from "./files.ts";
-import type { OfacSet } from "./ofac.ts";
+import type { OfacSet, SdnEntry } from "./ofac.ts";
 
+/** For addresses from a version 1 OFAC snapshot, which named no SDN entry. */
 const OFAC_LABEL: Label = {
   name: "OFAC SDN",
   category: "sanctioned",
   source: "https://sanctionssearch.ofac.treas.gov/",
   origin: "ofac",
 };
+
+/** OFAC's page for one SDN entry, by uid; it lists the entry's digital currency addresses. */
+const SDN_ENTRY_URL = "https://sanctionssearch.ofac.treas.gov/Details.aspx?id=";
 
 const ZERO_LABEL: Label = {
   name: "Mint/Burn (zero address)",
@@ -25,14 +29,39 @@ export class LabelRegistry {
   readonly labelsVersion: string;
   readonly hasLocal: boolean;
   readonly #entries = new Map<string, Label>();
-  readonly #ofac: OfacSet | null;
+  /** SDN labels by normalized address, one per entry listing it; built once per OFAC set. */
+  readonly #sanctions: Record<"evm" | "tron", Map<string, readonly Label[]>>;
 
   constructor(
     bundled: readonly BundledLabelFile[],
     local: LocalLabelFile | null,
     ofac: OfacSet | null,
   ) {
-    this.#ofac = ofac;
+    const byUid = new Map<number, Label>();
+    const sanctionLabels = (addresses: ReadonlyMap<string, readonly SdnEntry[]> | undefined) =>
+      new Map(
+        [...(addresses ?? [])].map(([address, listed]) => [
+          address,
+          listed.length === 0
+            ? [OFAC_LABEL]
+            : listed.map((entry) => {
+                let label = byUid.get(entry.uid);
+                if (!label) {
+                  label = {
+                    name: entry.name,
+                    category: "sanctioned",
+                    entity: entry.name,
+                    programs: entry.programs,
+                    source: `${SDN_ENTRY_URL}${entry.uid}`,
+                    origin: "ofac",
+                  };
+                  byUid.set(entry.uid, label);
+                }
+                return label;
+              }),
+        ]),
+      );
+    this.#sanctions = { evm: sanctionLabels(ofac?.evm), tron: sanctionLabels(ofac?.tron) };
     this.labelsVersion = computeVersion(bundled);
     this.hasLocal = local !== null && local.entries.length > 0;
     for (const file of bundled) {
@@ -62,16 +91,18 @@ export class LabelRegistry {
   }
 
   isSanctioned(chain: ChainId, address: string): boolean {
-    if (!this.#ofac) return false;
-    const a = normalizeAddress(chain, address);
-    return (CHAINS[chain].kind === "evm" ? this.#ofac.evm : this.#ofac.tron).has(a);
+    return this.#sanctions[CHAINS[chain].kind].has(normalizeAddress(chain, address));
   }
 
+  /**
+   * SDN labels first, so every consumer that reads only `labels[0]` shows a sanctions match; then
+   * the local or bundled label, then the zero-address label.
+   */
   lookup(chain: ChainId, address: string): Label[] {
-    const out: Label[] = [];
+    const sanctions = this.#sanctions[CHAINS[chain].kind].get(normalizeAddress(chain, address));
+    const out: Label[] = [...(sanctions ?? [])];
     const entry = this.#entries.get(this.#key(chain, address));
     if (entry) out.push(entry);
-    if (this.isSanctioned(chain, address)) out.push(OFAC_LABEL);
     if (isZeroAddress(chain, address)) out.push(ZERO_LABEL);
     return out;
   }

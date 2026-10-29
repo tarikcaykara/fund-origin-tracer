@@ -72,6 +72,19 @@ Private labels (your own customers, cases, internal wallets) go in a local file 
 - Local labels carry `origin: "local"` and `source: "local"`, and results record `dataSources.localLabels: true`.
 - The file is yours: never commit it to this repository.
 
+## OFAC SDN
+
+The sanctions list is not bundled. The server downloads OFAC's SDN XML (`OFAC_SDN_URL`) at boot and every `OFAC_REFRESH_HOURS`, and stores the parsed snapshot in SQLite.
+
+- Only `Digital Currency Address` ids that are EVM (`0x` + 40 hex) or TRON (`T` + 33 base58) addresses are kept. The currency tag (`ETH`, `USDT`, `TRX`, …) does not identify the chain, so addresses are classified by format.
+- A sanctioned address gets one label per SDN entry that lists it (an address can sit on more than one entry):
+  - `name` and `entity`: the entry name exactly as OFAC publishes it, `lastName` for entities and `lastName, firstName` for individuals (`LAZARUS GROUP`, `MESRI, Behzad`). Exposure by entity, flags and the CSV `entities` column therefore group by the sanctioned party.
+  - `programs`: the entry's sanctions programs (`["DPRK3"]`). A program is the legal authority, not the party (one program covers many unrelated entries), so it is never used as `entity`.
+  - `source`: the entry's page on OFAC's sanctions search, `https://sanctionssearch.ofac.treas.gov/Details.aspx?id=<uid>`, which lists its addresses.
+  - `category: "sanctioned"`, `origin: "ofac"`.
+- **Order.** SDN labels come first, before the bundled or local label of the same address, so anything that shows only the first label (graph node, Path view, touchpoint names, the first name in the CSV `labels` column) shows the sanctions match; the other label stays in the list. Stops, exposure and flags do not depend on the order: `sanctioned` always ranks first.
+- **Snapshots.** Version 2 (`ofac:sdn` in the SQLite KV, `ofac.json` in demo scenarios) is `{version, fetchedAt, entries: [{uid, name, programs}], evm: {address: [uid]}, tron: {…}}`. Version 1 snapshots (`{fetchedAt, evm[], tron[]}`, addresses only) still load, and their addresses carry the constant label `OFAC SDN` without entity. A version 1 snapshot in the KV is downloaded again at the next load even when it is younger than `OFAC_REFRESH_HOURS`, and is kept if that download fails.
+
 ## Contributing a label
 
 Open a pull request that edits the relevant `packages/core/labels/<chain>.json` file:
@@ -102,4 +115,4 @@ Known gaps (these are gaps in verified coverage, not statements that the entitie
 - **Bridges** cover Stargate, Across, Hop, Celer cBridge, deBridge, the Polygon PoS bridge (Ethereum side) and the Arbitrum gateways/inbox where a source was found. Other bridges are not covered.
 - **DEX coverage** is routers only (Uniswap, 1inch, 0x, Velora/ParaSwap, SushiSwap, Curve, QuickSwap, PancakeSwap, CoW, OKX DEX, SunSwap); pools and aggregators not listed are unlabeled.
 - **Tokens**: canonical stablecoins and wrapped natives only. On Polygon and Arbitrum the Tether token is now the USDT0 deployment (symbol `USDT0` / `USD₮0`), and the TRON USDC contract is the deprecated "USD Coin Old".
-- The OFAC SDN list is a separate source (`origin: "ofac"`), loaded at runtime rather than bundled.
+- The OFAC SDN list is a separate source (`origin: "ofac"`), loaded at runtime rather than bundled; see [OFAC SDN](#ofac-sdn).

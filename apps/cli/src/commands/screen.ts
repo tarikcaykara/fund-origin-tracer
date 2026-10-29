@@ -26,10 +26,11 @@ export async function screenCommand(
       "Labels:",
       ...(labels.length === 0
         ? ["  none"]
-        : labels.map(
-            (l) =>
-              `  ${l.name} (${l.category}${l.entity ? `, ${l.entity}` : ""}) [${l.origin}] ${l.source}`,
-          )),
+        : labels.map((l) => {
+            const entity = l.entity && l.entity !== l.name ? `, ${l.entity}` : "";
+            const programs = l.programs?.length ? ` programs ${l.programs.join(", ")}` : "";
+            return `  ${l.name} (${l.category}${entity}) [${l.origin}]${programs} ${l.source}`;
+          })),
     ];
     await io.stdout(`${lines.join("\n")}\n`);
     return EXIT_OK;

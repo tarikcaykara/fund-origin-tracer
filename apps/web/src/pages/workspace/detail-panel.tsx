@@ -249,7 +249,7 @@ function AddressPanel({
 }) {
   const [showAll, setShowAll] = useState(false);
   const node = labels.get(address);
-  const label = node?.labels[0] ?? null;
+  const nodeLabels = node?.labels ?? [];
   const graphNode = graphModel.nodes.find((item) => item.address === address);
   const stopReason = graphNode?.stopReason ?? null;
   const funnel = result?.flags.find(
@@ -296,36 +296,49 @@ function AddressPanel({
         </div>
         <div className="space-y-1.5">
           <h3 className="type-body font-semibold">Labels</h3>
-          {label ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1 rounded-sm border border-border p-2 text-xs">
-              <span
-                className="font-semibold"
-                style={{ color: `var(--category-${label.category})` }}
-              >
-                {CATEGORY_META[label.category].glyph} {label.name}
-              </span>
-              <span className="type-mono-sm text-muted-foreground">
-                {CATEGORY_META[label.category].label}
-              </span>
-              <span className="col-span-2 type-mono-sm text-muted-foreground">
-                entity {label.entity ?? "—"} · {label.origin} labels{" "}
-                {sources?.labelsVersion ?? "unknown version"}
-              </span>
-              {/^https?:\/\//.test(label.source) ? (
-                <a
-                  className="col-span-2 break-all type-mono-sm text-link underline-offset-2 hover:underline"
-                  href={label.source}
-                  target="_blank"
-                  rel="noreferrer noopener"
+          {nodeLabels.length > 0 ? (
+            nodeLabels.map((label) => {
+              const programs = label.programs?.length
+                ? `${label.programs.length === 1 ? "program" : "programs"} ${label.programs.join(", ")} · `
+                : "";
+              const provenance =
+                label.origin === "ofac"
+                  ? `${programs}OFAC SDN${sources?.ofacFetchedAt ? ` fetched ${fetched}` : ""}`
+                  : `${label.origin} labels ${sources?.labelsVersion ?? "unknown version"}`;
+              return (
+                <div
+                  key={`${label.origin}:${label.name}`}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1 rounded-sm border border-border p-2 text-xs"
                 >
-                  source: {label.source} ↗
-                </a>
-              ) : (
-                <span className="col-span-2 break-all type-mono-sm text-muted-foreground">
-                  source: {label.source}
-                </span>
-              )}
-            </div>
+                  <span
+                    className="font-semibold"
+                    style={{ color: `var(--category-${label.category})` }}
+                  >
+                    {CATEGORY_META[label.category].glyph} {label.name}
+                  </span>
+                  <span className="type-mono-sm text-muted-foreground">
+                    {CATEGORY_META[label.category].label}
+                  </span>
+                  <span className="col-span-2 type-mono-sm text-muted-foreground">
+                    entity {label.entity ?? "—"} · {provenance}
+                  </span>
+                  {/^https?:\/\//.test(label.source) ? (
+                    <a
+                      className="col-span-2 break-all type-mono-sm text-link underline-offset-2 hover:underline"
+                      href={label.source}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      source: {label.source} ↗
+                    </a>
+                  ) : (
+                    <span className="col-span-2 break-all type-mono-sm text-muted-foreground">
+                      source: {label.source}
+                    </span>
+                  )}
+                </div>
+              );
+            })
           ) : sources ? (
             <p className="rounded-sm border border-dashed border-border-strong p-2 text-xs leading-relaxed text-muted-foreground">
               No label. Checked bundled labels ({sources.labelsVersion}), local labels (

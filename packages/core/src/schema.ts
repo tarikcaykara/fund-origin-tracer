@@ -92,6 +92,8 @@ export const LabelSchema = z.object({
   name: z.string(),
   category: LabelCategorySchema,
   entity: z.string().optional(),
+  /** OFAC sanctions programs of the SDN entry (`origin: "ofac"` only), e.g. `["DPRK3"]`. */
+  programs: z.array(z.string()).optional(),
   source: z.string(),
   origin: z.enum(["bundled", "local", "ofac"]),
 });

@@ -554,6 +554,9 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
       )
     : [];
   const isSanctioned = result?.sanctioned ?? false;
+  const sdnNames = orderedLabels.flatMap((label) =>
+    label.origin === "ofac" ? [label.entity ?? label.name] : [],
+  );
   const fetchedAt = health?.ofacFetchedAt;
 
   return (
@@ -606,7 +609,10 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
                 {orderedLabels.map((label) => {
                   const category = label.category;
                   const origin = label.origin === "ofac" ? "OFAC SDN" : label.origin;
-                  const meta = [category, label.entity, origin].filter(
+                  const programs = label.programs?.length
+                    ? `${label.programs.length === 1 ? "program" : "programs"} ${label.programs.join(", ")}`
+                    : undefined;
+                  const meta = [category, label.entity, origin, programs].filter(
                     (part, index, parts): part is string =>
                       part !== undefined && part !== label.name && parts.indexOf(part) === index,
                   );
@@ -626,7 +632,7 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
             {isSanctioned ? (
               <div className="space-y-2">
                 <span className="inline-flex rounded-sm border border-risk-high bg-risk-high px-1.5 py-0.5 type-mono-node font-semibold text-background">
-                  ⊘ SDN MATCH · OFAC SDN
+                  ⊘ SDN MATCH · {sdnNames.join(" · ")}
                 </span>
                 <p className="text-xs leading-relaxed text-foreground">
                   Do not process. Any trace that touches this address gets a high-severity sanctions

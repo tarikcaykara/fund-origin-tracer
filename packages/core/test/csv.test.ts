@@ -205,7 +205,7 @@ describe("toCsv", () => {
     const result = await sample();
     const rows = parseCsv(toCsv("addresses", result));
     expect(rows[0]?.join(",")).toBe(
-      "address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out",
+      "address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out,sdn_programs",
     );
     expect(rows.slice(1).map((r) => r[0])).toEqual(result.graph.addresses.map((a) => a.address));
     const binance = rows.find((r) => r[0] === addr(20));
@@ -213,6 +213,27 @@ describe("toCsv", () => {
     expect(binance?.slice(8, 10)).toEqual(["0", "1"]);
     expect(binance?.[10]).toBe("");
     expect(binance?.[11]).toBe("7");
+  });
+
+  test("addresses: a sanctioned address carries its SDN entry name and programs", async () => {
+    const sdn = { uid: 58256, name: "GALEANO BAZURTO, Jose Dario", programs: ["SDGT", "TCO"] };
+    const result = await runAnalysis(
+      buildEdges([{ id: "a", near: addr(1), far: addr(30), amount: 100, seedId: "s1" }]),
+      {
+        sdn: { [addr(30)]: [sdn] },
+        bundled: [{ address: addr(30), name: "Desk 7", category: "exchange" }],
+      },
+    );
+    const rows = parseCsv(toCsv("addresses", result));
+    const row = rows.find((r) => r[0] === addr(30));
+    expect(row?.slice(1, 5)).toEqual([
+      `${sdn.name} | Desk 7`,
+      "sanctioned;exchange",
+      sdn.name,
+      "true",
+    ]);
+    expect(row?.[12]).toBe("SDGT;TCO");
+    expect(rows.find((r) => r[0] === addr(1))?.[12]).toBe("");
   });
 
   test("empty collections give just the header row", async () => {
