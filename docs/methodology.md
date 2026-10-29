@@ -132,6 +132,8 @@ For a swap-through edge, the subject becomes `near` (the swapper), only candidat
 | `timed_out` | `timeoutSec` elapsed. |
 | `failed` | Fatal provider error, or every seed failed. |
 
+After **Expand further**, the status describes the merged graph. A continuation that times out or fails sets `timed_out` or `failed`. Otherwise the previous status stands, and a `timed_out` or `cancelled` run becomes `completed` once no edge still carries `timeout` or `cancelled`. A cancelled expansion keeps the edges it found, with its unfinished edges stopped as `cancelled`; a completed run stays `completed`. The `incomplete_trace` flag follows this status.
+
 ### Stop reasons
 
 | Reason | Meaning |

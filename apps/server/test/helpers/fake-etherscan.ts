@@ -30,6 +30,27 @@ export function chainOfTransfers(length: number): FakeTransfer[] {
   }));
 }
 
+/**
+ * tx 1 moves 1000 USDT from a101 to a100, and a101 was funded by a102 and a103 (tx 2 and 3).
+ * Each funder heads a linear chain of `length` more hops (a102 ← a104 ← a106 …,
+ * a103 ← a105 ← a107 …), so a backward trace from tx 1 splits into two branches.
+ */
+export function twoBranches(length: number): FakeTransfer[] {
+  const transfers: FakeTransfer[] = [
+    { tx: 1, from: 101, to: 100, amount: 1000, ts: T0 + (length + 2) * 3600 },
+    { tx: 2, from: 102, to: 101, amount: 500, ts: T0 + (length + 1) * 3600 },
+    { tx: 3, from: 103, to: 101, amount: 500, ts: T0 + (length + 1) * 3600 - 60 },
+  ];
+  for (let k = 1; k <= length; k++) {
+    const ts = T0 + (length + 1 - k) * 3600;
+    transfers.push(
+      { tx: 2 + 2 * k, from: 102 + 2 * k, to: 100 + 2 * k, amount: 500, ts },
+      { tx: 3 + 2 * k, from: 103 + 2 * k, to: 101 + 2 * k, amount: 500, ts: ts - 60 },
+    );
+  }
+  return transfers;
+}
+
 const pad = (a: string) => `0x${a.slice(2).padStart(64, "0")}`;
 const hex = (n: number | bigint) => `0x${n.toString(16)}`;
 

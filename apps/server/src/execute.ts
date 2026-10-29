@@ -7,7 +7,10 @@ import {
   type LabelRegistry,
   type RunController,
   type RunParams,
+  type RunStatus,
   runTrace,
+  type StopReason,
+  type TraceEdge,
   type TraceStats,
   type Transport,
 } from "@fot/core";
@@ -51,6 +54,29 @@ function mergeStats(prev: TraceStats, next: TraceStats): TraceStats {
   };
 }
 
+/** Stop reason a run with this status leaves on the edges it could not finish. */
+const OPEN_STOP_REASON: Partial<Record<RunStatus, StopReason>> = {
+  timed_out: "timeout",
+  cancelled: "cancelled",
+};
+
+/**
+ * The status of a run after "Expand further" describes the merged graph, not the continuation.
+ * A continuation that times out or fails reports that. Otherwise the previous status stands
+ * (a cancelled expansion keeps the edges it found), except that a timed-out or cancelled run
+ * becomes `completed` once no edge carries its open stop reason any more.
+ */
+function statusAfterExpand(
+  previous: RunStatus,
+  continuation: RunStatus,
+  edges: readonly TraceEdge[],
+): RunStatus {
+  if (continuation === "timed_out" || continuation === "failed") return continuation;
+  const open = OPEN_STOP_REASON[previous];
+  if (open !== undefined && !edges.some((edge) => edge.stopReason === open)) return "completed";
+  return previous;
+}
+
 /**
  * Runs the engine and the analysis for one run, streaming events through `emit`, and finishes
  * with `result` then `done`. Throws (without emitting `result`/`done`) on unexpected errors so the
@@ -90,7 +116,11 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
     emit,
     continueFrom,
   );
-  if (opts.continueFrom) trace.stats = mergeStats(opts.continueFrom.previous.stats, trace.stats);
+  if (opts.continueFrom) {
+    const { previous } = opts.continueFrom;
+    trace.stats = mergeStats(previous.stats, trace.stats);
+    trace.status = statusAfterExpand(previous.status, trace.status, trace.edges);
+  }
 
   const result = await analyze(trace, params, labels, runtime.policy, {
     provider,
