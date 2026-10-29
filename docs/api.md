@@ -196,6 +196,8 @@ Continues a stopped edge of a finished run ("Expand further").
 
 Allowed only when the run is not active, the run is not a recorded demo, the edge has `status: "stopped"` and its `stopReason` is `max_depth`, `max_edges`, `timeout`, `cancelled` or `entity` (an `entity` continuation traces through that entity; mixers still stop). Returns `202 {"status":"running"}`. The run reverts to `running` and **keeps its id**: subscribe to `GET /api/runs/:id/events` **after** this call to watch the new edges arrive, then `result` and `done` again; the merged, re-analyzed result replaces the stored one. The continuation makes live explorer calls, so it needs the chain's API key. Demo runs are refused with `409 demo_run_not_expandable`: a continuation would mix live explorer, price and OFAC data into a recorded replay; start a live trace from the address instead.
 
+The stored status describes the merged graph, not the continuation alone. A continuation that times out or fails sets `timed_out` or `failed`. Otherwise the run keeps its previous status, except that a `timed_out` or `cancelled` run becomes `completed` once no edge still stops with `timeout` or `cancelled`. Cancelling an expansion (`POST /api/runs/:id/cancel` while it runs) keeps the edges it already found, its unfinished edges stop with `cancelled`, and a completed run stays `completed`.
+
 Errors: `404 not_found`, `404 edge_not_found`, `409 run_active`, `409 not_finished`, `409 edge_not_expandable`, `409 demo_only`, `409 demo_run_not_expandable`, `409 chain_not_ready`, `429 too_many_runs`.
 
 ```bash

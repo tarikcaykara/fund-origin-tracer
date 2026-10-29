@@ -1,7 +1,22 @@
 import { describe, expect, test } from "bun:test";
-import { type AnalysisResult, EXPANDABLE_REASONS, type RunEvent } from "@fot/core";
-import { createTestEnv, liveBody, post, recordDemoScenario, type TestEnv } from "./helpers/env.ts";
-import { chainOfTransfers, fakeTransport, txHash } from "./helpers/fake-etherscan.ts";
+import {
+  type AnalysisResult,
+  type CancelReason,
+  EXPANDABLE_REASONS,
+  RunController,
+  type RunEvent,
+  type RunParams,
+} from "@fot/core";
+import { executeRun } from "../src/index.ts";
+import {
+  createTestEnv,
+  LIVE_SEED_TX,
+  liveBody,
+  post,
+  recordDemoScenario,
+  type TestEnv,
+} from "./helpers/env.ts";
+import { chainOfTransfers, fakeTransport, twoBranches, txHash } from "./helpers/fake-etherscan.ts";
 
 async function startLive(env: TestEnv, extra: Record<string, unknown> = {}): Promise<string> {
   const res = await env.app.request(...post("/api/runs", liveBody(extra)));
@@ -28,6 +43,56 @@ async function getRun(env: TestEnv, runId: string) {
     riskLevel: string | null;
     result: AnalysisResult | null;
   };
+}
+
+/**
+ * Stores a finished live run whose trace was stopped with `reason` as soon as the seed edge had
+ * created its children, so every child carries the matching stop reason (`timeout` / `cancelled`).
+ * `timeoutSec` cannot go below 10 s, so the stop is triggered on the controller instead.
+ */
+async function storeStoppedRun(env: TestEnv, reason: CancelReason): Promise<string> {
+  const params: RunParams = {
+    chain: "ethereum",
+    direction: "backward",
+    seeds: [{ id: "s1", kind: "tx", value: LIVE_SEED_TX }],
+    maxDepth: 20,
+    maxBranches: 3,
+    maxEdges: 50,
+    minUsd: 0,
+    traceThroughEntities: false,
+    followUnpriced: false,
+    timeoutSec: 600,
+  };
+  const runId = crypto.randomUUID();
+  env.db.investigations.insert({
+    id: runId,
+    chain: params.chain,
+    direction: params.direction,
+    seeds: params.seeds,
+    params,
+    status: "running",
+    title: "Stopped run",
+    demo: null,
+    createdAt: new Date().toISOString(),
+  });
+  const controller = new RunController();
+  let added = 0;
+  const result = await executeRun({
+    params,
+    runtime: env.runtime,
+    controller,
+    runId,
+    emit: (event) => {
+      if (event.type === "edge_added" && ++added === 3) controller.cancel(reason);
+    },
+  });
+  env.db.investigations.update(runId, {
+    status: result.status,
+    riskLevel: result.riskLevel,
+    finishedAt: result.finishedAt,
+    result,
+  });
+  return runId;
 }
 
 describe("run lifecycle", () => {
@@ -285,6 +350,54 @@ describe("expand", () => {
     const after = await getRun(env, runId);
     expect(after.status).toBe("completed");
     expect(after.result).toEqual(before);
+  });
+
+  test("a cancelled expansion keeps the completed status and the edges it found", async () => {
+    const env = await createTestEnv({ transport: fakeTransport(chainOfTransfers(12)) });
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+
+    // Called on the manager so the subscription is in place before the continuation's first
+    // edge: it cancels the expansion as soon as that edge arrives.
+    const expanding = env.manager.expand(runId, stopped.id, { maxDepth: 10 });
+    env.manager.subscribe(runId, (e) => {
+      if (e.type === "edge_added") env.manager.cancel(runId);
+    });
+    await expanding;
+    await env.manager.waitForRun(runId);
+
+    const after = await getRun(env, runId);
+    expect(after.status).toBe("completed");
+    expect(after.result?.status).toBe("completed");
+    expect(after.result?.graph.edges.length).toBeGreaterThan(before.graph.edges.length);
+    expect(after.result?.graph.edges.some((e) => e.stopReason === "cancelled")).toBe(true);
+  });
+
+  test.each([
+    ["timed_out", "timeout"],
+    ["cancelled", "cancelled"],
+  ] as const)("a %s run keeps that status until no %s edge is left", async (status, reason) => {
+    const env = await createTestEnv({ transport: fakeTransport(twoBranches(4)) });
+    const runId = await storeStoppedRun(env, reason);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    expect(before.status).toBe(status);
+    const open = before.graph.edges.filter((e) => e.stopReason === reason).map((e) => e.id);
+    expect(open).toHaveLength(2);
+
+    for (const [index, edgeId] of open.entries()) {
+      const res = await env.app.request(
+        ...post(`/api/runs/${runId}/expand`, { edgeId, maxDepth: 1 }),
+      );
+      expect(res.status).toBe(202);
+      await env.manager.waitForRun(runId);
+      const run = await getRun(env, runId);
+      const expected = index === 0 ? status : "completed";
+      expect(run.status).toBe(expected);
+      expect(run.result?.status).toBe(expected);
+    }
   });
 });
 
