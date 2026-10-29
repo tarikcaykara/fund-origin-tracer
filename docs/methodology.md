@@ -256,7 +256,7 @@ Settings: `severity` is `high`, `medium`, `low`, `info` or `off`. Numeric ranges
 | Ethereum, Polygon, Arbitrum transfers | Etherscan API V2 (`https://api.etherscan.io/v2/api`, `chainid` 1 / 137 / 42161) | Free key; free tier is 3 calls/s (`ETHERSCAN_RPS`). BSC, Base and OP are paid-only and not supported. |
 | TRON transfers | Tronscan API (`https://apilist.tronscanapi.com/api`) | Free key(s) required (`TRONSCAN_API_KEYS`). |
 | USD prices | DefiLlama `coins.llama.fi` (`batchHistorical`) | No key. |
-| Sanctions | OFAC SDN list (`sanctionslistservice.ofac.treas.gov`) | Digital currency addresses, refreshed every `OFAC_REFRESH_HOURS`. |
+| Sanctions | OFAC SDN list (`sanctionslistservice.ofac.treas.gov`) | Digital currency addresses with their SDN entry name and programs, refreshed every `OFAC_REFRESH_HOURS`. |
 | Labels | Bundled `packages/core/labels/*.json` and your local file | See [labels.md](labels.md). |
 
 Per address the explorer is asked for several lists (Etherscan: ERC-20 `tokentx`, native `txlist`, internal `txlistinternal`; Tronscan: TRC20 transfers and TRX transactions). Failed transactions and reverted TRC20 transfers are ignored. Responses are cached (SQLite on the server, memory for demos) for 30 days when the queried time bound or transaction is older than one hour, otherwise 300 seconds; error responses are never cached.

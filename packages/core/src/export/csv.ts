@@ -11,7 +11,7 @@
  *   touchpoints   kind,entity,exchange_address,counterparty,symbol,amount,usd,timestamp_iso,
  *                 tx_hash,explorer_url,depth,seed_ids
  *   addresses     address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,
- *                 transfers_in,transfers_out,usd_in,usd_out
+ *                 transfers_in,transfers_out,usd_in,usd_out,sdn_programs
  *
  * List-valued cells are joined with ";". Labels are the first label name of the address.
  */
@@ -221,6 +221,7 @@ export function toCsv(kind: CsvKind, result: AnalysisResult): string {
           "transfers_out",
           "usd_in",
           "usd_out",
+          "sdn_programs",
         ],
         result.graph.addresses.map((a) => {
           const inn = sumUsd(a.inEdgeIds);
@@ -232,6 +233,7 @@ export function toCsv(kind: CsvKind, result: AnalysisResult): string {
           const entities = Array.from(
             new Set(a.labels.flatMap((l) => (l.entity ? [l.entity] : []))),
           );
+          const programs = Array.from(new Set(a.labels.flatMap((l) => l.programs ?? [])));
           return [
             a.address,
             a.labels.map((l) => l.name).join(" | "),
@@ -245,6 +247,7 @@ export function toCsv(kind: CsvKind, result: AnalysisResult): string {
             out.n,
             usd(inn.usd),
             usd(out.usd),
+            programs.join(";"),
           ];
         }),
       );

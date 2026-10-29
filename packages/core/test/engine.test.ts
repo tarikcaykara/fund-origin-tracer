@@ -68,8 +68,8 @@ function labelsOf(
   };
   return new LabelRegistry([file], null, {
     fetchedAt: null,
-    evm: new Set(sanctioned),
-    tron: new Set(),
+    evm: new Map(sanctioned.map((address) => [address, []])),
+    tron: new Map(),
   });
 }
 

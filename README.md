@@ -23,7 +23,7 @@ Commercial know-your-transaction tools are expensive and return a risk score you
 
 - Backward (source of funds) and forward (destination of funds) tracing from 1–20 seeds, each a transaction hash or an address.
 - Ethereum, Polygon, Arbitrum (Etherscan API V2) and TRON (Tronscan).
-- Stops at labeled exchanges, DEXes, bridges, mixers, scams and token contracts (only mixers with `traceThroughEntities`), and at sanctioned addresses (OFAC SDN list).
+- Stops at labeled exchanges, DEXes, bridges, mixers, scams and token contracts (only mixers with `traceThroughEntities`), and at sanctioned addresses (OFAC SDN list), which are named by their SDN entry and programs (for example `LAZARUS GROUP`, `DPRK3`).
 - Linked wallets: addresses reached by more than one seed or branch.
 - Exposure to labeled entities by hop distance, and exchange touchpoints with a copyable freeze-request list.
 - Explainable flags with severities, overridable per flag through a policy file.

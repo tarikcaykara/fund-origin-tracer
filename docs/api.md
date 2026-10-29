@@ -237,11 +237,11 @@ Columns:
 | `convergences` | `role,address,kinds,seed_ids,min_depth,counterparties,edge_count,totals,usd,other_counterparties` |
 | `exposure` | `category,entity,address,hops,symbol,amount,usd,tx_hash,explorer_url` |
 | `touchpoints` | `kind,entity,exchange_address,counterparty,symbol,amount,usd,timestamp_iso,tx_hash,explorer_url,depth,seed_ids` |
-| `addresses` | `address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out` |
+| `addresses` | `address,labels,categories,entities,sanctioned,seed_subject,seed_ids,min_depth,transfers_in,transfers_out,usd_in,usd_out,sdn_programs` |
 
 List-valued cells are joined with `;`.
 
-`addresses` has one row per graph address, in graph order. `labels` are joined with ` \| `; `min_depth` is the smallest depth of any edge touching the address; `usd_in`/`usd_out` sum the priced edges and are blank when none is priced. Edges in the result also carry `droppedByReason`, a `{reason: count}` map over **every** dropped candidate (sums to `droppedTotal`; absent in results stored before it existed).
+`addresses` has one row per graph address, in graph order. `labels` are joined with ` \| `; `min_depth` is the smallest depth of any edge touching the address; `usd_in`/`usd_out` sum the priced edges and are blank when none is priced; `sdn_programs` lists the OFAC programs of the address's SDN entries (blank when it is not sanctioned or the snapshot predates SDN entries). Edges in the result also carry `droppedByReason`, a `{reason: count}` map over **every** dropped candidate (sums to `droppedTotal`; absent in results stored before it existed).
 
 ```bash
 curl -s "localhost:3000/api/runs/$ID/export.csv?kind=touchpoints"
@@ -265,7 +265,17 @@ curl -s localhost:3000/api/screen/ethereum/0x28c6c06298d514db089934071355e5743bf
 {"labels":[{"name":"Binance 14","category":"exchange","entity":"Binance","source":"https://etherscan.io/address/0x28c6c06298d514db089934071355e5743bf21d60","origin":"bundled"}],"sanctioned":false}
 ```
 
-`labels` is the list of `Label` objects (empty when unknown); `sanctioned` is true when the address is on the OFAC list. `400 invalid_request` for an unknown chain or a malformed address.
+A sanctioned address gets one label per SDN entry that lists it, before any bundled or local label:
+
+```bash
+curl -s localhost:3000/api/screen/ethereum/0x098b716b8aaf21512996dc57eb0615e2383e2f96
+```
+
+```json
+{"labels":[{"name":"LAZARUS GROUP","category":"sanctioned","entity":"LAZARUS GROUP","programs":["DPRK3"],"source":"https://sanctionssearch.ofac.treas.gov/Details.aspx?id=27307","origin":"ofac"}],"sanctioned":true}
+```
+
+`labels` is the list of `Label` objects (empty when unknown); `sanctioned` is true when the address is on the OFAC list. SDN labels carry the entry name as `name` and `entity`, its `programs`, and the entry's OFAC page as `source` (see [labels.md](labels.md#ofac-sdn)). `400 invalid_request` for an unknown chain or a malformed address.
 
 ## SSE stream
 

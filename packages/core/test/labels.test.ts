@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import type { Transport } from "../src/infra/transport.ts";
 import { parseBundledLabelFile, parseLocalLabelFile } from "../src/labels/files.ts";
-import { OFAC_KV_KEY, OfacSource, parseSdnXml } from "../src/labels/ofac.ts";
+import {
+  OFAC_KV_KEY,
+  OfacSource,
+  ofacSetFromSnapshot,
+  ofacSnapshot,
+  parseSdnXml,
+} from "../src/labels/ofac.ts";
 import { LabelRegistry } from "../src/labels/registry.ts";
 import { foldSymbol, isSpoofed } from "../src/labels/spoof.ts";
 import type { Asset } from "../src/schema.ts";
@@ -54,7 +60,19 @@ describe("spoof", () => {
   });
 });
 
+/** A captured SDN XML fragment: four entries with digital currency addresses and one without. */
+const SDN_FRAGMENT = await Bun.file(
+  new URL("./fixtures/ofac/sdn-fragment.xml", import.meta.url),
+).text();
+const LAZARUS = { uid: 27307, name: "LAZARUS GROUP", programs: ["DPRK3"] };
+const BOYKOV = { uid: 58886, name: "BOYKOV, Ilya Aleksandrovich", programs: ["DPRK2"] };
+const OBERTAS = { uid: 58889, name: "OBERTAS, Vitold Viktorovich", programs: ["DPRK2"] };
+const RONIN_EXPLOITER = "0x098b716b8aaf21512996dc57eb0615e2383e2f96";
+const SHARED = "0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510";
+
 const XML = `<sdnEntry>
+<uid>1</uid><lastName>A &amp; B &#x4C;TD</lastName><sdnType>Entity</sdnType>
+<programList><program>CYBER2</program></programList>
 <id><idType>Digital Currency Address - USDT</idType>
   <idNumber>${EVM_A.toUpperCase().replace("0X", "0x")}</idNumber></id>
 <id><idType>Digital Currency Address - TRX</idType><idNumber>${TRON_A}</idNumber></id>
@@ -64,10 +82,38 @@ const XML = `<sdnEntry>
 </sdnEntry>`;
 
 describe("ofac", () => {
-  test("parse classifies by format, dedupes, ignores BTC/other types", () => {
+  test("parses the entry name, uid and programs behind each address", () => {
+    const r = parseSdnXml(SDN_FRAGMENT);
+    expect(r.evm.get(RONIN_EXPLOITER)).toEqual([LAZARUS]);
+    expect(r.evm.get("0x08723392ed15743cc38513c4925f5e6be5c17243")).toEqual([LAZARUS]);
+    expect(r.tron.get("TQKoDq5aCrWAciiNtete5pDYVN38i4qFN1")).toEqual([BOYKOV]);
+    expect(r.tron.get("THwbVuBBb26abe5TrAsYUpYz9mhWnBppdz")).toEqual([
+      { uid: 58256, name: "GALEANO BAZURTO, Jose Dario", programs: ["SDGT", "TCO"] },
+    ]);
+    // One address listed on two entries keeps both.
+    expect(r.evm.get(SHARED)).toEqual([BOYKOV, OBERTAS]);
+    // Lazarus 8 + Boykov 2 (one shared with Obertas); Boykov 2 + Obertas 3 + Galeano 1.
+    expect(r.evm.size).toBe(10);
+    expect(r.tron.size).toBe(6);
+  });
+
+  test("classifies by format, dedupes, decodes entities, ignores other currencies and ids", () => {
     const r = parseSdnXml(XML);
-    expect(r.evm).toEqual([EVM_A]);
-    expect(r.tron).toEqual([TRON_A]);
+    const entry = { uid: 1, name: "A & B LTD", programs: ["CYBER2"] };
+    expect([...r.evm]).toEqual([[EVM_A, [entry]]]);
+    expect([...r.tron]).toEqual([[TRON_A, [entry]]]);
+  });
+
+  test("snapshots round-trip, and version 1 snapshots load without entries", () => {
+    const set = { fetchedAt: "2026-10-28T00:00:00.000Z", ...parseSdnXml(SDN_FRAGMENT) };
+    const stored = JSON.parse(JSON.stringify(ofacSnapshot(set)));
+    expect(stored.version).toBe(2);
+    expect(ofacSetFromSnapshot(stored)).toEqual(set);
+
+    const legacy = ofacSetFromSnapshot({ fetchedAt: "x", evm: [EVM_A], tron: [TRON_A] });
+    expect(legacy.evm.get(EVM_A)).toEqual([]);
+    expect(legacy.tron.get(TRON_A)).toEqual([]);
+    expect(() => ofacSetFromSnapshot({ fetchedAt: "x" })).toThrow(/Invalid OFAC snapshot/);
   });
 
   function memKv() {
@@ -101,6 +147,31 @@ describe("ofac", () => {
     now += 25 * HOUR;
     await src.load();
     expect(calls).toBe(2);
+  });
+
+  test("a fresh version 1 snapshot is refreshed at once, and kept if the fetch fails", async () => {
+    const now = Date.parse("2026-01-01T00:00:00Z");
+    const legacy = JSON.stringify({
+      fetchedAt: new Date(now).toISOString(),
+      evm: [EVM_A],
+      tron: [],
+    });
+    const kv = memKv();
+    kv.m.set(OFAC_KV_KEY, legacy);
+    const refreshed = await new OfacSource({ url: "u", transport: ok, kv, now: () => now }).load();
+    expect(refreshed.set.evm.get(EVM_A)?.[0]?.name).toBe("A & B LTD");
+    expect(JSON.parse(kv.m.get(OFAC_KV_KEY) ?? "{}").version).toBe(2);
+
+    const offline = memKv();
+    offline.m.set(OFAC_KV_KEY, legacy);
+    const r = await new OfacSource({
+      url: "u",
+      transport: fail,
+      kv: offline,
+      now: () => now,
+    }).load();
+    expect(r.warning?.code).toBe("ofac_unavailable");
+    expect(r.set.evm.get(EVM_A)).toEqual([]);
   });
 
   test("stale snapshot kept with warning on failure; empty set when none", async () => {
@@ -171,12 +242,55 @@ describe("registry", () => {
     expect(reg.labelsVersion).toBe("2026-05-01");
   });
 
-  test("bundled label, OFAC label, zero address", () => {
-    const ofac = { fetchedAt: "x", evm: new Set([EVM_A, EVM_B]), tron: new Set<string>() };
+  test("SDN labels come first, one per entry, named by the entry", () => {
+    const listed = parseBundledLabelFile({
+      chain: "ethereum",
+      entries: [
+        {
+          address: SHARED,
+          name: "Exchange deposit",
+          category: "exchange",
+          entity: "Y",
+          source: "https://example.com/y",
+          verifiedAt: "2026-02-03",
+        },
+      ],
+    });
+    const reg = new LabelRegistry([listed], null, { fetchedAt: "x", ...parseSdnXml(SDN_FRAGMENT) });
+    const labels = reg.lookup("polygon", SHARED.toUpperCase().replace("0X", "0x"));
+    expect(labels.map((l) => l.name)).toEqual([BOYKOV.name, OBERTAS.name]);
+    expect(reg.lookup("ethereum", SHARED).map((l) => l.origin)).toEqual([
+      "ofac",
+      "ofac",
+      "bundled",
+    ]);
+    expect(reg.lookup("ethereum", RONIN_EXPLOITER)).toEqual([
+      {
+        name: "LAZARUS GROUP",
+        category: "sanctioned",
+        entity: "LAZARUS GROUP",
+        programs: ["DPRK3"],
+        source: "https://sanctionssearch.ofac.treas.gov/Details.aspx?id=27307",
+        origin: "ofac",
+      },
+    ]);
+    expect(reg.isSanctioned("tron", "TQKoDq5aCrWAciiNtete5pDYVN38i4qFN1")).toBe(true);
+    expect(reg.isSanctioned("tron", SHARED)).toBe(false);
+  });
+
+  test("bundled label, unnamed OFAC label, zero address", () => {
+    const ofac = {
+      fetchedAt: "x",
+      evm: new Map([
+        [EVM_A, []],
+        [EVM_B, []],
+      ]),
+      tron: new Map(),
+    };
     const reg = new LabelRegistry(bundled, null, ofac);
     const labels = reg.lookup("ethereum", EVM_A);
-    expect(labels.map((l) => l.origin)).toEqual(["bundled", "ofac"]);
-    expect(labels[0]?.entity).toBe("X");
+    expect(labels.map((l) => `${l.origin}:${l.name}`)).toEqual(["ofac:OFAC SDN", "bundled:Hot 1"]);
+    expect(labels[1]?.entity).toBe("X");
     expect(reg.isSanctioned("ethereum", EVM_B)).toBe(true);
     expect(reg.isSanctioned("tron", EVM_B)).toBe(false);
     expect(reg.lookup("ethereum", `0x${"0".repeat(40)}`)[0]?.name).toBe("Mint/Burn (zero address)");

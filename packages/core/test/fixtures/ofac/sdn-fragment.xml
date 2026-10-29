@@ -1,0 +1,327 @@
+<?xml version="1.0" standalone="yes"?>
+<sdnList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML">
+  <publshInformation>
+    <Publish_Date>10/28/2026</Publish_Date>
+    <Record_Count>5</Record_Count>
+  </publshInformation>
+  <sdnEntry>
+    <uid>36</uid>
+    <lastName>AEROCARIBBEAN AIRLINES</lastName>
+    <sdnType>Entity</sdnType>
+    <programList>
+      <program>CUBA</program>
+    </programList>
+    <akaList>
+      <aka>
+        <uid>12</uid>
+        <type>a.k.a.</type>
+        <category>strong</category>
+        <lastName>AERO-CARIBBEAN</lastName>
+      </aka>
+    </akaList>
+    <addressList>
+      <address>
+        <uid>25</uid>
+        <city>Havana</city>
+        <country>Cuba</country>
+      </address>
+    </addressList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>27307</uid>
+    <lastName>LAZARUS GROUP</lastName>
+    <sdnType>Entity</sdnType>
+    <programList>
+      <program>DPRK3</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>135306</uid>
+        <idType>Transactions Prohibited For Persons Owned or Controlled By U.S. Financial Institutions:</idType>
+        <idNumber>North Korea Sanctions Regulations section 510.214</idNumber>
+      </id>
+      <id>
+        <uid>150215</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x098B716B8Aaf21512996dC57EB0615e2383E2f96</idNumber>
+      </id>
+      <id>
+        <uid>150347</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0xa0e1c89Ef1a489c9C7dE96311eD5Ce5D32c20E4B</idNumber>
+      </id>
+      <id>
+        <uid>150348</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x3Cffd56B47B7b41c56258D9C7731ABaDc360E073</idNumber>
+      </id>
+      <id>
+        <uid>150529</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x53b6936513e738f44FB50d2b9476730C0Ab3Bfc1</idNumber>
+      </id>
+      <id>
+        <uid>151631</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x35fB6f6DB4fb05e6A4cE86f2C93691425626d4b1</idNumber>
+      </id>
+      <id>
+        <uid>151632</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0xF7B31119c2682c88d88D455dBb9d5932c65Cf1bE</idNumber>
+      </id>
+      <id>
+        <uid>151633</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x3e37627dEAA754090fBFbb8bd226c1CE66D255e9</idNumber>
+      </id>
+      <id>
+        <uid>151647</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x08723392Ed15743cc38513C4925f5e6be5c17243</idNumber>
+      </id>
+      <id>
+        <uid>132507</uid>
+        <idType>Secondary sanctions risk:</idType>
+        <idNumber>North Korea Sanctions Regulations, sections 510.201 and 510.210</idNumber>
+      </id>
+    </idList>
+    <akaList>
+      <aka>
+        <uid>43391</uid>
+        <type>a.k.a.</type>
+        <category>weak</category>
+        <lastName>HIDDEN COBRA</lastName>
+      </aka>
+      <aka>
+        <uid>43392</uid>
+        <type>a.k.a.</type>
+        <category>weak</category>
+        <lastName>OFFICE 91</lastName>
+      </aka>
+    </akaList>
+    <addressList>
+      <address>
+        <uid>41656</uid>
+        <address1>Potonggang District</address1>
+        <city>Pyongyang</city>
+        <country>Korea, North</country>
+      </address>
+    </addressList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>58886</uid>
+    <firstName>Ilya Aleksandrovich</firstName>
+    <lastName>BOYKOV</lastName>
+    <sdnType>Individual</sdnType>
+    <remarks>(Linked To: LIMITED LIABILITY COMPANY ALIS)</remarks>
+    <programList>
+      <program>DPRK2</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>53769</uid>
+        <idType>Passport</idType>
+        <idNumber>620645580</idNumber>
+        <idCountry>Russia</idCountry>
+        <expirationDate>17 Jun 2009</expirationDate>
+      </id>
+      <id>
+        <uid>204313</uid>
+        <idType>Secondary sanctions risk:</idType>
+        <idNumber>North Korea Sanctions Regulations, sections 510.201 and 510.210</idNumber>
+      </id>
+      <id>
+        <uid>204314</uid>
+        <idType>Transactions Prohibited For Persons Owned or Controlled By U.S. Financial Institutions:</idType>
+        <idNumber>North Korea Sanctions Regulations section 510.214</idNumber>
+      </id>
+      <id>
+        <uid>202023</uid>
+        <idType>Gender</idType>
+        <idNumber>Male</idNumber>
+      </id>
+      <id>
+        <uid>202025</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x12Ea80238C7d805D003ce793594e92d84A6f4E8d</idNumber>
+      </id>
+      <id>
+        <uid>202026</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510</idNumber>
+      </id>
+      <id>
+        <uid>202027</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>TQKoDq5aCrWAciiNtete5pDYVN38i4qFN1</idNumber>
+      </id>
+      <id>
+        <uid>202028</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>TXmrnVgsqCMJncYHTXchuJ5z111BXSj4g3</idNumber>
+      </id>
+    </idList>
+    <addressList>
+      <address>
+        <uid>91002</uid>
+        <country>Russia</country>
+      </address>
+    </addressList>
+    <nationalityList>
+      <nationality>
+        <uid>102024</uid>
+        <country>Russia</country>
+        <mainEntry>true</mainEntry>
+      </nationality>
+    </nationalityList>
+    <dateOfBirthList>
+      <dateOfBirthItem>
+        <uid>102022</uid>
+        <dateOfBirth>30 May 1994</dateOfBirth>
+        <mainEntry>true</mainEntry>
+      </dateOfBirthItem>
+    </dateOfBirthList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>58889</uid>
+    <firstName>Vitold Viktorovich</firstName>
+    <lastName>OBERTAS</lastName>
+    <sdnType>Individual</sdnType>
+    <programList>
+      <program>DPRK2</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>53771</uid>
+        <idType>National ID No.</idType>
+        <idNumber>4613339474</idNumber>
+        <idCountry>Russia</idCountry>
+        <issueDate>20 Jan 2013</issueDate>
+      </id>
+      <id>
+        <uid>202036</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>TCV4qdpTxoMyqkn7sSPeRrXmhH5JFxMvmT</idNumber>
+      </id>
+      <id>
+        <uid>202037</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>TQCBdU4K92oxLAkzwexZpqVZJhmPbtLYMm</idNumber>
+      </id>
+      <id>
+        <uid>202038</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>TFksjBcHPYqgAax2USheQuaT1ydRKyZRdg</idNumber>
+      </id>
+      <id>
+        <uid>202041</uid>
+        <idType>Gender</idType>
+        <idNumber>Male</idNumber>
+      </id>
+      <id>
+        <uid>202039</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510</idNumber>
+      </id>
+      <id>
+        <uid>204317</uid>
+        <idType>Secondary sanctions risk:</idType>
+        <idNumber>North Korea Sanctions Regulations, sections 510.201 and 510.210</idNumber>
+      </id>
+      <id>
+        <uid>204318</uid>
+        <idType>Transactions Prohibited For Persons Owned or Controlled By U.S. Financial Institutions:</idType>
+        <idNumber>North Korea Sanctions Regulations section 510.214</idNumber>
+      </id>
+    </idList>
+    <addressList>
+      <address>
+        <uid>90775</uid>
+        <country>Russia</country>
+      </address>
+    </addressList>
+    <nationalityList>
+      <nationality>
+        <uid>102042</uid>
+        <country>Russia</country>
+        <mainEntry>true</mainEntry>
+      </nationality>
+    </nationalityList>
+    <citizenshipList>
+      <citizenship>
+        <uid>102043</uid>
+        <country>Russia</country>
+        <mainEntry>true</mainEntry>
+      </citizenship>
+    </citizenshipList>
+    <dateOfBirthList>
+      <dateOfBirthItem>
+        <uid>102040</uid>
+        <dateOfBirth>18 Nov 1968</dateOfBirth>
+        <mainEntry>true</mainEntry>
+      </dateOfBirthItem>
+    </dateOfBirthList>
+    <placeOfBirthList>
+      <placeOfBirthItem>
+        <uid>102044</uid>
+        <placeOfBirth>Vladivostok, Russia</placeOfBirth>
+        <mainEntry>true</mainEntry>
+      </placeOfBirthItem>
+    </placeOfBirthList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>58256</uid>
+    <firstName>Jose Dario</firstName>
+    <lastName>GALEANO BAZURTO</lastName>
+    <sdnType>Individual</sdnType>
+    <remarks>(Linked To: TREN DE ARAGUA)</remarks>
+    <programList>
+      <program>SDGT</program>
+      <program>TCO</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>52909</uid>
+        <idType>Cedula No.</idType>
+        <idNumber>25580278</idNumber>
+        <idCountry>Venezuela</idCountry>
+      </id>
+      <id>
+        <uid>201205</uid>
+        <idType>Digital Currency Address - TRX</idType>
+        <idNumber>THwbVuBBb26abe5TrAsYUpYz9mhWnBppdz</idNumber>
+      </id>
+      <id>
+        <uid>199979</uid>
+        <idType>Gender</idType>
+        <idNumber>Male</idNumber>
+      </id>
+      <id>
+        <uid>200265</uid>
+        <idType>Secondary sanctions risk:</idType>
+        <idNumber>section 1(b) of Executive Order 13224, as amended by Executive Order 13886</idNumber>
+      </id>
+    </idList>
+    <addressList>
+      <address>
+        <uid>89498</uid>
+        <country>Venezuela</country>
+      </address>
+    </addressList>
+    <nationalityList>
+      <nationality>
+        <uid>99978</uid>
+        <country>Venezuela</country>
+        <mainEntry>true</mainEntry>
+      </nationality>
+    </nationalityList>
+    <dateOfBirthList>
+      <dateOfBirthItem>
+        <uid>99977</uid>
+        <dateOfBirth>26 Mar 1993</dateOfBirth>
+        <mainEntry>true</mainEntry>
+      </dateOfBirthItem>
+    </dateOfBirthList>
+  </sdnEntry>
+</sdnList>

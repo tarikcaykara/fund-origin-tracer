@@ -227,7 +227,7 @@ describe("runtime", () => {
       fetches++;
       return {
         status: 200,
-        body: "<idType>Digital Currency Address - ETH</idType><idNumber>0x00000000000000000000000000000000000000bb</idNumber>",
+        body: "<sdnEntry><uid>7</uid><lastName>TEST ENTITY</lastName><sdnType>Entity</sdnType><idList><id><idType>Digital Currency Address - ETH</idType><idNumber>0x00000000000000000000000000000000000000bb</idNumber></id></idList></sdnEntry>",
       };
     };
     const first = await createRuntime(loadConfig({}), { db, transport });
@@ -237,6 +237,7 @@ describe("runtime", () => {
     const second = await createRuntime(loadConfig({}), { db, transport });
     expect(fetches).toBe(1);
     expect(second.ofacFetchedAt).toBe(first.ofacFetchedAt);
+    expect(second.labels.lookup("ethereum", `0x${"0".repeat(38)}bb`)[0]?.name).toBe("TEST ENTITY");
   });
 
   test("explorerFor builds a fresh provider per run and requires a key for live traffic", async () => {
