@@ -59,7 +59,7 @@ curl -s localhost:3000/api/health
 ```
 
 ```json
-{"version":"1.0.0","chains":{"ethereum":"missing_key","polygon":"missing_key","arbitrum":"missing_key","tron":"missing_key"},"demoOnly":false,"ofacFetchedAt":null,"labelsVersion":"2026-10-20"}
+{"version":"1.0.1","chains":{"ethereum":"missing_key","polygon":"missing_key","arbitrum":"missing_key","tron":"missing_key"},"demoOnly":false,"ofacFetchedAt":null,"labelsVersion":"2026-10-20"}
 ```
 
 - `chains.<id>` is `ready` when the key for that chain is configured (`ETHERSCAN_API_KEY` covers ethereum, polygon and arbitrum; at least one `TRONSCAN_API_KEYS` entry for tron), else `missing_key`. The keys themselves are not validated here.
