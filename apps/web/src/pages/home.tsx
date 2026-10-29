@@ -390,12 +390,14 @@ function AdvancedLimits({
   maxBranches,
   maxEdges,
   minUsd,
+  timeoutSec,
   through,
   followUnpriced,
   setMaxDepth,
   setMaxBranches,
   setMaxEdges,
   setMinUsd,
+  setTimeoutSec,
   setThrough,
   setFollowUnpriced,
 }: {
@@ -403,18 +405,20 @@ function AdvancedLimits({
   maxBranches: number;
   maxEdges: number;
   minUsd: number;
+  timeoutSec: number;
   through: boolean;
   followUnpriced: boolean;
   setMaxDepth: (value: number) => void;
   setMaxBranches: (value: number) => void;
   setMaxEdges: (value: number) => void;
   setMinUsd: (value: number) => void;
+  setTimeoutSec: (value: number) => void;
   setThrough: (value: boolean) => void;
   setFollowUnpriced: (value: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const summaryValue = (value: number) => (Number.isNaN(value) ? "—" : String(value));
-  const summary = `depth ${summaryValue(maxDepth)} · branches ${summaryValue(maxBranches)} · edges ${summaryValue(maxEdges)} · min $${summaryValue(minUsd)}`;
+  const summary = `depth ${summaryValue(maxDepth)} · branches ${summaryValue(maxBranches)} · edges ${summaryValue(maxEdges)} · min $${summaryValue(minUsd)} · timeout ${Number.isNaN(timeoutSec) ? "—" : `${timeoutSec}s`}`;
 
   return (
     <section className="overflow-hidden rounded-md border border-border-strong">
@@ -435,7 +439,7 @@ function AdvancedLimits({
       </button>
       {open ? (
         <div id="advanced-limits-content" className="space-y-4 border-t border-border p-3.5">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <NumberField
               id="maxDepth"
               label="Max depth"
@@ -467,6 +471,14 @@ function AdvancedLimits({
               min={0}
               step={0.01}
               onChange={setMinUsd}
+            />
+            <NumberField
+              id="timeoutSec"
+              label="Time limit (s)"
+              value={timeoutSec}
+              min={10}
+              max={3600}
+              onChange={setTimeoutSec}
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -692,6 +704,7 @@ export function HomePage() {
   const [maxBranches, setMaxBranches] = useState(3);
   const [maxEdges, setMaxEdges] = useState(200);
   const [minUsd, setMinUsd] = useState(0);
+  const [timeoutSec, setTimeoutSec] = useState(600);
   const [through, setThrough] = useState(false);
   const [followUnpriced, setFollowUnpriced] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -712,7 +725,7 @@ export function HomePage() {
   }, [healthData, chainTouched, demoOnly]);
 
   const parsed = useMemo(() => parseSeeds(seedText, chain), [seedText, chain]);
-  const limitError = firstLimitError({ maxDepth, maxBranches, maxEdges, minUsd });
+  const limitError = firstLimitError({ maxDepth, maxBranches, maxEdges, minUsd, timeoutSec });
   const limitsValid = limitError === null;
   const canSubmit =
     liveReady &&
@@ -745,6 +758,7 @@ export function HomePage() {
         maxBranches,
         maxEdges,
         minUsd,
+        timeoutSec,
         traceThroughEntities: through,
         followUnpriced,
       }),
@@ -874,12 +888,14 @@ export function HomePage() {
                   maxBranches={maxBranches}
                   maxEdges={maxEdges}
                   minUsd={minUsd}
+                  timeoutSec={timeoutSec}
                   through={through}
                   followUnpriced={followUnpriced}
                   setMaxDepth={setMaxDepth}
                   setMaxBranches={setMaxBranches}
                   setMaxEdges={setMaxEdges}
                   setMinUsd={setMinUsd}
+                  setTimeoutSec={setTimeoutSec}
                   setThrough={setThrough}
                   setFollowUnpriced={setFollowUnpriced}
                 />

@@ -55,7 +55,11 @@ function getVisiblePhase(run: RunDetail, phase: RunPhase): RunPhase {
 
 function ProvisionalStrip({ phase, hasResult }: { phase: RunPhase; hasResult: boolean }) {
   if (phase === "completed") return null;
-  const before = { cancelled: "cancellation", failed: "the run failed", timed_out: "timeout" };
+  const before = {
+    cancelled: "cancellation",
+    failed: "the run failed",
+    timed_out: "the time limit was reached",
+  };
   const outcome = { cancelled: "was cancelled", failed: "failed", timed_out: "timed out" };
   const partial = (reason: "cancelled" | "failed" | "timed_out") =>
     hasResult
@@ -73,7 +77,7 @@ function ProvisionalStrip({ phase, hasResult }: { phase: RunPhase; hasResult: bo
     },
     cancelled: { tag: "□ CANCELLED", text: partial("cancelled") },
     failed: { tag: "✕ FAILED", text: partial("failed") },
-    timed_out: { tag: "✕ FAILED", text: partial("timed_out") },
+    timed_out: { tag: "✕ TIMED OUT", text: partial("timed_out") },
   };
   const message = copy[phase];
   return (

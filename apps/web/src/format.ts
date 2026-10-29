@@ -90,3 +90,8 @@ export function formatClock(milliseconds: number): string {
   const minutes = String(totalMinutes % 60).padStart(2, "0");
   return `${hours}:${minutes}:${seconds}`;
 }
+
+/** `10-minute` for whole minutes, else `90-second`; run time limits (`timeoutSec`). */
+export function formatTimeLimit(seconds: number): string {
+  return seconds % 60 === 0 ? `${seconds / 60}-minute` : `${seconds}-second`;
+}

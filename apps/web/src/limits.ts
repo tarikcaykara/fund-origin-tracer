@@ -3,6 +3,7 @@ export interface RunLimits {
   maxBranches: number;
   maxEdges: number;
   minUsd: number;
+  timeoutSec: number;
 }
 
 function outOfRange(value: number, min: number, max: number): boolean {
@@ -17,5 +18,7 @@ export function firstLimitError(limits: RunLimits): string | null {
   if (outOfRange(limits.maxEdges, 10, 5000))
     return "Max edges must be a whole number from 10 to 5000.";
   if (!(limits.minUsd >= 0)) return "Min USD must be 0 or more.";
+  if (outOfRange(limits.timeoutSec, 10, 3600))
+    return "Time limit must be a whole number of seconds from 10 to 3600.";
   return null;
 }

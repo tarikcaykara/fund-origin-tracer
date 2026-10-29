@@ -80,6 +80,13 @@ export interface FollowUpOutcome {
   warnings: { code: string; message: string }[];
 }
 
+/** Why follow-ups stopped, from the reason `RunController.cancel` aborts with. */
+function abortReason(signal: AbortSignal): string {
+  if (signal.reason === "timeout") return "the run reached its time limit";
+  if (signal.reason === "cancelled") return "the run was cancelled";
+  return "the run was aborted";
+}
+
 /**
  * "Who else did this funder pay?" For the top convergences by usd, list the common address's
  * other transfers (backward: its outgoing, forward: its incoming) and keep those whose
@@ -99,7 +106,7 @@ export async function followUpConvergences(
     if (deps.signal.aborted) {
       warnings.push({
         code: "convergence_followup_failed",
-        message: `Follow-up for ${conv.address} skipped: run was aborted.`,
+        message: `Follow-up for ${conv.address} skipped: ${abortReason(deps.signal)}.`,
       });
       break;
     }
