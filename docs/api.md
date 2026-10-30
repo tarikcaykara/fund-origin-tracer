@@ -68,11 +68,13 @@ curl -s localhost:3000/api/health
 
 ### `GET /api/demo`
 
-Returns `[{id, title, description, chain, direction}]` for every valid scenario in `fixtures/demo/`:
+Returns `[{id, title, description, chain, direction, addresses, transfers}]` for every valid scenario in `fixtures/demo/`:
 
 ```json
-[{"id":"d1-source-of-funds-ethereum","title":"Source of funds on Ethereum","description":"Backward trace of a 50k USDT transfer. …","chain":"ethereum","direction":"backward"}, …]
+[{"id":"d1-source-of-funds-ethereum","title":"Source of funds on Ethereum","description":"Backward trace of a 50k USDT transfer. …","chain":"ethereum","direction":"backward","addresses":64,"transfers":84}, …]
 ```
+
+- `addresses` and `transfers` are the size of the recorded run (`graph.addresses.length` and `graph.edges.length`), written by `fot fixtures record`; both are omitted for scenarios recorded without them.
 
 ### `POST /api/runs`
 

@@ -174,6 +174,8 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
         description: s.description,
         chain: s.chain,
         direction: s.direction,
+        addresses: s.addresses,
+        transfers: s.transfers,
       })),
     ),
   );

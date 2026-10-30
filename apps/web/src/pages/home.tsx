@@ -58,6 +58,12 @@ function demoMeta(demo: DemoScenario): string {
   return `${chainName(demo.chain).toUpperCase()} · ${direction}`;
 }
 
+/** "64 addr · 84 transfers"; null when the scenario has no counts. */
+function demoSize(demo: DemoScenario): string | null {
+  if (demo.addresses === undefined || demo.transfers === undefined) return null;
+  return `${demo.addresses} addr · ${demo.transfers} ${demo.transfers === 1 ? "transfer" : "transfers"}`;
+}
+
 function DemoCards({
   demos,
   prominent,
@@ -120,20 +126,26 @@ function DemoCards({
         </p>
       </div>
       <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-3 xl:gap-4">
-        {demos.map((demo) => (
-          <Card key={demo.id} className="min-w-0 border-border-strong">
-            <CardContent className="min-w-0 gap-3 p-4">
-              <p className="type-mono-node text-muted-foreground">{demoMeta(demo)}</p>
-              <h3 className="text-base font-semibold">{demo.title}</h3>
-              <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-muted-foreground">
-                {demo.description}
-              </p>
-              <Button type="button" size="lg" disabled={busy} onClick={() => onStart(demo.id)}>
-                ▶ Run demo
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {demos.map((demo) => {
+          const size = demoSize(demo);
+          return (
+            <Card key={demo.id} className="min-w-0 border-border-strong">
+              <CardContent className="min-w-0 gap-3 p-4">
+                <div className="flex min-w-0 flex-wrap justify-between gap-x-2 gap-y-1 type-mono-node text-muted-foreground">
+                  <span>{demoMeta(demo)}</span>
+                  {size !== null ? <span>{size}</span> : null}
+                </div>
+                <h3 className="text-base font-semibold">{demo.title}</h3>
+                <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-muted-foreground">
+                  {demo.description}
+                </p>
+                <Button type="button" size="lg" disabled={busy} onClick={() => onStart(demo.id)}>
+                  ▶ Run demo
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );

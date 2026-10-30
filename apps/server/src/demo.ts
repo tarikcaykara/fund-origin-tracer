@@ -21,6 +21,10 @@ export const ScenarioSchema = z.object({
   description: z.string(),
   chain: ChainIdSchema,
   direction: DirectionSchema,
+  /** `graph.addresses.length` of the recorded run; absent in scenarios recorded without counts. */
+  addresses: z.number().int().nonnegative().optional(),
+  /** `graph.edges.length` of the recorded run; absent in scenarios recorded without counts. */
+  transfers: z.number().int().nonnegative().optional(),
   params: RunParamsSchema,
   recordedAt: z.string(),
 });

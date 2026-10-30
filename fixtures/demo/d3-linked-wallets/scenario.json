@@ -4,6 +4,8 @@
   "description": "Backward trace of two unrelated-looking USDT payments. Both lead back to the same unlabeled funding wallet, which is flagged as a common source shared across seeds.",
   "chain": "ethereum",
   "direction": "backward",
+  "addresses": 75,
+  "transfers": 117,
   "params": {
     "chain": "ethereum",
     "direction": "backward",
