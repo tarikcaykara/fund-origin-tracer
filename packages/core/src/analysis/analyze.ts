@@ -3,7 +3,17 @@ import type { TraceOutput } from "../engine/types.ts";
 import type { LabelRegistry } from "../labels/registry.ts";
 import type { LoadedPolicy } from "../policy/policy.ts";
 import type { ExplorerProvider, PriceSource } from "../providers/types.ts";
-import type { AddressNode, AnalysisResult, Label, RunParams, TraceEdge } from "../schema.ts";
+import type {
+  AddressNode,
+  AnalysisResult,
+  Convergence,
+  DerivedAnalysis,
+  ExchangeTouchpoint,
+  Exposure,
+  Label,
+  RunParams,
+  TraceEdge,
+} from "../schema.ts";
 import { findConvergences, followUpConvergences } from "./convergence.ts";
 import { computeExposure } from "./exposure.ts";
 import { evaluateFlags, riskLevelOf } from "./flags.ts";
@@ -88,20 +98,25 @@ function buildAddressNodes(
   });
 }
 
-/**
- * Turns a finished trace into the result envelope: graph, linked wallets (convergences), exposure,
- * exchange touchpoints, policy flags and risk level. Deterministic for a given input apart from
- * the convergence follow-up lookups, which go through `deps.provider`.
- */
-export async function analyze(
-  trace: TraceOutput,
+interface Derived {
+  ctx: AnalysisContext;
+  /** Edges in `ctx` order (depth, seed index, rank, id). */
+  edges: TraceEdge[];
+  addresses: AddressNode[];
+  /** Before the follow-up lookups: `otherCounterparties` is empty. */
+  convergences: Convergence[];
+  exposure: Exposure;
+  exchangeTouchpoints: ExchangeTouchpoint[];
+}
+
+/** The synchronous, network-free part shared by `analyze` and `analyzeProvisional`. */
+function deriveFromEdges(
+  traceEdges: readonly TraceEdge[],
   params: RunParams,
   labels: LabelRegistry,
-  policy: LoadedPolicy,
-  deps: AnalyzeDeps,
-): Promise<AnalysisResult> {
-  const { edgeSeedIds, seedOrder } = seedReachability(trace.edges, params.seeds);
-  const edges = sortEdges(trace.edges, edgeSeedIds, seedOrder);
+): Derived {
+  const { edgeSeedIds, seedOrder } = seedReachability(traceEdges, params.seeds);
+  const edges = sortEdges(traceEdges, edgeSeedIds, seedOrder);
 
   const labelCache = new Map<string, readonly Label[]>();
   const ctx: AnalysisContext = {
@@ -121,16 +136,37 @@ export async function analyze(
     },
   };
 
-  const addresses = buildAddressNodes(ctx, (a) => labels.isSanctioned(params.chain, a));
+  return {
+    ctx,
+    edges,
+    addresses: buildAddressNodes(ctx, (a) => labels.isSanctioned(params.chain, a)),
+    convergences: findConvergences(ctx),
+    exposure: computeExposure(ctx),
+    exchangeTouchpoints: findTouchpoints(ctx),
+  };
+}
+
+/**
+ * Turns a finished trace into the result envelope: graph, linked wallets (convergences), exposure,
+ * exchange touchpoints, policy flags and risk level. Deterministic for a given input apart from
+ * the convergence follow-up lookups, which go through `deps.provider`.
+ */
+export async function analyze(
+  trace: TraceOutput,
+  params: RunParams,
+  labels: LabelRegistry,
+  policy: LoadedPolicy,
+  deps: AnalyzeDeps,
+): Promise<AnalysisResult> {
+  const derived = deriveFromEdges(trace.edges, params, labels);
+  const { ctx, edges, addresses, exposure, exchangeTouchpoints } = derived;
   const followUp = await followUpConvergences(
-    findConvergences(ctx),
+    derived.convergences,
     ctx,
     new Set(addresses.map((a) => a.address)),
     { provider: deps.provider, prices: deps.prices, signal: deps.signal },
   );
   const convergences = followUp.convergences;
-  const exposure = computeExposure(ctx);
-  const exchangeTouchpoints = findTouchpoints(ctx);
   const flags = evaluateFlags({
     ctx,
     flags: policy.flags,
@@ -172,5 +208,44 @@ export async function analyze(
       ofacFetchedAt: deps.ofacFetchedAt,
     },
     policy: { version: policy.version, overridden: policy.overridden },
+  };
+}
+
+/**
+ * `analyze` for a run still in flight: synchronous and network-free. No convergence follow-up
+ * (`otherCounterparties` stays empty) and no run outcome (`incomplete_trace` only reflects
+ * branches whose data could not be fetched). Pending edges count as transfers, not as stops.
+ */
+export function analyzeProvisional(
+  edges: readonly TraceEdge[],
+  params: RunParams,
+  labels: LabelRegistry,
+  policy: LoadedPolicy,
+): DerivedAnalysis {
+  const { ctx, addresses, convergences, exposure, exchangeTouchpoints } = deriveFromEdges(
+    edges,
+    params,
+    labels,
+  );
+  const flags = evaluateFlags({
+    ctx,
+    flags: policy.flags,
+    exposure,
+    convergences,
+    touchpoints: exchangeTouchpoints,
+    status: null,
+    // The engine's `maxDepthReached` is the depth of the deepest edge it created.
+    maxDepthReached: edges.reduce((max, e) => Math.max(max, e.depth), 0),
+  });
+  return {
+    chain: params.chain,
+    direction: params.direction,
+    seeds: params.seeds,
+    graph: { addresses },
+    convergences,
+    exposure,
+    exchangeTouchpoints,
+    flags,
+    riskLevel: riskLevelOf(flags),
   };
 }

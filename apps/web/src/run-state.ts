@@ -1,4 +1,10 @@
-import type { AnalysisResult, RunEvent, RunStatus, TraceEdge } from "@fot/core/schema";
+import type {
+  AnalysisResult,
+  DerivedAnalysis,
+  RunEvent,
+  RunStatus,
+  TraceEdge,
+} from "@fot/core/schema";
 
 /** `connecting` until the first `snapshot` arrives; the rest mirrors the server's run status. */
 export type RunPhase = "connecting" | "running" | "paused" | RunStatus;
@@ -15,6 +21,8 @@ export interface RunState {
   progress: Omit<RunProgress, "type"> | null;
   warnings: { code: string; message: string }[];
   error: { code: string; message: string } | null;
+  /** Live-only analysis of the edges so far; cleared by `snapshot`, replaced by `result`. */
+  provisional: DerivedAnalysis | null;
   /** The final analysis; set by the `result` event. */
   result: AnalysisResult | null;
   /** True after `done`; the stream is finished and must not be reconnected. */
@@ -28,6 +36,7 @@ export const initialRunState: RunState = {
   progress: null,
   warnings: [],
   error: null,
+  provisional: null,
   result: null,
   done: false,
 };
@@ -89,6 +98,8 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
       const { type: _type, ...progress } = event;
       return { ...state, progress };
     }
+    case "provisional":
+      return { ...state, provisional: event.analysis };
     case "warning":
       return {
         ...state,
@@ -102,6 +113,7 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
         phase: event.result.status,
         edges: indexEdges(event.result.graph.edges),
         stats: event.result.stats,
+        provisional: null,
         result: event.result,
       };
     case "done":

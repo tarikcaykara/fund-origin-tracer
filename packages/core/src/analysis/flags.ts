@@ -19,7 +19,8 @@ export interface FlagInput {
   exposure: Exposure;
   convergences: readonly Convergence[];
   touchpoints: readonly ExchangeTouchpoint[];
-  status: TraceStatus;
+  /** Null while the run is still in flight (provisional analysis): there is no outcome yet. */
+  status: TraceStatus | null;
   maxDepthReached: number;
 }
 
@@ -431,9 +432,10 @@ export function evaluateFlags(input: FlagInput): Flag[] {
 
   // incomplete_trace
   const failed = ctx.edges.filter((e) => e.stopReason === "fetch_failed");
-  if (input.status !== "completed" || failed.length > 0) {
+  const ended = input.status !== null && input.status !== "completed";
+  if (ended || failed.length > 0) {
     const parts: string[] = [];
-    if (input.status !== "completed") parts.push(`the run ended as ${input.status}`);
+    if (ended) parts.push(`the run ended as ${input.status}`);
     if (failed.length > 0) {
       parts.push(
         `${plural(failed.length, "branch", "branches")} stopped because data could not be fetched`,

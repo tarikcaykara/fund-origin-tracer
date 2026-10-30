@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { AnalysisResult, RunEvent, TraceEdge } from "@fot/core/schema";
+import type { AnalysisResult, DerivedAnalysis, RunEvent, TraceEdge } from "@fot/core/schema";
 import { initialRunState, type RunState, reduceRunEvent, sortedEdges } from "../src/run-state.ts";
 
 function edge(id: string, overrides: Partial<TraceEdge> = {}): TraceEdge {
@@ -156,6 +156,35 @@ describe("reduceRunEvent", () => {
     });
     expect(resumed.done).toBe(false);
     expect(resumed.error).toBeNull();
+  });
+
+  test("a provisional analysis lasts until the result replaces it or a snapshot resets it", () => {
+    const analysis = { riskLevel: "medium", flags: [] } as unknown as DerivedAnalysis;
+    const live = fold([
+      { type: "snapshot", status: "running", edges: [edge("a")], stats: {} },
+      { type: "provisional", analysis },
+      { type: "edge_added", edge: edge("b") },
+    ]);
+    expect(live.provisional).toBe(analysis);
+    expect(live.phase).toBe("running");
+    expect(Object.keys(live.edges)).toEqual(["a", "b"]);
+
+    const reconnected = reduceRunEvent(live, {
+      type: "snapshot",
+      status: "running",
+      edges: [edge("a")],
+      stats: {},
+    });
+    expect(reconnected.provisional).toBeNull();
+
+    const result = {
+      status: "completed",
+      graph: { addresses: [], edges: [edge("a")] },
+      stats: {},
+    } as unknown as AnalysisResult;
+    const finished = reduceRunEvent(live, { type: "result", result });
+    expect(finished.provisional).toBeNull();
+    expect(finished.result).toBe(result);
   });
 });
 

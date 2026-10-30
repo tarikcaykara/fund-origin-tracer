@@ -488,6 +488,96 @@ describe("pause, resume and cancel", () => {
   });
 });
 
+describe("provisional analysis", () => {
+  test("streams before the result, never after it, and is never stored", async () => {
+    // Real timers on purpose: this exercises the provisional interval against the transport delay.
+    const env = await createTestEnv({
+      transport: fakeTransport(chainOfTransfers(8), { delayMs: 15 }),
+      provisionalIntervalMs: 5,
+    });
+    const runId = await startLive(env, { maxDepth: 6 });
+    const types: string[] = [];
+    // What the database held each time a provisional analysis was streamed.
+    const stored: { riskLevel: string | null; result: AnalysisResult | null }[] = [];
+    const results: AnalysisResult[] = [];
+    env.manager.subscribe(runId, (e) => {
+      types.push(e.type);
+      if (e.type === "provisional") {
+        stored.push({
+          riskLevel: env.db.investigations.get(runId)?.riskLevel ?? null,
+          result: env.db.investigations.getResult(runId),
+        });
+      }
+      if (e.type === "result") results.push(e.result);
+    });
+    await env.manager.waitForRun(runId);
+
+    const resultAt = types.indexOf("result");
+    expect(types.slice(0, resultAt)).toContain("provisional");
+    expect(types.slice(resultAt)).not.toContain("provisional");
+    expect(new Set(stored.map((s) => JSON.stringify(s)))).toEqual(
+      new Set([JSON.stringify({ riskLevel: null, result: null })]),
+    );
+    expect((await getRun(env, runId)).result).toEqual(results[0] ?? null);
+  });
+
+  test("pausing streams it at once and late subscribers get it after the snapshot", async () => {
+    const env = await createTestEnv({
+      transport: fakeTransport(chainOfTransfers(8), { delayMs: 20 }),
+    });
+    const runId = await startLive(env, { maxDepth: 6 });
+    const events: RunEvent[] = [];
+    const firstEdge = Promise.withResolvers<void>();
+    env.manager.subscribe(runId, (e) => {
+      events.push(e);
+      if (e.type === "edge_added") firstEdge.resolve();
+    });
+    await firstEdge.promise;
+
+    env.manager.pause(runId);
+    expect(events.slice(-2).map((e) => e.type)).toEqual(["status", "provisional"]);
+
+    const late: RunEvent[] = [];
+    env.manager.subscribe(runId, (e) => late.push(e));
+    const [snapshot, provisional] = late;
+    expect(late.map((e) => e.type)).toEqual(["snapshot", "provisional"]);
+    expect(provisional).toEqual(events.at(-1));
+    if (snapshot?.type !== "snapshot" || provisional?.type !== "provisional") return;
+    const analyzed = new Set(provisional.analysis.graph.addresses.map((a) => a.address));
+    for (const edge of snapshot.edges) {
+      expect(analyzed.has(edge.far) && analyzed.has(edge.near)).toBe(true);
+    }
+
+    env.manager.resume(runId);
+    await env.manager.waitForRun(runId);
+  });
+
+  test("an expansion's first subscriber gets the merged graph's analysis with the snapshot", async () => {
+    const env = await createTestEnv({ transport: fakeTransport(chainOfTransfers(12)) });
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+
+    // Called on the manager so the subscription is in place before the continuation's first edge.
+    const expanding = env.manager.expand(runId, stopped.id, { maxDepth: 2 });
+    const first: RunEvent[] = [];
+    env.manager.subscribe(runId, (e) => {
+      if (first.length < 2) first.push(e);
+    });
+    await expanding;
+    await env.manager.waitForRun(runId);
+
+    expect(first.map((e) => e.type)).toEqual(["snapshot", "provisional"]);
+    const provisional = first[1];
+    if (provisional?.type !== "provisional") return;
+    expect(provisional.analysis.graph.addresses.map((a) => a.address).sort()).toEqual(
+      before.graph.addresses.map((a) => a.address).sort(),
+    );
+  });
+});
+
 describe("history", () => {
   function seed(env: TestEnv) {
     const base = {

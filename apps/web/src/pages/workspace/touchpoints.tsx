@@ -1,4 +1,4 @@
-import type { AnalysisResult, ExchangeTouchpoint } from "@fot/core/schema";
+import type { DerivedAnalysis, ExchangeTouchpoint } from "@fot/core/schema";
 import { useMemo } from "react";
 import { CategoryTag } from "@/components/badges.tsx";
 import { EmptyState } from "@/components/empty-state.tsx";
@@ -17,7 +17,7 @@ import { withUniqueKeys } from "@/lib/utils.ts";
 import { CATEGORY_META } from "@/meta.ts";
 
 /** Plain-text block per touchpoint, ready to paste into a freeze or information request. */
-export function freezeRequestText(result: AnalysisResult): string {
+export function freezeRequestText(result: DerivedAnalysis): string {
   const { chain } = result;
   return result.exchangeTouchpoints
     .map((touchpoint: ExchangeTouchpoint) => {
@@ -44,7 +44,7 @@ function groupByEntity(touchpoints: ExchangeTouchpoint[]): [string, ExchangeTouc
   return [...groups.entries()];
 }
 
-export function TouchpointsTab({ result }: { result: AnalysisResult }) {
+export function TouchpointsTab({ result }: { result: DerivedAnalysis }) {
   const { chain, direction, exchangeTouchpoints } = result;
   const labels = useMemo(() => indexAddresses(result.graph.addresses), [result.graph.addresses]);
   const primaryKind = direction === "backward" ? "origin" : "arrival";

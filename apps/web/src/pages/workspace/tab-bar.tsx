@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "@fot/core/schema";
+import type { DerivedAnalysis } from "@fot/core/schema";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 
@@ -7,7 +7,7 @@ export function WorkspaceTabBar({
   result,
 }: {
   edgeCount: number;
-  result: AnalysisResult | null;
+  result: DerivedAnalysis | null;
 }) {
   const breakpoint = useBreakpoint();
   const phone = breakpoint === "phone";

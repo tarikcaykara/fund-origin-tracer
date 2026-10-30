@@ -1,4 +1,4 @@
-import { type AnalysisResult, type Convergence, transferId } from "@fot/core/schema";
+import { type Convergence, type DerivedAnalysis, transferId } from "@fot/core/schema";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state.tsx";
 import { AddressChip, TxLink } from "@/components/links.tsx";
@@ -32,7 +32,7 @@ export function LinkedWalletsTab({
   onSelect,
   onTraceForward,
 }: {
-  result: AnalysisResult;
+  result: DerivedAnalysis;
   onSelect: (selection: Selection) => void;
   onTraceForward: (address: string) => void;
 }) {

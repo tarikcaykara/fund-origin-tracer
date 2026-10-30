@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "@fot/core/schema";
+import type { DerivedAnalysis } from "@fot/core/schema";
 import { useMemo } from "react";
 import { CategoryTag, SeverityTag } from "@/components/badges.tsx";
 import { EmptyState } from "@/components/empty-state.tsx";
@@ -15,7 +15,7 @@ export function FlagsTab({
   result,
   onSelect,
 }: {
-  result: AnalysisResult;
+  result: DerivedAnalysis;
   onSelect: (selection: Selection) => void;
 }) {
   const { chain, flags } = result;
