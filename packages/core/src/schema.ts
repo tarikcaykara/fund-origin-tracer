@@ -317,6 +317,22 @@ export const AnalysisResultSchema = z.object({
 });
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
+/**
+ * The edge-derived part of an analysis: what the workspace tabs render. Every `AnalysisResult`
+ * satisfies it; the `provisional` event carries one while a run is live.
+ */
+export const DerivedAnalysisSchema = AnalysisResultSchema.pick({
+  chain: true,
+  direction: true,
+  seeds: true,
+  convergences: true,
+  exposure: true,
+  exchangeTouchpoints: true,
+  flags: true,
+  riskLevel: true,
+}).extend({ graph: z.object({ addresses: z.array(AddressNodeSchema) }) });
+export type DerivedAnalysis = z.infer<typeof DerivedAnalysisSchema>;
+
 const statsSchema = z.object({
   expandedEdges: z.number().int(),
   apiCalls: z.number().int(),
@@ -349,6 +365,7 @@ export const RunEventSchema = z.discriminatedUnion("type", [
     cacheHits: z.number().int(),
     elapsedMs: z.number(),
   }),
+  z.object({ type: z.literal("provisional"), analysis: DerivedAnalysisSchema }),
   z.object({ type: z.literal("warning"), code: z.string(), message: z.string() }),
   z.object({ type: z.literal("result"), result: AnalysisResultSchema }),
   z.object({ type: z.literal("error"), code: z.string(), message: z.string() }),

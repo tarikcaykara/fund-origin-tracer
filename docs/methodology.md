@@ -194,6 +194,16 @@ Every edge whose `far` is labeled `exchange`:
 
 `counterparty` is the `near` address: for an arrival this is the probable deposit address. Touchpoints are sorted by USD descending (unknown last), then depth. They are the addresses to put in a freeze or information request.
 
+### Provisional analysis
+
+While a run is live, the server streams a **provisional** analysis of the edges found so far (`analyzeProvisional` in `analysis/analyze.ts`; cadence in `apps/server/src/runs.ts`): at most once per second when edges changed, immediately on pause, and at the start of an "Expand further". It applies every rule above to the current edges and differs from the final analysis in three ways:
+
+- **No follow-up lookups.** Convergences have empty `otherCounterparties`; the follow-up listings run only for the final result.
+- **No run outcome.** `incomplete_trace` is raised only for `fetch_failed` edges, never for the run's status, because the run has not ended.
+- **Pending edges are not stops.** Edges still queued count as transfers (for convergences and touchpoints) but not as unresolved ends, so exposure's unresolved and terminal values grow as the run proceeds.
+
+The provisional risk level can therefore still change in either direction. It is shown as provisional, never stored, and replaced by the final analysis when the run finishes.
+
 ## Flags and risk level
 
 Source: `analysis/flags.ts`, defaults in `packages/core/src/policy/default-policy.json`.

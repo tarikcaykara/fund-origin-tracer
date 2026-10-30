@@ -1,4 +1,4 @@
-import { type AnalyzeDeps, analyze } from "../../src/analysis/analyze.ts";
+import { type AnalyzeDeps, analyze, analyzeProvisional } from "../../src/analysis/analyze.ts";
 import type { TraceOutput, TraceStatus } from "../../src/engine/types.ts";
 import type { SdnEntry } from "../../src/labels/ofac.ts";
 import { LabelRegistry } from "../../src/labels/registry.ts";
@@ -16,6 +16,7 @@ import {
   type AnalysisResult,
   type Asset,
   assetId,
+  type DerivedAnalysis,
   type Direction,
   type LabelCategory,
   RunParamsSchema,
@@ -250,13 +251,16 @@ export function transferRow(init: {
   };
 }
 
-export async function runAnalysis(edges: TraceEdge[], s: Scenario = {}): Promise<AnalysisResult> {
-  const direction = s.direction ?? "backward";
-  const params = RunParamsSchema.parse({
+function paramsFor(s: Scenario) {
+  return RunParamsSchema.parse({
     chain: "ethereum",
-    direction,
+    direction: s.direction ?? "backward",
     seeds: seeds(...(s.seedIds ?? ["s1"])),
   });
+}
+
+export async function runAnalysis(edges: TraceEdge[], s: Scenario = {}): Promise<AnalysisResult> {
+  const params = paramsFor(s);
   const maxDepth = s.maxDepthReached ?? edges.reduce((m, e) => Math.max(m, e.depth), 0);
   const trace: TraceOutput = {
     edges,
@@ -282,6 +286,11 @@ export async function runAnalysis(edges: TraceEdge[], s: Scenario = {}): Promise
   return analyze(trace, params, registryFor(s), loadPolicy(s.policy ?? null), deps);
 }
 
-export function flagIds(result: AnalysisResult): string[] {
+/** `analyzeProvisional` over the same params, labels and policy that `runAnalysis` uses. */
+export function provisionalAnalysis(edges: TraceEdge[], s: Scenario = {}): DerivedAnalysis {
+  return analyzeProvisional(edges, paramsFor(s), registryFor(s), loadPolicy(s.policy ?? null));
+}
+
+export function flagIds(result: Pick<AnalysisResult, "flags">): string[] {
   return result.flags.map((f) => f.id);
 }

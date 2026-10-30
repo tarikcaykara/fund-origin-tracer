@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { AnalysisResultSchema } from "../src/schema.ts";
+import { AnalysisResultSchema, DerivedAnalysisSchema } from "../src/schema.ts";
 import {
   addr,
   buildEdges,
   FAKE_USDT,
   fakePrices,
   fakeProvider,
+  flagIds,
+  provisionalAnalysis,
   runAnalysis,
   T0,
   transferRow,
@@ -467,5 +469,50 @@ describe("analyze: exchange touchpoints", () => {
     });
     expect(result.exchangeTouchpoints).toHaveLength(1);
     expect(result.exchangeTouchpoints[0]).toMatchObject({ kind: "arrival", counterparty: addr(1) });
+  });
+});
+
+describe("analyzeProvisional", () => {
+  test("equals the derived part of analyze for a completed run whose follow-ups find nothing", async () => {
+    const scenario = { seedIds: ["s1", "s2"], labels: [BINANCE], ofac: [addr(21)] };
+    const edges = twoSeedGraph();
+    const final = await runAnalysis(edges, scenario);
+    // The fixture exercises every derived section, so equality below is not vacuous.
+    expect(final.convergences).toHaveLength(1);
+    expect(final.exchangeTouchpoints).toHaveLength(1);
+    expect(final.riskLevel).toBe("high");
+
+    const provisional = provisionalAnalysis(edges, scenario);
+    expect(provisional).toEqual({
+      chain: final.chain,
+      direction: final.direction,
+      seeds: final.seeds,
+      graph: { addresses: final.graph.addresses },
+      convergences: final.convergences,
+      exposure: final.exposure,
+      exchangeTouchpoints: final.exchangeTouchpoints,
+      flags: final.flags,
+      riskLevel: final.riskLevel,
+    });
+    expect(DerivedAnalysisSchema.parse(JSON.parse(JSON.stringify(provisional)))).toEqual(
+      provisional,
+    );
+  });
+
+  test("raises incomplete_trace only for failed fetches: a run in flight has no outcome yet", async () => {
+    const clean = buildEdges([{ id: "a", near: addr(1), far: addr(2), seedId: "s1" }]);
+    expect(flagIds(await runAnalysis(clean, { status: "cancelled" }))).toContain(
+      "incomplete_trace",
+    );
+    expect(flagIds(provisionalAnalysis(clean))).not.toContain("incomplete_trace");
+
+    const failed = buildEdges([
+      { id: "a", near: addr(1), far: addr(2), seedId: "s1" },
+      { id: "b", near: addr(1), far: addr(3), seedId: "s1", stop: "fetch_failed" },
+    ]);
+    const flag = provisionalAnalysis(failed).flags.find((f) => f.id === "incomplete_trace");
+    expect(flag?.detail).toBe(
+      "The result may be partial: 1 branch stopped because data could not be fetched.",
+    );
   });
 });

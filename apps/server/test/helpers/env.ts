@@ -44,6 +44,7 @@ export interface EnvOptions {
   transport?: Transport;
   fixturesDir?: string;
   maxLiveRuns?: number;
+  provisionalIntervalMs?: number;
 }
 
 /** Server wired to an in-memory database and a fake explorer; no network, no keys needed. */
@@ -64,6 +65,9 @@ export async function createTestEnv(options: EnvOptions = {}): Promise<TestEnv> 
     fixturesDir,
     replayDelayMs: 0,
     ...(options.maxLiveRuns ? { maxLiveRuns: options.maxLiveRuns } : {}),
+    ...(options.provisionalIntervalMs
+      ? { provisionalIntervalMs: options.provisionalIntervalMs }
+      : {}),
   });
   const app = createApp({ runtime, manager, webDir: null });
   return { db, runtime, manager, app, config, fixturesDir };

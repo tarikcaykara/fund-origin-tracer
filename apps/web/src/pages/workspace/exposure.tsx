@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "@fot/core/schema";
+import type { DerivedAnalysis } from "@fot/core/schema";
 import { CategoryTag } from "@/components/badges.tsx";
 import { EmptyState } from "@/components/empty-state.tsx";
 import {
@@ -13,7 +13,7 @@ import { formatUsd } from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import { CATEGORY_META } from "@/meta.ts";
 
-export function ExposureTab({ result }: { result: AnalysisResult }) {
+export function ExposureTab({ result }: { result: DerivedAnalysis }) {
   const { exposure } = result;
   const phone = useBreakpoint() === "phone";
   const byEntityTotalUsd = exposure.byEntity.reduce((sum, entity) => sum + entity.usd, 0);

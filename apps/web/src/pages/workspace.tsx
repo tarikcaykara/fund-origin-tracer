@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "@fot/core/schema";
+import type { AnalysisResult, DerivedAnalysis } from "@fot/core/schema";
 import { CircleSlash, Clock3 } from "lucide-react";
 import { lazy, type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -69,11 +69,11 @@ function ProvisionalStrip({ phase, hasResult }: { phase: RunPhase; hasResult: bo
     connecting: { tag: "● LIVE", text: "Connecting to the live run stream." },
     running: {
       tag: "● LIVE",
-      text: "Provisional · transfers are still arriving; analysis is deferred.",
+      text: "Provisional · the trace is still running; this view updates as transfers arrive.",
     },
     paused: {
       tag: "❚❚ PAUSED",
-      text: "Provisional · the run is paused; derived analysis is deferred.",
+      text: "Provisional · the run is paused; this view covers the transfers found so far.",
     },
     cancelled: { tag: "□ CANCELLED", text: partial("cancelled") },
     failed: { tag: "✕ FAILED", text: partial("failed") },
@@ -93,8 +93,8 @@ function WaitingForResult() {
     <div className="p-3 md:p-5">
       <EmptyState
         icon={Clock3}
-        title="Available when the run finishes"
-        body="Derived analysis is deferred until the trace has a final result."
+        title="Waiting for the first transfers"
+        body="Provisional analysis appears once the trace has found transfers; the final analysis replaces it when the run finishes."
       />
     </div>
   );
@@ -176,7 +176,9 @@ export function WorkspacePage() {
   const labels = useMemo(() => indexAddresses(result?.graph.addresses), [result]);
   const phase = run ? getVisiblePhase(run, state.phase) : state.phase;
   const live = isLivePhase(phase) || phase === "connecting";
-  const riskLevel = result?.riskLevel ?? run?.riskLevel ?? null;
+  // While live the tabs show the streamed provisional analysis, afterwards the final result.
+  const analysis: DerivedAnalysis | null = live ? state.provisional : result;
+  const riskLevel = analysis?.riskLevel ?? run?.riskLevel ?? null;
   const selectedEdge =
     selection?.kind === "edge"
       ? (edges.find((edge) => edge.id === selection.edgeId) ?? null)
@@ -341,11 +343,11 @@ export function WorkspacePage() {
         : undefined;
   const runError = state.error ? `${state.error.code}: ${state.error.message}` : run.error;
   const strip = <ProvisionalStrip phase={phase} hasResult={result !== null} />;
-  // Result-only tabs: wait while live, explain when a finished run produced nothing.
-  const resultTab = (render: (final: AnalysisResult) => ReactNode) => {
+  // Analysis tabs: provisional while live, final afterwards; explain when a run produced nothing.
+  const analysisTab = (render: (analysis: DerivedAnalysis) => ReactNode) => {
+    if (analysis !== null) return render(analysis);
     if (live) return <WaitingForResult />;
-    if (result === null) return <NoResult error={runError} />;
-    return render(result);
+    return <NoResult error={runError} />;
   };
 
   const panel = selection ? (
@@ -392,7 +394,7 @@ export function WorkspacePage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="min-w-0 gap-0">
-        <WorkspaceTabBar edgeCount={edges.length} result={result} />
+        <WorkspaceTabBar edgeCount={edges.length} result={analysis} />
         <div
           className={
             selection
@@ -432,16 +434,16 @@ export function WorkspacePage() {
             </TabsContent>
             <TabsContent value="exposure" className="min-w-0">
               {strip}
-              {resultTab((final) => (
-                <ExposureTab result={final} />
+              {analysisTab((shown) => (
+                <ExposureTab result={shown} />
               ))}
             </TabsContent>
             <TabsContent value="linked" className="min-w-0">
               {strip}
-              {resultTab((final) => (
+              {analysisTab((shown) => (
                 <LinkedWalletsTab
                   key={run.id}
-                  result={final}
+                  result={shown}
                   onSelect={selectInGraph}
                   onTraceForward={(address) => void traceForward(address)}
                 />
@@ -449,14 +451,14 @@ export function WorkspacePage() {
             </TabsContent>
             <TabsContent value="touchpoints" className="min-w-0">
               {strip}
-              {resultTab((final) => (
-                <TouchpointsTab result={final} />
+              {analysisTab((shown) => (
+                <TouchpointsTab result={shown} />
               ))}
             </TabsContent>
             <TabsContent value="flags" className="min-w-0">
               {strip}
-              {resultTab((final) => (
-                <FlagsTab result={final} onSelect={selectInGraph} />
+              {analysisTab((shown) => (
+                <FlagsTab result={shown} onSelect={selectInGraph} />
               ))}
             </TabsContent>
           </div>

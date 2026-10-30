@@ -1,6 +1,8 @@
 import {
   type AnalysisResult,
+  analyzeProvisional,
   BUNDLED_LABEL_FILES,
+  type DerivedAnalysis,
   EXPANDABLE_REASONS,
   FixtureTransport,
   isFotError,
@@ -49,6 +51,8 @@ export interface RunManagerOptions {
   replayDelayMs?: number;
   /** Concurrent live (non-demo) runs. */
   maxLiveRuns?: number;
+  /** Minimum time between two provisional analyses of a live run. */
+  provisionalIntervalMs?: number;
 }
 
 type LiveStatus = "running" | "paused";
@@ -64,6 +68,15 @@ interface LiveRun {
   subscribers: Set<RunEventListener>;
   lastError: string | null;
   finished: Promise<void>;
+  /** What the run is analyzed with: the same params and label registry `executeRun` uses. */
+  params: RunParams;
+  labels: LabelRegistry;
+  /** Latest provisional analysis; replayed to late subscribers after the snapshot. */
+  provisional: DerivedAnalysis | null;
+  /** Edges changed since `provisional` was computed. */
+  stale: boolean;
+  /** Set by `result` (or a failed provisional pass): no provisional analysis follows. */
+  settled: boolean;
 }
 
 export type ControlStatus = InvestigationStatus;
@@ -87,6 +100,7 @@ export class RunManager {
   private readonly fixturesDir: string;
   private readonly replayDelayMs: number;
   private readonly maxLiveRuns: number;
+  private readonly provisionalIntervalMs: number;
   private readonly runs = new Map<string, LiveRun>();
 
   constructor(options: RunManagerOptions) {
@@ -95,6 +109,7 @@ export class RunManager {
     this.fixturesDir = options.fixturesDir ?? DEFAULT_FIXTURES_DIR;
     this.replayDelayMs = options.replayDelayMs ?? 40;
     this.maxLiveRuns = options.maxLiveRuns ?? 3;
+    this.provisionalIntervalMs = options.provisionalIntervalMs ?? 1000;
   }
 
   demos(): Scenario[] {
@@ -139,7 +154,7 @@ export class RunManager {
       demo: null,
       createdAt: new Date().toISOString(),
     });
-    const run = this.register(runId, true);
+    const run = this.register(runId, true, params, this.runtime.labels);
     this.launch(run, () =>
       executeRun({
         params,
@@ -147,6 +162,7 @@ export class RunManager {
         controller: run.controller,
         emit: (e) => this.handle(run, e),
         runId,
+        labels: run.labels,
       }),
     );
     return { runId };
@@ -168,7 +184,8 @@ export class RunManager {
       demo: scenario.id,
       createdAt: new Date().toISOString(),
     });
-    const run = this.register(runId, false);
+    const labels = new LabelRegistry(BUNDLED_LABEL_FILES, null, ofac);
+    const run = this.register(runId, false, scenario.params, labels);
     this.launch(run, () =>
       executeRun({
         params: scenario.params,
@@ -176,7 +193,7 @@ export class RunManager {
         controller: run.controller,
         emit: (e) => this.handle(run, e),
         runId,
-        labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, ofac),
+        labels,
         ofacFetchedAt: ofac.fetchedAt,
         transport: FixtureTransport(http, { delayMs: this.replayDelayMs }),
         cache: new MemoryCacheStore(Date.now),
@@ -226,7 +243,7 @@ export class RunManager {
     this.assertLiveCapacity(previous.chain);
 
     const throughEntities = edge.stopReason === "entity";
-    const run = this.register(runId, true);
+    const run = this.register(runId, true, previous.params, this.runtime.labels);
     for (const e of previous.graph.edges) run.edges.set(e.id, structuredClone(e));
     const target = run.edges.get(edgeId) as TraceEdge;
     target.status = "pending";
@@ -234,6 +251,9 @@ export class RunManager {
     target.stopDetail = null;
     run.stats = { ...previous.stats };
     this.db.investigations.update(runId, { status: "running", finishedAt: null, error: null });
+    // The first subscriber gets the merged graph's analysis with its snapshot, not a blank tab.
+    run.stale = true;
+    this.refreshProvisional(run);
 
     this.launch(
       run,
@@ -244,6 +264,7 @@ export class RunManager {
           controller: run.controller,
           emit: (e) => this.handle(run, e),
           runId,
+          labels: run.labels,
           continueFrom: {
             edgeId,
             maxDepth: options.maxDepth ?? DEFAULT_EXPAND_DEPTH,
@@ -265,6 +286,7 @@ export class RunManager {
       run.controller.pause();
       run.status = "paused";
       this.handle(run, { type: "status", status: "paused" });
+      this.refreshProvisional(run);
     }
     return { status: run.status };
   }
@@ -362,6 +384,7 @@ export class RunManager {
         edges: [...run.edges.values()],
         stats: run.stats,
       });
+      if (run.provisional) listener({ type: "provisional", analysis: run.provisional });
       run.subscribers.add(listener);
       return () => run.subscribers.delete(listener);
     }
@@ -403,7 +426,7 @@ export class RunManager {
     }
   }
 
-  private register(id: string, live: boolean): LiveRun {
+  private register(id: string, live: boolean, params: RunParams, labels: LabelRegistry): LiveRun {
     const run: LiveRun = {
       id,
       controller: new RunController(),
@@ -414,6 +437,11 @@ export class RunManager {
       subscribers: new Set(),
       lastError: null,
       finished: Promise.resolve(),
+      params,
+      labels,
+      provisional: null,
+      stale: false,
+      settled: false,
     };
     this.runs.set(id, run);
     return run;
@@ -425,6 +453,7 @@ export class RunManager {
     work: () => Promise<AnalysisResult>,
     fallback?: AnalysisResult,
   ): void {
+    const ticker = setInterval(() => this.refreshProvisional(run), this.provisionalIntervalMs);
     run.finished = (async () => {
       try {
         await work();
@@ -440,10 +469,37 @@ export class RunManager {
         this.handle(run, { type: "error", code, message });
         this.handle(run, { type: "done", status });
       } finally {
+        clearInterval(ticker);
         this.runs.delete(run.id);
         run.subscribers.clear();
       }
     })();
+  }
+
+  /**
+   * Recomputes the provisional analysis when the edges changed since the last one and streams it.
+   * Network-free and never persisted; nothing follows the final `result`.
+   */
+  private refreshProvisional(run: LiveRun): void {
+    if (run.settled || !run.stale || run.edges.size === 0) return;
+    run.stale = false;
+    let analysis: DerivedAnalysis;
+    try {
+      analysis = analyzeProvisional(
+        [...run.edges.values()],
+        run.params,
+        run.labels,
+        this.runtime.policy,
+      );
+    } catch (e) {
+      // Runs from a timer, so a failure must not take the server down. The final analysis still
+      // runs inside `launch` and reports its own errors.
+      console.error(`[runs] provisional analysis of ${run.id} failed:`, e);
+      run.settled = true;
+      return;
+    }
+    run.provisional = analysis;
+    this.handle(run, { type: "provisional", analysis });
   }
 
   /** Mirrors an engine event into live state, persists the result, then fans out to subscribers. */
@@ -451,10 +507,12 @@ export class RunManager {
     switch (event.type) {
       case "edge_added":
         run.edges.set(event.edge.id, event.edge);
+        run.stale = true;
         break;
       case "edge_linked": {
         const e = run.edges.get(event.edgeId);
         if (e && !e.parents.includes(event.parentId)) e.parents.push(event.parentId);
+        run.stale = true;
         break;
       }
       case "edge_expanded": {
@@ -464,6 +522,7 @@ export class RunManager {
           e.children = event.selected;
           e.droppedTotal = event.droppedTotal;
         }
+        run.stale = true;
         break;
       }
       case "edge_stopped": {
@@ -473,6 +532,7 @@ export class RunManager {
           e.stopReason = event.reason;
           e.stopDetail = event.detail;
         }
+        run.stale = true;
         break;
       }
       case "progress":
@@ -486,6 +546,8 @@ export class RunManager {
         run.lastError = event.message;
         break;
       case "result":
+        run.settled = true;
+        run.provisional = null;
         this.db.investigations.update(run.id, {
           status: event.result.status,
           riskLevel: event.result.riskLevel,
