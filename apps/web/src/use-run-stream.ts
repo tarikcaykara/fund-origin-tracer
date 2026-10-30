@@ -12,6 +12,7 @@ const EVENT_TYPES = [
   "edge_expanded",
   "edge_stopped",
   "progress",
+  "expansion",
   "provisional",
   "warning",
   "result",

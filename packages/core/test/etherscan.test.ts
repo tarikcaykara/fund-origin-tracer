@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { listingCalls } from "../src/chains.ts";
 import { FotError } from "../src/errors.ts";
 import { MinIntervalLimiter } from "../src/infra/limiter.ts";
 import { MemoryCacheStore } from "../src/infra/store.ts";
@@ -361,6 +362,22 @@ describe("listTransfers", () => {
       expect(pages).toEqual(["1", "2"]);
       expect(res.rows).toHaveLength(57);
       expect(res.truncated).toBe(false);
+    });
+
+    test("listingCalls bounds the requests of one listing (the UI's expand cost hint)", async () => {
+      const empty = scripted(() => json(emptyEnvelope));
+      await list(make(empty.transport, { maxPages: 2 }));
+      expect(empty.calls).toHaveLength(listingCalls("ethereum", "backward", 2).min);
+
+      const full = scripted((p) =>
+        json({
+          status: "1",
+          message: "OK",
+          result: fullPage(Number(p.get("page"))).map((row) => ({ ...row, isError: "0" })),
+        }),
+      );
+      await list(make(full.transport, { maxPages: 2 }));
+      expect(full.calls).toHaveLength(listingCalls("ethereum", "backward", 2).max);
     });
 
     test("maxPages is clamped to 1..4", async () => {

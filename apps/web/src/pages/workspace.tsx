@@ -11,6 +11,7 @@ import { ModalLayer } from "@/components/modal-layer.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
+import { expandCallHint, expansionProgress, PANEL_EXPAND_DEPTH } from "@/expansion.ts";
 import { chainName } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
@@ -18,7 +19,7 @@ import { isLivePhase, type RunPhase, sortedEdges, transferOrder } from "@/run-st
 import type { Selection } from "@/selection.ts";
 import { useRunStream } from "@/use-run-stream.ts";
 import { WorkspaceBanners } from "./workspace/banners.tsx";
-import type { ExpandError } from "./workspace/detail-panel.tsx";
+import type { ExpandError, ExpansionView } from "./workspace/detail-panel.tsx";
 import { ExposureTab } from "./workspace/exposure.tsx";
 import { FlagsTab } from "./workspace/flags.tsx";
 import { WorkspaceHeader } from "./workspace/header.tsx";
@@ -143,7 +144,8 @@ export function WorkspacePage() {
   const health = useAsync(() => api.health(), []);
   const [tab, setTab] = useState("graph");
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [expanding, setExpanding] = useState(false);
+  // Set from the click until the stream reports the expansion (or the request fails).
+  const [pendingExpandEdgeId, setPendingExpandEdgeId] = useState<string | null>(null);
   const [expandError, setExpandError] = useState<ExpandError | null>(null);
   const [busy, setBusy] = useState(false);
   const [fullGraph, setFullGraph] = useState(false);
@@ -152,7 +154,7 @@ export function WorkspacePage() {
   useEffect(() => {
     setTab("graph");
     setSelection(null);
-    setExpanding(false);
+    setPendingExpandEdgeId(null);
     setExpandError(null);
     setBusy(false);
     setFullGraph(false);
@@ -163,7 +165,7 @@ export function WorkspacePage() {
     if (state.done) reload();
   }, [state.done, reload]);
   useEffect(() => {
-    if (state.done) setExpanding(false);
+    if (state.done) setPendingExpandEdgeId(null);
   }, [state.done]);
 
   const run = detail.data?.id === id ? detail.data : null;
@@ -184,6 +186,14 @@ export function WorkspacePage() {
       ? (edges.find((edge) => edge.id === selection.edgeId) ?? null)
       : null;
   const canExpand = state.done && result !== null && selectedEdge !== null;
+  // The stream names the expanded edge, so a reload or a second tab shows the same progress.
+  const expandingEdgeId = state.expansion?.edgeId ?? pendingExpandEdgeId;
+  const expansion: ExpansionView | null = expandingEdgeId
+    ? {
+        edgeId: expandingEdgeId,
+        progress: state.expansion ? expansionProgress(state.expansion, state.progress) : null,
+      }
+    : null;
   const selectedEdgeIndex = selectedEdge
     ? edges.findIndex((edge) => edge.id === selectedEdge.id)
     : -1;
@@ -226,10 +236,10 @@ export function WorkspacePage() {
 
   const expand = useCallback(
     async (edgeId: string) => {
-      setExpanding(true);
+      setPendingExpandEdgeId(edgeId);
       setExpandError(null);
       try {
-        await api.expand(id, edgeId);
+        await api.expand(id, edgeId, PANEL_EXPAND_DEPTH);
         restart();
       } catch (error) {
         setExpandError(
@@ -237,11 +247,14 @@ export function WorkspacePage() {
             ? { edgeId, code: error.code, message: error.message }
             : { edgeId, code: "unexpected_error", message: errorMessage(error) },
         );
-        setExpanding(false);
+        setPendingExpandEdgeId(null);
       }
     },
     [id, restart],
   );
+  const cancelExpansion = useCallback(() => {
+    void control("cancel");
+  }, [control]);
 
   const onClosePanel = useCallback(() => setSelection(null), []);
   const closeFullGraph = useCallback(() => setFullGraph(false), []);
@@ -341,6 +354,9 @@ export function WorkspacePage() {
       : healthData && healthData.chains[run.chain] !== "ready"
         ? `${chainName(run.chain)} is not ready (API key missing), so expanding is disabled.`
         : undefined;
+  const expandHint = healthData
+    ? expandCallHint(run.chain, run.direction, healthData.explorerMaxPages)
+    : undefined;
   const runError = state.error ? `${state.error.code}: ${state.error.message}` : run.error;
   const strip = <ProvisionalStrip phase={phase} hasResult={result !== null} />;
   // Analysis tabs: provisional while live, final afterwards; explain when a run produced nothing.
@@ -360,7 +376,9 @@ export function WorkspacePage() {
       params={run.params}
       live={live}
       canExpand={canExpand}
-      expanding={expanding}
+      expansion={expansion}
+      expandHint={expandHint}
+      onCancelExpansion={cancelExpansion}
       expandError={expandError}
       expandBlockedReason={expandBlockedReason}
       onExpand={onExpand}

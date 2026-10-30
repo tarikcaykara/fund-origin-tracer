@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { listingCalls } from "../src/chains.ts";
 import { FotError } from "../src/errors.ts";
 import { MemoryCacheStore } from "../src/infra/store.ts";
 import type { Transport } from "../src/infra/transport.ts";
@@ -447,6 +448,40 @@ describe("TronscanProvider.listTransfers", () => {
       signal,
     });
     expect(calls.filter((c) => c.endpoint !== "transaction")).toHaveLength(1);
+  });
+
+  test("listingCalls bounds the requests of one listing (the UI's expand cost hint)", async () => {
+    const empty = setup(["k1"], (c) => ok(emptyPage(c.endpoint)));
+    await empty.provider.listTransfers({
+      address: ADDR,
+      direction: "in",
+      window: { beforeTs: 1_764_517_700 },
+      signal,
+    });
+    expect(empty.calls).toHaveLength(listingCalls("tron", "backward", 2).min);
+
+    // Full pages in an oversized forward window: both lists page to maxPages, then re-query.
+    const trc20 = trc20Page.token_transfers[2];
+    const tx = txPage.data[0];
+    const full = setup(["k1"], (c) => {
+      const start = Number(c.params.start);
+      const ids = Array.from({ length: 50 }, (_, i) => start + i);
+      return ok(
+        c.endpoint === "transaction"
+          ? { rangeTotal: 500, data: ids.map((i) => ({ ...tx, hash: `h${i}` })) }
+          : {
+              rangeTotal: 500,
+              token_transfers: ids.map((i) => ({ ...trc20, transaction_id: `t${i}` })),
+            },
+      );
+    });
+    await full.provider.listTransfers({
+      address: ADDR,
+      direction: "out",
+      window: { afterTs: 1_764_517_600 },
+      signal,
+    });
+    expect(full.calls).toHaveLength(listingCalls("tron", "forward", 2).max);
   });
 
   test("paging stops early on a short page or when rangeTotal is reached", async () => {

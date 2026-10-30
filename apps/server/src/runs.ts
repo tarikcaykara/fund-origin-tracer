@@ -57,6 +57,7 @@ export interface RunManagerOptions {
 
 type LiveStatus = "running" | "paused";
 type Stats = Extract<RunEvent, { type: "snapshot" }>["stats"];
+type Expansion = Omit<Extract<RunEvent, { type: "expansion" }>, "type">;
 
 interface LiveRun {
   id: string;
@@ -77,6 +78,8 @@ interface LiveRun {
   stale: boolean;
   /** Set by `result` (or a failed provisional pass): no provisional analysis follows. */
   settled: boolean;
+  /** The expansion in progress, replayed to late subscribers; null for a fresh run. */
+  expansion: Expansion | null;
 }
 
 export type ControlStatus = InvestigationStatus;
@@ -251,6 +254,10 @@ export class RunManager {
     target.stopDetail = null;
     run.stats = { ...previous.stats };
     this.db.investigations.update(runId, { status: "running", finishedAt: null, error: null });
+    const maxDepth = options.maxDepth ?? DEFAULT_EXPAND_DEPTH;
+    const { expandedEdges, apiCalls, cacheHits } = previous.stats;
+    run.expansion = { edgeId, maxDepth, base: { expandedEdges, apiCalls, cacheHits } };
+    this.handle(run, { type: "expansion", ...run.expansion });
     // The first subscriber gets the merged graph's analysis with its snapshot, not a blank tab.
     run.stale = true;
     this.refreshProvisional(run);
@@ -265,12 +272,7 @@ export class RunManager {
           emit: (e) => this.handle(run, e),
           runId,
           labels: run.labels,
-          continueFrom: {
-            edgeId,
-            maxDepth: options.maxDepth ?? DEFAULT_EXPAND_DEPTH,
-            throughEntities,
-            previous,
-          },
+          continueFrom: { edgeId, maxDepth, throughEntities, previous },
         }),
       previous,
     );
@@ -384,6 +386,7 @@ export class RunManager {
         edges: [...run.edges.values()],
         stats: run.stats,
       });
+      if (run.expansion) listener({ type: "expansion", ...run.expansion });
       if (run.provisional) listener({ type: "provisional", analysis: run.provisional });
       run.subscribers.add(listener);
       return () => run.subscribers.delete(listener);
@@ -442,6 +445,7 @@ export class RunManager {
       provisional: null,
       stale: false,
       settled: false,
+      expansion: null,
     };
     this.runs.set(id, run);
     return run;
@@ -548,6 +552,7 @@ export class RunManager {
       case "result":
         run.settled = true;
         run.provisional = null;
+        run.expansion = null;
         this.db.investigations.update(run.id, {
           status: event.result.status,
           riskLevel: event.result.riskLevel,

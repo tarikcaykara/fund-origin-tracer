@@ -161,6 +161,7 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
       version: pkg.version,
       chains: chainHealth(runtime.config),
       demoOnly: runtime.config.demoOnly,
+      explorerMaxPages: runtime.config.explorerMaxPages,
       ofacFetchedAt: runtime.ofacFetchedAt,
       labelsVersion: runtime.labels.labelsVersion,
     }),

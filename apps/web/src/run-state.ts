@@ -11,6 +11,7 @@ export type RunPhase = "connecting" | "running" | "paused" | RunStatus;
 
 export type SnapshotStats = Extract<RunEvent, { type: "snapshot" }>["stats"];
 export type RunProgress = Extract<RunEvent, { type: "progress" }>;
+export type RunExpansion = Omit<Extract<RunEvent, { type: "expansion" }>, "type">;
 
 export interface RunState {
   phase: RunPhase;
@@ -23,6 +24,8 @@ export interface RunState {
   error: { code: string; message: string } | null;
   /** Live-only analysis of the edges so far; cleared by `snapshot`, replaced by `result`. */
   provisional: DerivedAnalysis | null;
+  /** The "Expand further" in progress; cleared by `snapshot` and `result`. */
+  expansion: RunExpansion | null;
   /** The final analysis; set by the `result` event. */
   result: AnalysisResult | null;
   /** True after `done`; the stream is finished and must not be reconnected. */
@@ -37,6 +40,7 @@ export const initialRunState: RunState = {
   warnings: [],
   error: null,
   provisional: null,
+  expansion: null,
   result: null,
   done: false,
 };
@@ -98,6 +102,10 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
       const { type: _type, ...progress } = event;
       return { ...state, progress };
     }
+    case "expansion": {
+      const { type: _type, ...expansion } = event;
+      return { ...state, expansion };
+    }
     case "provisional":
       return { ...state, provisional: event.analysis };
     case "warning":
@@ -114,6 +122,7 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
         edges: indexEdges(event.result.graph.edges),
         stats: event.result.stats,
         provisional: null,
+        expansion: null,
         result: event.result,
       };
     case "done":

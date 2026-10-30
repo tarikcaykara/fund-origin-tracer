@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { chainName, directionName, formatClock } from "@/format.ts";
+import { chainName, directionName, formatClock, shortAddress } from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import type { RiskLevel } from "@/meta.ts";
 import { isLivePhase, type RunPhase, type RunState } from "@/run-state.ts";
@@ -64,6 +64,10 @@ export function WorkspaceHeader({
   const transferCount = live ? streamedCount : (exportResult?.graph.edges.length ?? streamedCount);
   const progress = Math.min(100, (expanded / Math.max(1, run.params.maxEdges)) * 100);
   const showProgress = phase !== "completed";
+  // During "Expand further" the counts are run totals; the per-expansion budget and clock live in
+  // the detail panel, so the header shows neither `/ maxEdges` nor the elapsed time.
+  const expansion = live ? state.expansion : null;
+  const expandingFrom = expansion ? state.edges[expansion.edgeId]?.far : undefined;
   const failed = phase === "failed" || phase === "timed_out";
   const saveTitle = async () => {
     try {
@@ -197,19 +201,30 @@ export function WorkspaceHeader({
 
             {showProgress ? (
               <div className="max-w-[560px] space-y-1">
-                <div
-                  className="h-1 overflow-hidden rounded-full bg-border"
-                  role="progressbar"
-                  aria-label="Run expansion progress"
-                  aria-valuemin={0}
-                  aria-valuemax={run.params.maxEdges}
-                  aria-valuenow={Math.min(expanded, run.params.maxEdges)}
-                >
-                  <div className="h-full bg-foreground" style={{ width: `${progress}%` }} />
-                </div>
+                {expansion ? (
+                  <div
+                    className="h-1 overflow-hidden rounded-full bg-border"
+                    role="progressbar"
+                    aria-label="Expansion in progress"
+                  >
+                    <div className="h-full w-full animate-shimmer bg-foreground" />
+                  </div>
+                ) : (
+                  <div
+                    className="h-1 overflow-hidden rounded-full bg-border"
+                    role="progressbar"
+                    aria-label="Run expansion progress"
+                    aria-valuemin={0}
+                    aria-valuemax={run.params.maxEdges}
+                    aria-valuenow={Math.min(expanded, run.params.maxEdges)}
+                  >
+                    <div className="h-full bg-foreground" style={{ width: `${progress}%` }} />
+                  </div>
+                )}
                 <p className="type-mono-node text-muted-foreground">
-                  {expanded} / {run.params.maxEdges} edges · max depth {maxDepth} ·{" "}
-                  {elapsed === undefined ? "—" : formatClock(elapsed)}
+                  {expansion
+                    ? `${expanded} edges · max depth ${maxDepth} · expanding ${expandingFrom ? shortAddress(run.chain, expandingFrom) : "…"}`
+                    : `${expanded} / ${run.params.maxEdges} edges · max depth ${maxDepth} · ${elapsed === undefined ? "—" : formatClock(elapsed)}`}
                 </p>
               </div>
             ) : null}

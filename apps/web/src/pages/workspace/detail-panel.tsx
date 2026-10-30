@@ -13,10 +13,12 @@ import { StopTag } from "@/components/badges.tsx";
 import { AddressChip, ExplorerLink, type LabelIndex, TxLink } from "@/components/links.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { ExpansionProgress } from "@/expansion.ts";
 import { useCopyText } from "@/lib/clipboard.ts";
 import {
   assetSymbol,
   formatAmount,
+  formatClock,
   formatTimestamp,
   formatUsd,
   formatUtcMinute,
@@ -54,6 +56,12 @@ export interface ExpandError {
   message: string;
 }
 
+/** An "Expand further" in progress: its edge and, once the stream reports them, its own counters. */
+export interface ExpansionView {
+  edgeId: string;
+  progress: ExpansionProgress | null;
+}
+
 export function DetailPanel({
   chain,
   selection,
@@ -62,7 +70,9 @@ export function DetailPanel({
   labels,
   params,
   canExpand,
-  expanding,
+  expansion,
+  expandHint,
+  onCancelExpansion,
   expandError,
   expandBlockedReason,
   onExpand,
@@ -80,7 +90,11 @@ export function DetailPanel({
   labels: LabelIndex;
   params: RunParams;
   canExpand: boolean;
-  expanding: boolean;
+  /** The expansion in progress, if any; its edge shows progress and Cancel instead of Expand. */
+  expansion: ExpansionView | null;
+  /** Approximate cost of one expansion, shown beside the Expand button. */
+  expandHint?: string | undefined;
+  onCancelExpansion(): void;
   /** The last failed expand request; shown inline on its edge. */
   expandError: ExpandError | null;
   /** When set, Expand is disabled and this explains why. */
@@ -216,7 +230,9 @@ export function DetailPanel({
             params={params}
             labels={labels}
             canExpand={canExpand}
-            expanding={expanding}
+            expansion={expansion}
+            expandHint={expandHint}
+            onCancelExpansion={onCancelExpansion}
             expandError={expandError}
             expandBlockedReason={expandBlockedReason}
             onExpand={onExpand}
@@ -591,7 +607,9 @@ function TransferPanel({
   params,
   labels,
   canExpand,
-  expanding,
+  expansion,
+  expandHint,
+  onCancelExpansion,
   expandError,
   expandBlockedReason,
   onExpand,
@@ -603,7 +621,9 @@ function TransferPanel({
   params: RunParams;
   labels: LabelIndex;
   canExpand: boolean;
-  expanding: boolean;
+  expansion: ExpansionView | null;
+  expandHint: string | undefined;
+  onCancelExpansion(): void;
   expandError: ExpandError | null;
   expandBlockedReason: string | undefined;
   live: boolean;
@@ -650,6 +670,8 @@ function TransferPanel({
     ? `Rank ${edge.selection.rank} among candidates`
     : "Seed transfer";
   const stopped = edge.status === "stopped" && edge.stopReason !== null;
+  // The expanded edge is `pending` on the stream until its listing returns.
+  const expanding = expansion?.edgeId === edge.id;
   const canContinue = edge.stopReason !== null && EXPANDABLE_REASONS.has(edge.stopReason);
   const droppedCountFor = (reason: DropReason): number =>
     edge.droppedByReason?.[reason] ?? edge.dropped.filter((item) => item.reason === reason).length;
@@ -661,16 +683,21 @@ function TransferPanel({
   const fromLabel = labels.get(transfer.from)?.labels[0]?.name;
   const toLabel = labels.get(transfer.to)?.labels[0]?.name;
   const followed = edge.far;
-  const statusText = edge.stopReason
-    ? STOP_TAGS[edge.stopReason].text
-    : edge.status === "pending"
-      ? "Waiting to expand"
-      : "Expanded";
-  const statusNote = stopped
-    ? (edge.stopDetail ?? statusText)
-    : edge.status === "expanded"
-      ? `${direction === "backward" ? "←" : "→"} ${edge.children.length} ${direction === "backward" ? "earlier" : "later"} transfers followed`
-      : "Queued for expansion";
+  const continuationWord = direction === "backward" ? "earlier" : "later";
+  const statusText = expanding
+    ? "Expanding"
+    : edge.stopReason
+      ? STOP_TAGS[edge.stopReason].text
+      : edge.status === "pending"
+        ? "Waiting to expand"
+        : "Expanded";
+  const statusNote = expanding
+    ? `fetching ${continuationWord} transfers`
+    : stopped
+      ? (edge.stopDetail ?? statusText)
+      : edge.status === "expanded"
+        ? `${direction === "backward" ? "←" : "→"} ${edge.children.length} ${continuationWord} transfers followed`
+        : "Queued for expansion";
 
   return (
     <>
@@ -713,17 +740,24 @@ function TransferPanel({
           <dt className="text-muted-foreground">Status</dt>
           <dd className="flex flex-wrap items-center gap-1.5">
             <span className="type-mono-sm font-medium">{statusText}</span>
-            {stopped ? <StopTag reason={edge.stopReason} /> : null}
+            {stopped && !expanding ? <StopTag reason={edge.stopReason} /> : null}
             <span className="text-muted-foreground">{statusNote}</span>
           </dd>
         </dl>
       </section>
-      {stopped ? (
+      {expanding ? (
+        <ExpansionSection
+          chain={chain}
+          address={followed}
+          progress={expansion.progress}
+          onCancel={onCancelExpansion}
+        />
+      ) : stopped ? (
         <StoppedSection
           edge={edge}
           params={params}
           canExpand={canExpand && canContinue && expandBlockedReason === undefined}
-          expanding={expanding}
+          expandHint={expandHint}
           expandError={expandError}
           expandBlockedReason={expandBlockedReason}
           onExpand={onExpand}
@@ -888,7 +922,7 @@ function StoppedSection({
   edge,
   params,
   canExpand,
-  expanding,
+  expandHint,
   expandError,
   expandBlockedReason,
   onExpand,
@@ -896,7 +930,7 @@ function StoppedSection({
   edge: TraceEdge;
   params: RunParams;
   canExpand: boolean;
-  expanding: boolean;
+  expandHint: string | undefined;
   expandError: ExpandError | null;
   expandBlockedReason: string | undefined;
   onExpand(edgeId: string): void;
@@ -911,39 +945,93 @@ function StoppedSection({
         <span>Stopped: {detail.replace(/^Stopped: /, "")}</span>
       </div>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        {shortAddress(edge.transfer.chain, edge.far)} was not expanded. Expanding fetches its{" "}
-        {continuation} transfers and follows up to {params.maxBranches} more branches with the same
-        limits ({params.maxDepth} max depth; tracing through entities is{" "}
-        {params.traceThroughEntities ? "on" : "off"}).
+        {shortAddress(edge.transfer.chain, edge.far)} was not expanded. Expanding lists its{" "}
+        {continuation} transfers and adds up to {params.maxBranches} of them one hop further, with
+        the run's selection rules; expand those to continue.
+        {edge.stopReason === "entity"
+          ? " It continues through this entity; mixers still stop."
+          : ""}
       </p>
       {EXPANDABLE_REASONS.has(edge.stopReason) ? (
-        expanding ? (
-          <div className="space-y-2">
-            <Button type="button" disabled loading>
-              Expanding…
-            </Button>
-            <div className="space-y-1.5 pt-1">
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-3 w-2/3" />
-              <Skeleton className="h-3 w-3/4" />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <Button type="button" disabled={!canExpand} onClick={() => onExpand(edge.id)}>
               Expand further {params.direction === "backward" ? "←" : "→"} 1 hop
             </Button>
-            {expandBlockedReason ? (
-              <p className="text-xs text-destructive-muted-foreground">{expandBlockedReason}</p>
-            ) : null}
-            {expandError?.edgeId === edge.id ? (
-              <p role="alert" className="text-xs text-destructive-muted-foreground">
-                <span className="font-mono">{expandError.code}</span>: {expandError.message}
-              </p>
+            {expandHint ? (
+              <span className="text-xs text-muted-foreground">{expandHint}</span>
             ) : null}
           </div>
-        )
+          {expandBlockedReason ? (
+            <p className="text-xs text-destructive-muted-foreground">{expandBlockedReason}</p>
+          ) : null}
+          {expandError?.edgeId === edge.id ? (
+            <p role="alert" className="text-xs text-destructive-muted-foreground">
+              <span className="font-mono">{expandError.code}</span>: {expandError.message}
+            </p>
+          ) : null}
+        </div>
       ) : null}
+    </section>
+  );
+}
+
+/** "Expand further" running on this edge: live counters, a progress bar and an inline Cancel. */
+function ExpansionSection({
+  chain,
+  address,
+  progress,
+  onCancel,
+}: {
+  chain: ChainId;
+  /** The followed address whose transfers are being listed. */
+  address: string;
+  /** Null until the stream reports the expansion. */
+  progress: ExpansionProgress | null;
+  onCancel(): void;
+}) {
+  const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+  const listing = `listing ${shortAddress(chain, address)}`;
+  const ratio = progress?.ratio ?? null;
+  const work =
+    progress === null
+      ? `${listing} · starting`
+      : [
+          ratio === null ? listing : `${count(progress.edges, "edge")} · ${progress.queued} queued`,
+          count(progress.apiCalls, "API call"),
+          count(progress.cacheHits, "cache hit"),
+          formatClock(progress.elapsedMs),
+        ].join(" · ");
+  return (
+    <section className="space-y-2.5 border-b border-border bg-muted px-4 py-3.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" disabled loading>
+          Expanding…
+        </Button>
+        <Button type="button" variant="destructive-outline" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+      <p className="type-mono-sm text-muted-foreground">{work}</p>
+      <div
+        className="h-[3px] overflow-hidden rounded-full bg-border-strong"
+        role="progressbar"
+        aria-label="Expansion progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={ratio === null ? undefined : Math.round(ratio * 100)}
+      >
+        {ratio === null ? (
+          <div className="h-full w-full animate-shimmer bg-selection" />
+        ) : (
+          <div className="h-full bg-selection" style={{ width: `${ratio * 100}%` }} />
+        )}
+      </div>
+      <div className="space-y-1.5 pt-1">
+        <Skeleton className="h-3 w-4/5" />
+        <Skeleton className="h-3 w-2/3" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
     </section>
   );
 }
