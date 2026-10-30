@@ -7,7 +7,7 @@ import {
   type RunEvent,
   type RunParams,
 } from "@fot/core";
-import { DEFAULT_FIXTURES_DIR, executeRun } from "../src/index.ts";
+import { DEFAULT_EXPAND_DEPTH, DEFAULT_FIXTURES_DIR, executeRun } from "../src/index.ts";
 import {
   createTestEnv,
   LIVE_SEED_TX,
@@ -434,6 +434,57 @@ describe("expand", () => {
       expect(run.result?.status).toBe(expected);
     }
   });
+
+  test("an expansion streams its edge and base first, then run totals that never go backwards", async () => {
+    const env = await createTestEnv({ transport: fakeTransport(chainOfTransfers(12)) });
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+
+    // Called on the manager so the subscription is in place before the continuation's first edge.
+    const expanding = env.manager.expand(runId, stopped.id, { maxDepth: 2 });
+    const events: RunEvent[] = [];
+    env.manager.subscribe(runId, (e) => events.push(e));
+    await expanding;
+    await env.manager.waitForRun(runId);
+
+    expect(events.slice(0, 3).map((e) => e.type)).toEqual(["snapshot", "expansion", "provisional"]);
+    const { expandedEdges, apiCalls, cacheHits } = before.stats;
+    expect(events[1]).toEqual({
+      type: "expansion",
+      edgeId: stopped.id,
+      maxDepth: 2,
+      base: { expandedEdges, apiCalls, cacheHits },
+    });
+    const progress = events.flatMap((e) => (e.type === "progress" ? [e] : []));
+    for (const p of progress) {
+      expect(p.expandedEdges).toBeGreaterThanOrEqual(expandedEdges);
+      expect(p.apiCalls).toBeGreaterThanOrEqual(apiCalls);
+    }
+    const after = (await getRun(env, runId)).result as AnalysisResult;
+    const last = progress.at(-1);
+    expect({ expandedEdges: last?.expandedEdges, apiCalls: last?.apiCalls }).toEqual({
+      expandedEdges: after.stats.expandedEdges,
+      apiCalls: after.stats.apiCalls,
+    });
+  });
+
+  test("the API still continues DEFAULT_EXPAND_DEPTH hops when maxDepth is omitted", async () => {
+    const env = await createTestEnv({ transport: fakeTransport(chainOfTransfers(12)) });
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+
+    const res = await env.app.request(...post(`/api/runs/${runId}/expand`, { edgeId: stopped.id }));
+    expect(res.status).toBe(202);
+    await env.manager.waitForRun(runId);
+    const after = (await getRun(env, runId)).result as AnalysisResult;
+    expect(after.stats.maxDepthReached).toBe(stopped.depth + DEFAULT_EXPAND_DEPTH);
+  });
 });
 
 describe("pause, resume and cancel", () => {
@@ -562,16 +613,18 @@ describe("provisional analysis", () => {
 
     // Called on the manager so the subscription is in place before the continuation's first edge.
     const expanding = env.manager.expand(runId, stopped.id, { maxDepth: 2 });
-    const first: RunEvent[] = [];
+    // Everything the subscriber gets before the continuation's first new edge.
+    const upfront: RunEvent[] = [];
+    let streaming = false;
     env.manager.subscribe(runId, (e) => {
-      if (first.length < 2) first.push(e);
+      if (e.type === "edge_added") streaming = true;
+      if (!streaming) upfront.push(e);
     });
     await expanding;
     await env.manager.waitForRun(runId);
 
-    expect(first.map((e) => e.type)).toEqual(["snapshot", "provisional"]);
-    const provisional = first[1];
-    if (provisional?.type !== "provisional") return;
+    const provisional = upfront.find((e) => e.type === "provisional");
+    if (provisional?.type !== "provisional") throw new Error("no provisional analysis up front");
     expect(provisional.analysis.graph.addresses.map((a) => a.address).sort()).toEqual(
       before.graph.addresses.map((a) => a.address).sort(),
     );

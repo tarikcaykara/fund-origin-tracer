@@ -98,9 +98,24 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
   const prices = runtime.pricesFor(providerOptions);
 
   let continueFrom: ContinueFrom | undefined;
+  let traceEmit = emit;
   if (opts.continueFrom) {
     const { edgeId, maxDepth, throughEntities, previous } = opts.continueFrom;
     continueFrom = { edges: previous.graph.edges, edgeId, maxDepth, throughEntities };
+    // The engine counts the continuation alone; report run totals, as `mergeStats` does at the end,
+    // so counters never go backwards. `queued` and `elapsedMs` stay the continuation's.
+    const base = previous.stats;
+    traceEmit = (event) =>
+      emit(
+        event.type === "progress"
+          ? {
+              ...event,
+              expandedEdges: base.expandedEdges + event.expandedEdges,
+              apiCalls: base.apiCalls + event.apiCalls,
+              cacheHits: base.cacheHits + event.cacheHits,
+            }
+          : event,
+      );
   }
 
   const trace = await runTrace(
@@ -113,7 +128,7 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
       concurrency: opts.concurrency ?? runtime.config.engineConcurrency,
     },
     controller,
-    emit,
+    traceEmit,
     continueFrom,
   );
   if (opts.continueFrom) {

@@ -158,14 +158,21 @@ describe("reduceRunEvent", () => {
     expect(resumed.error).toBeNull();
   });
 
-  test("a provisional analysis lasts until the result replaces it or a snapshot resets it", () => {
+  test("provisional analysis and expansion last until the result or a reconnect snapshot", () => {
     const analysis = { riskLevel: "medium", flags: [] } as unknown as DerivedAnalysis;
+    const expansion = {
+      edgeId: "a",
+      maxDepth: 1,
+      base: { expandedEdges: 4, apiCalls: 28, cacheHits: 4 },
+    };
     const live = fold([
       { type: "snapshot", status: "running", edges: [edge("a")], stats: {} },
+      { type: "expansion", ...expansion },
       { type: "provisional", analysis },
       { type: "edge_added", edge: edge("b") },
     ]);
     expect(live.provisional).toBe(analysis);
+    expect(live.expansion).toEqual(expansion);
     expect(live.phase).toBe("running");
     expect(Object.keys(live.edges)).toEqual(["a", "b"]);
 
@@ -176,6 +183,7 @@ describe("reduceRunEvent", () => {
       stats: {},
     });
     expect(reconnected.provisional).toBeNull();
+    expect(reconnected.expansion).toBeNull();
 
     const result = {
       status: "completed",
@@ -184,6 +192,7 @@ describe("reduceRunEvent", () => {
     } as unknown as AnalysisResult;
     const finished = reduceRunEvent(live, { type: "result", result });
     expect(finished.provisional).toBeNull();
+    expect(finished.expansion).toBeNull();
     expect(finished.result).toBe(result);
   });
 });

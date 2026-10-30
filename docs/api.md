@@ -59,10 +59,11 @@ curl -s localhost:3000/api/health
 ```
 
 ```json
-{"version":"1.0.1","chains":{"ethereum":"missing_key","polygon":"missing_key","arbitrum":"missing_key","tron":"missing_key"},"demoOnly":false,"ofacFetchedAt":null,"labelsVersion":"2026-10-20"}
+{"version":"1.0.1","chains":{"ethereum":"missing_key","polygon":"missing_key","arbitrum":"missing_key","tron":"missing_key"},"demoOnly":false,"explorerMaxPages":2,"ofacFetchedAt":null,"labelsVersion":"2026-10-20"}
 ```
 
 - `chains.<id>` is `ready` when the key for that chain is configured (`ETHERSCAN_API_KEY` covers ethereum, polygon and arbitrum; at least one `TRONSCAN_API_KEYS` entry for tron), else `missing_key`. The keys themselves are not validated here.
+- `explorerMaxPages` is `EXPLORER_MAX_PAGES`: pages fetched per explorer list. The web UI uses it to state the cost of one expansion.
 - `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off).
 - `labelsVersion` is the newest `verifiedAt` across the bundled label files.
 
@@ -194,11 +195,13 @@ Continues a stopped edge of a finished run ("Expand further").
 | Field | Type | Default | Constraint |
 |---|---|---|---|
 | `edgeId` | string | required | An edge of this run |
-| `maxDepth` | integer | 3 | 1–50; extra depth, relative to the edge |
+| `maxDepth` | integer | 3 | 1–50; extra depth, relative to the edge. The web UI sends 1 (one hop per click) |
 
 Allowed only when the run is not active, the run is not a recorded demo, the edge has `status: "stopped"` and its `stopReason` is `max_depth`, `max_edges`, `timeout`, `cancelled` or `entity` (an `entity` continuation traces through that entity; mixers still stop). Returns `202 {"status":"running"}`. The run reverts to `running` and **keeps its id**: subscribe to `GET /api/runs/:id/events` **after** this call. The first `snapshot` is followed by a `provisional` analysis of the merged graph, then the new edges arrive, then `result` and `done` again; the merged, re-analyzed result replaces the stored one. The continuation makes live explorer calls, so it needs the chain's API key. Demo runs are refused with `409 demo_run_not_expandable`: a continuation would mix live explorer, price and OFAC data into a recorded replay; start a live trace from the address instead.
 
 The stored status describes the merged graph, not the continuation alone. A continuation that times out or fails sets `timed_out` or `failed`. Otherwise the run keeps its previous status, except that a `timed_out` or `cancelled` run becomes `completed` once no edge still stops with `timeout` or `cancelled`. Cancelling an expansion (`POST /api/runs/:id/cancel` while it runs) keeps the edges it already found, its unfinished edges stop with `cancelled`, and a completed run stays `completed`.
+
+Each expansion has its own budget: `maxEdges` and `timeoutSec` apply to the continuation, not to the run so far (a `max_edges` or `timeout` edge could not be continued otherwise). While it runs, the stream starts with `snapshot`, then an `expansion` event naming the edge and the run totals before it (`base`), then the `provisional` analysis; `progress` reports run totals, so the expansion's own counters are `progress` minus `base`.
 
 Errors: `404 not_found`, `404 edge_not_found`, `409 run_active`, `409 not_finished`, `409 edge_not_expandable`, `409 demo_only`, `409 demo_run_not_expandable`, `409 chain_not_ready`, `429 too_many_runs`.
 
@@ -299,7 +302,8 @@ where `data` is the complete `RunEvent` JSON, including its `type` field. Event 
 | `edge_linked` | `{edgeId, parentId}` | An existing edge got another parent (no re-expansion) |
 | `edge_expanded` | `{edgeId, selected, droppedTotal}` | Edge expanded; `selected` are its child edge ids |
 | `edge_stopped` | `{edgeId, reason, detail}` | Edge stopped (`reason` is a stop reason) |
-| `progress` | `{expandedEdges, queued, apiCalls, cacheHits, elapsedMs}` | About once per second |
+| `progress` | `{expandedEdges, queued, apiCalls, cacheHits, elapsedMs}` | About once per second. Counts are run totals; during an expansion `queued` and `elapsedMs` are the expansion's |
+| `expansion` | `{edgeId, maxDepth, base: {expandedEdges, apiCalls, cacheHits}}` | An "Expand further" started on `edgeId`; `base` is the run totals before it. Not stored |
 | `provisional` | `{analysis}` | Live analysis of the edges so far: `{chain, direction, seeds, graph: {addresses}, convergences, exposure, exchangeTouchpoints, flags, riskLevel}` (the `DerivedAnalysis` part of an `AnalysisResult`, without edges). Never stored; see below. |
 | `warning` | `{code, message}` | Non-fatal issue (`listing_truncated`, `prices_unavailable`, `seed_failed:<id>`, …) |
 | `error` | `{code, message}` | Fatal problem; a `result` (status `failed`) and `done` normally follow |
@@ -308,7 +312,7 @@ where `data` is the complete `RunEvent` JSON, including its `type` field. Event 
 
 Behavior:
 
-- **Snapshot on subscribe.** A client that connects mid-run first receives a `snapshot` with every edge so far, then the latest `provisional` analysis if there is one, then live events. Rebuild state from the snapshot, then apply `edge_added`, `edge_linked`, `edge_expanded` and `edge_stopped`; `result` supersedes it.
+- **Snapshot on subscribe.** A client that connects mid-run first receives a `snapshot` with every edge so far, then the running `expansion` if there is one, then the latest `provisional` analysis if there is one, then live events. Rebuild state from the snapshot, then apply `edge_added`, `edge_linked`, `edge_expanded` and `edge_stopped`; `result` supersedes it.
 - **Provisional analysis.** While a run is live the server recomputes the analysis from the edges so far and sends it as `provisional`: at most once per second and only when edges changed, immediately when the run is paused, and at the start of an expand. It makes no explorer calls: convergences have empty `otherCounterparties` (the follow-up lookups run only for the final result), and `incomplete_trace` reflects only `fetch_failed` edges because the run has no outcome yet. It is never written to the database, never sent after `result`, and the final `result` replaces it. See [methodology](methodology.md#provisional-analysis).
 - **Finished runs replay.** Subscribing to a finished run sends `snapshot`, `result` and `done` at once and closes. A run that has no result (interrupted by a restart, or failed before analysis) sends `snapshot`, an `error` (`interrupted` or `no_result`) and `done` with status `failed`.
 - **Keepalive.** While no event is pending, the server writes a `: keepalive` comment every 15 seconds so proxies keep the connection open.

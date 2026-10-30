@@ -28,7 +28,7 @@ Commercial know-your-transaction tools are expensive and return a risk score you
 - Exposure to labeled entities by hop distance, and exchange touchpoints with a copyable freeze-request list.
 - Explainable flags with severities, overridable per flag through a policy file.
 - USD values from DefiLlama; canonical stablecoins are priced 1:1 by contract address, so a spoofed "USDT" is never valued as a dollar. Candidates without a USD price are not followed by default (`followUnpriced` turns that on).
-- Live graph laid out in hop columns, with pause, resume and cancel; expand any stopped edge by hand. While a run is live, the exposure, linked-wallet, touchpoint and flag tabs and the risk level fill in provisionally and update as transfers arrive. On phones the graph tab opens on a Path view (the highest-USD path from the seed) with a Full graph toggle.
+- Live graph laid out in hop columns, with pause, resume and cancel; expand any stopped edge one hop at a time, with the cost shown up front, live progress and an inline cancel. While a run is live, the exposure, linked-wallet, touchpoint and flag tabs and the risk level fill in provisionally and update as transfers arrive. On phones the graph tab opens on a Path view (the highest-USD path from the seed) with a Full graph toggle.
 - Exports: JSON and five CSVs (edges, addresses, convergences, exposure, touchpoints), and a printable evidence report per run (A4 or Letter).
 - Web UI with light, dark and system themes; phones keep every feature in a mobile-first layout.
 - REST + SSE API, CLI, and a Docker image.

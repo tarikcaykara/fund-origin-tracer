@@ -90,6 +90,20 @@ export function isZeroAddress(chain: ChainId, address: string): boolean {
   return CHAINS[chain].zeroAddresses.includes(normalizeAddress(chain, address));
 }
 
+/**
+ * Explorer requests one address listing (`listTransfers`) makes. Etherscan lists `tokentx`,
+ * `txlist` and `txlistinternal`; Tronscan lists TRC-20 transfers and transactions and re-queries
+ * an incomplete forward window once. Every list fetches 1…`maxPages` pages.
+ */
+export function listingCalls(
+  chain: ChainId,
+  direction: "backward" | "forward",
+  maxPages: number,
+): { min: number; max: number } {
+  if (CHAINS[chain].kind === "evm") return { min: 3, max: 3 * maxPages };
+  return { min: 2, max: 2 * maxPages * (direction === "forward" ? 2 : 1) };
+}
+
 export interface CanonicalToken {
   symbol: string;
   contract: string;

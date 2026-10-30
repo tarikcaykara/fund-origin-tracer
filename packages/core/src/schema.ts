@@ -365,6 +365,13 @@ export const RunEventSchema = z.discriminatedUnion("type", [
     cacheHits: z.number().int(),
     elapsedMs: z.number(),
   }),
+  z.object({
+    type: z.literal("expansion"),
+    edgeId: z.string(),
+    maxDepth: z.number().int(),
+    /** Run totals before this expansion; the expansion's own counters are `progress` minus these. */
+    base: statsSchema.pick({ expandedEdges: true, apiCalls: true, cacheHits: true }),
+  }),
   z.object({ type: z.literal("provisional"), analysis: DerivedAnalysisSchema }),
   z.object({ type: z.literal("warning"), code: z.string(), message: z.string() }),
   z.object({ type: z.literal("result"), result: AnalysisResultSchema }),

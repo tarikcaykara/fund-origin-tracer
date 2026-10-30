@@ -149,7 +149,7 @@ After **Expand further**, the status describes the merged graph. A continuation 
 | `cancelled` | The run was cancelled. |
 | `fetch_failed` | The explorer failed for this edge (`stopDetail` = error code), or a fatal error aborted the run. |
 
-`max_depth`, `max_edges`, `timeout`, `cancelled` and `entity` edges can be continued with "Expand further" (`POST /api/runs/:id/expand`). The depth budget of the continuation is relative to the edge (default +3), and an `entity` continuation traces through that entity (mixers still stop).
+`max_depth`, `max_edges`, `timeout`, `cancelled` and `entity` edges can be continued with "Expand further" (`POST /api/runs/:id/expand`). The depth budget of the continuation is relative to the edge (API default +3; the web UI expands one hop per click, so each step is an analyst's choice), and an `entity` continuation traces through that entity (mixers still stop). `maxEdges` and `timeoutSec` apply to each expansion on its own. One hop costs one listing of the edge's address: on Etherscan chains `tokentx`, `txlist` and `txlistinternal` (1 to `EXPLORER_MAX_PAGES` pages each), on TRON TRC-20 transfers and transactions (re-queried once for an incomplete forward window), plus a price lookup.
 
 ## Analysis
 

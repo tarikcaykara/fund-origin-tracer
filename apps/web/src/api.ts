@@ -15,6 +15,8 @@ export interface Health {
   version: string;
   chains: Record<ChainId, ChainHealth>;
   demoOnly: boolean;
+  /** Pages fetched per explorer list (`EXPLORER_MAX_PAGES`); sizes the expand cost hint. */
+  explorerMaxPages: number;
   ofacFetchedAt: string | null;
   labelsVersion: string;
 }
