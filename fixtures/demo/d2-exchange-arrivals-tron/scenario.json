@@ -4,6 +4,8 @@
   "description": "Forward trace of a USDT-TRC20 withdrawal from a Binance hot wallet. The recipient moves the funds through deposit addresses that sweep into exchange wallets (Gate, Binance): the exchange arrivals are where a freeze request would go.",
   "chain": "tron",
   "direction": "forward",
+  "addresses": 26,
+  "transfers": 32,
   "params": {
     "chain": "tron",
     "direction": "forward",

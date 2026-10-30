@@ -7,7 +7,7 @@ import {
   type RunEvent,
   type RunParams,
 } from "@fot/core";
-import { executeRun } from "../src/index.ts";
+import { DEFAULT_FIXTURES_DIR, executeRun } from "../src/index.ts";
 import {
   createTestEnv,
   LIVE_SEED_TX,
@@ -236,8 +236,15 @@ describe("demo mode", () => {
     expect(live.status).toBe(403);
     expect(((await live.json()) as { error: { code: string } }).error.code).toBe("demo_only");
 
-    const list = (await (await env.app.request("/api/demo")).json()) as { id: string }[];
+    const list = (await (await env.app.request("/api/demo")).json()) as {
+      id: string;
+      addresses?: number;
+      transfers?: number;
+    }[];
     expect(list.map((d) => d.id)).toEqual([demoId]);
+    // recordDemoScenario writes no counts, like scenarios recorded before counts existed.
+    expect(list[0]).not.toHaveProperty("addresses");
+    expect(list[0]).not.toHaveProperty("transfers");
 
     const res = await env.app.request(...post("/api/runs", { demo: demoId }));
     expect(res.status).toBe(201);
@@ -262,6 +269,34 @@ describe("demo mode", () => {
     const replay = await getRun(env, runId);
     expect(replay.status).toBe("completed");
     expect(replay.result?.stats.apiCalls).toBeGreaterThan(0);
+  });
+
+  test("committed demo scenarios carry the address and transfer counts of their replay", async () => {
+    const env = await createTestEnv({
+      fixturesDir: DEFAULT_FIXTURES_DIR,
+      transport: async () => {
+        throw new Error("network used");
+      },
+    });
+    const list = (await (await env.app.request("/api/demo")).json()) as {
+      id: string;
+      addresses?: number;
+      transfers?: number;
+    }[];
+    expect(list.length).toBeGreaterThan(0);
+    for (const demo of list) {
+      const { runId } = (await (
+        await env.app.request(...post("/api/runs", { demo: demo.id }))
+      ).json()) as { runId: string };
+      await env.manager.waitForRun(runId);
+      const { status, result } = await getRun(env, runId);
+      expect(status).toBe("completed");
+      expect({ id: demo.id, addresses: demo.addresses, transfers: demo.transfers }).toEqual({
+        id: demo.id,
+        addresses: result?.graph.addresses.length,
+        transfers: result?.graph.edges.length,
+      });
+    }
   });
 });
 

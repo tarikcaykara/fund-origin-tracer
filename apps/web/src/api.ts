@@ -25,6 +25,9 @@ export interface DemoScenario {
   description: string;
   chain: ChainId;
   direction: Direction;
+  /** Size of the recorded run; absent for scenarios recorded without counts. */
+  addresses?: number;
+  transfers?: number;
 }
 
 /** Persisted statuses plus the live-only overlay (`running`, `paused`) and boot recovery. */

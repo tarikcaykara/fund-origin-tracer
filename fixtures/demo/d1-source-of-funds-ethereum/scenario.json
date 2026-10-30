@@ -4,6 +4,8 @@
   "description": "Backward trace of a 50k USDT transfer. The funds lead back through an intermediary wallet to a Binance hot wallet (exchange origin).",
   "chain": "ethereum",
   "direction": "backward",
+  "addresses": 64,
+  "transfers": 84,
   "params": {
     "chain": "ethereum",
     "direction": "backward",

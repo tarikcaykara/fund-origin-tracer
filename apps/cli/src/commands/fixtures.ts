@@ -79,6 +79,8 @@ export async function fixturesCommand(
         description: values.description,
         chain: params.chain,
         direction: params.direction,
+        addresses: result.graph.addresses.length,
+        transfers: result.graph.edges.length,
         params: result.params,
         recordedAt: new Date().toISOString(),
       },

@@ -89,7 +89,7 @@ export function post(path: string, body: unknown): [string, RequestInit] {
   ];
 }
 
-/** Records a tiny demo scenario (like `fot fixtures record`) and returns its id. */
+/** Records a tiny demo scenario like `fot fixtures record`, but without the optional counts, and returns its id. */
 export async function recordDemoScenario(
   runtime: Runtime,
   fixturesDir: string,
