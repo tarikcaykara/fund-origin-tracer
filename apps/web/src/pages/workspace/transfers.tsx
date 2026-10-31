@@ -27,25 +27,10 @@ import {
 } from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import { cn } from "@/lib/utils.ts";
+import { transferSearchText } from "@/palette.ts";
 import type { RunPhase } from "@/run-state.ts";
 
 type Filter = "all" | "expanded" | "stopped";
-
-function getSearchText(edge: TraceEdge, labels: LabelIndex): string {
-  const labelText = [edge.from, edge.to]
-    .flatMap((address) => labels.get(address)?.labels.map((label) => label.name) ?? [])
-    .join(" ");
-  return [
-    edge.from,
-    edge.to,
-    edge.transfer.txHash,
-    assetSymbol(edge.transfer.asset),
-    edge.transfer.asset.kind === "token" ? edge.transfer.asset.contract : "",
-    labelText,
-  ]
-    .join(" ")
-    .toLocaleLowerCase();
-}
 
 function TransferStatus({ edge }: { edge: TraceEdge }) {
   if (edge.status === "stopped") return <StopTag reason={edge.stopReason} />;
@@ -89,7 +74,7 @@ export function TransfersTab({
 
   const matched = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    return edges.filter((edge) => !query || getSearchText(edge, labels).includes(query));
+    return edges.filter((edge) => !query || transferSearchText(edge, labels).includes(query));
   }, [edges, labels, search]);
   const counts = useMemo(
     () => ({

@@ -37,6 +37,7 @@ import { chainName, formatUtcMinute } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
 import { firstLimitError } from "@/limits.ts";
 import { STATUS_META } from "@/meta.ts";
+import { isMacPlatform } from "@/platform.ts";
 import { MAX_SEEDS, type ParsedSeeds, parseSeeds } from "@/seeds.ts";
 
 const CONFIGURATION_URL = "https://github.com/tarikcaykara/fund-origin-tracer#configuration";
@@ -789,7 +790,7 @@ export function HomePage() {
     formRef.current?.requestSubmit();
   };
 
-  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+  const isMac = isMacPlatform();
   const shortcut = isMac ? "⌘↵" : "Ctrl↵";
   let startHint: string;
   if (parsed.invalid.length > 0) {
