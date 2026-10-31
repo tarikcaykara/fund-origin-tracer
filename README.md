@@ -61,7 +61,7 @@ Requires [Bun](https://bun.sh) 1.4.3.
    bun run dev              # API on :3000, web UI on :5173
    ```
 
-3. Open <http://localhost:5173>. Without keys, use a **Run demo** card on the Home page: demos replay recorded API responses offline. Demo runs cannot be expanded (**Expand further** would mix live data into the recording); start a live trace for that.
+3. Open <http://localhost:5173>. Without keys, use a **Run demo** card on the Home page: demos replay recorded API responses offline. Demo runs cannot be expanded (**Expand further** would mix live data into the recording); start a live trace for that. Press ⌘K (Ctrl+K) on any page to search the open run's addresses, transfers and flags and your saved runs; on a phone, use Search in the ☰ menu.
 
 For a production-style run (`bun run build`, then `bun run start`) the server serves the built UI on `PORT`.
 

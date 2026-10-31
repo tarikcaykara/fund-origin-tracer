@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { shortAddress } from "@/format.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
 import { cn } from "@/lib/utils.ts";
+import { SEVERITY_ORDER } from "@/meta.ts";
+import { flagSelection } from "@/palette.ts";
 import type { Selection } from "@/selection.ts";
-
-const SEVERITY_ORDER = { high: 0, medium: 1, low: 2, info: 3 } as const;
 
 export function FlagsTab({
   result,
@@ -100,14 +100,7 @@ export function FlagsTab({
                 variant="ghost"
                 size="sm"
                 className="justify-self-start text-selection md:justify-self-end"
-                onClick={() =>
-                  onSelect({
-                    kind: "set",
-                    addresses,
-                    edgeIds: flag.evidence.edgeIds,
-                    title: flag.title,
-                  })
-                }
+                onClick={() => onSelect(flagSelection(flag))}
               >
                 Select {addresses.length} addr · {flag.evidence.edgeIds.length} edges in graph →
               </Button>

@@ -37,6 +37,7 @@ import {
   directionName,
   formatCompactUtc,
   formatUtcMinute,
+  runTitle,
   shortAddress,
 } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
@@ -101,10 +102,6 @@ function FilterMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function runTitle(run: RunSummary): string {
-  return run.title?.trim() || run.id;
 }
 
 function seedSummary(run: RunSummary): string {

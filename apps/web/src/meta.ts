@@ -49,6 +49,8 @@ export const SEVERITY_META: Record<Severity, { glyph: string; label: string; tok
   info: { glyph: "ⓘ", label: "INFO", token: "--severity-info" },
 };
 
+export const SEVERITY_ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2, info: 3 };
+
 export type RiskLevel = AnalysisResult["riskLevel"];
 
 export const RISK_META: Record<

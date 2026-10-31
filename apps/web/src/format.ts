@@ -65,6 +65,12 @@ export function chainName(chain: ChainId): string {
 export function directionName(direction: "backward" | "forward"): string {
   return direction === "backward" ? "Source of funds" : "Destination of funds";
 }
+
+/** The run's title, or its id when it has none. */
+export function runTitle(run: { id: string; title: string | null }): string {
+  return run.title?.trim() || run.id;
+}
+
 /** `2026-10-21 18:51 UTC` from an ISO string or epoch milliseconds. */
 export function formatUtcMinute(value: string | number): string {
   return `${new Date(value).toISOString().slice(0, 16).replace("T", " ")} UTC`;

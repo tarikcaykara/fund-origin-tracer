@@ -15,6 +15,7 @@ import { expandCallHint, expansionProgress, PANEL_EXPAND_DEPTH } from "@/expansi
 import { chainName } from "@/format.ts";
 import { useAsync } from "@/hooks/use-async.ts";
 import { useBreakpoint } from "@/hooks/use-breakpoint.ts";
+import { type PaletteRunSource, useRegisterPaletteSource } from "@/palette-context.tsx";
 import { isLivePhase, type RunPhase, sortedEdges, transferOrder } from "@/run-state.ts";
 import type { Selection } from "@/selection.ts";
 import { useRunStream } from "@/use-run-stream.ts";
@@ -297,6 +298,21 @@ export function WorkspacePage() {
     },
     [navigate, run],
   );
+  const chain = run?.chain ?? null;
+  const paletteSource = useMemo<PaletteRunSource | null>(
+    () =>
+      chain === null
+        ? null
+        : {
+            chain,
+            addresses: analysis?.graph.addresses ?? [],
+            edges,
+            flags: analysis?.flags ?? [],
+            select: selectInGraph,
+          },
+    [chain, analysis, edges, selectInGraph],
+  );
+  useRegisterPaletteSource(paletteSource);
 
   if (!run && detail.loading) return <Skeleton className="m-4 h-40 w-[calc(100%-2rem)]" />;
   if (detail.error && !run) {
