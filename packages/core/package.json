@@ -10,7 +10,7 @@
     "./csv": "./src/export/csv.ts"
   },
   "dependencies": {
-    "viem": "2.57.7",
+    "viem": "2.57.13",
     "zod": "4.6.7"
   }
 }

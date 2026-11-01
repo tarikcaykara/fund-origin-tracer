@@ -17,7 +17,7 @@
     "fixtures:record": "bun apps/cli/src/main.ts fixtures record"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.4",
     "@types/bun": "1.4.3",
     "typescript": "7.0.2"
   }
