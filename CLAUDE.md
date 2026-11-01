@@ -64,7 +64,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 ## Conventions
 
 - Conventional Commits in English (`feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`, `perf`). No `Co-Authored-By` lines.
-- Gate before every commit: `bun run check && bun run typecheck && bun test`.
+- Gate before every commit: `bun run check && bun run typecheck && bun test`. Biome (2.6+) formats Markdown by default; `biome.json` turns that off (`markdown.formatter.enabled: false`) so the hand-formatted docs stay as written. Upgrade Biome with `biome migrate` so the `$schema` version matches the CLI.
 - Explicit `.ts` import extensions and `import type`.
 - Update `README.md`, `CLAUDE.md` and `.env.example` in the same commit as any behaviour or config change.
 
