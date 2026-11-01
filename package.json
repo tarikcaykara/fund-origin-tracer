@@ -12,8 +12,9 @@
     "build": "bun run --cwd apps/web build",
     "check": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/core/test && tsc --noEmit -p apps/server && tsc --noEmit -p apps/cli && tsc --noEmit -p apps/web",
+    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/core/test && tsc --noEmit -p apps/server && tsc --noEmit -p apps/cli && tsc --noEmit -p apps/web && tsc --noEmit -p apps/web/smoke",
     "test": "bun test",
+    "smoke": "bun run build && bun run --cwd apps/web smoke",
     "fixtures:record": "bun apps/cli/src/main.ts fixtures record"
   },
   "devDependencies": {
