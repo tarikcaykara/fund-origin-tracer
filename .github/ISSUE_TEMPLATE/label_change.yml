@@ -1,0 +1,72 @@
+name: Label addition or correction
+description: Add, correct or remove a bundled address label. Every entry needs a public source.
+labels: [core]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bundled labels follow the [source policy](https://github.com/tarikcaykara/fund-origin-tracer/blob/master/docs/labels.md#source-policy): a public page that you opened and that shows this exact address with this name. Third-party label dumps are not a source. Sanctions matches come from the OFAC SDN list at runtime and are not edited here.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Change
+      options:
+        - Add
+        - Correct
+        - Remove
+    validations:
+      required: true
+  - type: dropdown
+    id: chain
+    attributes:
+      label: Chain
+      options:
+        - Ethereum
+        - Polygon
+        - Arbitrum
+        - TRON
+    validations:
+      required: true
+  - type: input
+    id: address
+    attributes:
+      label: Address
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      description: The name exactly as the source shows it, for example `Binance 14`.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - exchange
+        - dex
+        - bridge
+        - mixer
+        - scam
+        - defi
+        - token
+        - other
+  - type: input
+    id: source
+    attributes:
+      label: Source URL
+      description: A public page that shows this address with this name.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: For a correction or removal, what is wrong with the current label.
+  - type: checkboxes
+    id: verified
+    attributes:
+      label: Verification
+      options:
+        - label: I opened the source, and it shows this exact address with this name.
+          required: true
