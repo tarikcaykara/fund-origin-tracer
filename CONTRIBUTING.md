@@ -4,7 +4,7 @@ Thanks for helping. This project traces crypto funds for compliance, fraud and i
 
 ## Setup
 
-Requirements: [Bun](https://bun.sh) 1.4.3.
+Requirements: [Bun](https://bun.sh) 1.4.3. The browser smoke also needs [Node.js](https://nodejs.org) 20 or newer, because Playwright Test runs under Node.
 
 ```bash
 bun install
@@ -27,9 +27,11 @@ Run all three before every commit and before opening a pull request:
 
 ```bash
 bun run check       # Biome lint + format check (bun run format fixes formatting)
-bun run typecheck   # tsc for core, server, cli and web
+bun run typecheck   # tsc for core, server, cli, web and the browser smoke
 bun test            # unit and integration tests, fully offline
 ```
+
+`bun run smoke` is the browser smoke: it builds the web app, starts the built app on port 4173 with `DEMO_ONLY=true`, an in-memory database, no keys and no OFAC download, and drives the three demos in Chromium at 1440 px and 390 px (graph, analysis tabs, report, ⌘K palette, phone Path view and menu, no browser console errors). Install the browser once with `cd apps/web && bunx playwright install chromium`. Run it before pull requests that touch `apps/web` or `apps/server`. A failure leaves a trace in `apps/web/smoke/test-results/`; open it from `apps/web` with `bunx playwright show-trace <trace.zip>`.
 
 Behavior changes need a test. Changes to behavior, configuration or the API also update `README.md`, `CLAUDE.md`, `.env.example` and the matching page in `docs/` in the same commit.
 
@@ -39,12 +41,12 @@ Behavior changes need a test. Changes to behavior, configuration or the API also
 - No `Co-Authored-By` trailers.
 - Reference the issue in the commit footer: `Refs #N`, or `Closes #N` on the commit that finishes it.
 - Work on a branch named `<type>/<issue-number>-<slug>` (for example `feat/42-polygon-bridges`; `<type>/<slug>` when there is no issue) and open a pull request from the template, with `Closes #N` in its description. The maintainer squash-merges; keep the PR to one logical change.
-- `master` is protected by a ruleset: changes land only through a pull request, the CI `check` job must pass before merging, and force pushes and branch deletion are rejected. No review approval is required.
+- `master` is protected by a ruleset: changes land only through a pull request, the CI `check` and `smoke` jobs must pass before merging, and force pushes and branch deletion are rejected. No review approval is required.
 - Open issues with the forms (bug report, feature request, label addition or correction). Report vulnerabilities and leaked keys privately as [`SECURITY.md`](SECURITY.md) describes.
 
 ## Dependencies
 
-Dependabot opens update pull requests every week: Bun packages as `build(deps)` / `build(deps-dev)`, GitHub Actions as `ci(deps)`. Minor and patch updates are grouped per ecosystem; each major update comes alone, so read its changelog. They pass the same `check` as any pull request.
+Dependabot opens update pull requests every week: Bun packages as `build(deps)` / `build(deps-dev)`, GitHub Actions as `ci(deps)`. Minor and patch updates are grouped per ecosystem; each major update comes alone, so read its changelog. They pass the same `check` and `smoke` jobs as any pull request.
 
 The Bun runtime is not updated by Dependabot: the image, CI and the type definitions must stay on the same version. Upgrade it by hand in one pull request:
 
