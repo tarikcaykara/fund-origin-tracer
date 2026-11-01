@@ -28,6 +28,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | `scripts/dev.ts` | Runs API (3000) and Vite (5173) together |
 | `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Two-stage image on `oven/bun:1.4.3-debian` (build the web app, then ship sources + prod deps + `apps/web/dist`, `packages/core/labels`, `fixtures/demo`); compose pins `PORT`/`DATA_DIR` inside the container and maps `${PORT:-3000}` |
 | `.github/workflows/ci.yml`, `.gitleaksignore` | CI: install, check, typecheck, test, build, gitleaks; the workflow grants `pull-requests: read` because gitleaks-action lists a PR's commits through the API (without it every PR fails with 403); `.gitleaksignore` holds fingerprints of reviewed false positives (TRON contract ids in `tokenId` fixture fields) |
+| `.github/dependabot.yml`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | Weekly Dependabot PRs: `bun` as `build(deps)`, `github-actions` as `ci(deps)`, minor and patch grouped. `@types/bun` is ignored and there is no `docker` ecosystem, because the Bun runtime is bumped by hand in one PR (`Dockerfile` image, `ci.yml` `bun-version`, `@types/bun`, the version in README/CONTRIBUTING/this file). Issue forms (bug, feature, label change; blank issues off; security goes to `SECURITY.md`) and the PR template |
 | `CONTRIBUTING.md`, `SECURITY.md` | Contributor workflow and secrets runbook; private vulnerability reporting |
 
 ## Gotchas
@@ -72,4 +73,5 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 - Work is tracked in GitHub milestones (`Phase N — Name`, each with a "Done when:" description) and issues, one issue per plan step until v1.
 - Issue titles use the commit style (`feat(core): …`); bodies carry Scope, an Acceptance checklist and the planned commit message.
 - Commits reference their issue with a `Refs #N` footer, or `Closes #N` on the commit that finishes it. The owner pushes and closes issues; never close one yourself.
-- After v1, branches are `<type>/<issue-number>-<slug>` (`<type>/<slug>` when there is no issue) and the PR body says `Closes #N`.
+- After v1, branches are `<type>/<issue-number>-<slug>` (`<type>/<slug>` when there is no issue) and the PR body says `Closes #N`. A milestone is a release (`vX.Y.Z — Theme`, with a "Done when:" description); work not planned for soon stays out of milestones.
+- `master` is protected by the repository ruleset "Protect master" (GitHub settings, not a file): pull request required with 0 approvals, required status check `check` from GitHub Actions, branches need not be up to date, force pushes and deletion blocked. Repository admins may bypass on pull requests only, so even the owner cannot push to `master` directly.

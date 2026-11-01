@@ -38,8 +38,20 @@ Behavior changes need a test. Changes to behavior, configuration or the API also
 - [Conventional Commits](https://www.conventionalcommits.org) in English: `feat(core): …`, `fix(server): …`, `docs: …`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`, `perf`.
 - No `Co-Authored-By` trailers.
 - Reference the issue in the commit footer: `Refs #N`, or `Closes #N` on the commit that finishes it.
-- Work on a branch named `<type>/<issue-number>-<slug>` (for example `feat/42-polygon-bridges`; `<type>/<slug>` when there is no issue) and open a pull request whose description says `Closes #N`. The maintainer squash-merges; keep the PR to one logical change.
-- Contributors do not push to `master`.
+- Work on a branch named `<type>/<issue-number>-<slug>` (for example `feat/42-polygon-bridges`; `<type>/<slug>` when there is no issue) and open a pull request from the template, with `Closes #N` in its description. The maintainer squash-merges; keep the PR to one logical change.
+- `master` is protected by a ruleset: changes land only through a pull request, the CI `check` job must pass before merging, and force pushes and branch deletion are rejected. No review approval is required.
+- Open issues with the forms (bug report, feature request, label addition or correction). Report vulnerabilities and leaked keys privately as [`SECURITY.md`](SECURITY.md) describes.
+
+## Dependencies
+
+Dependabot opens update pull requests every week: Bun packages as `build(deps)` / `build(deps-dev)`, GitHub Actions as `ci(deps)`. Minor and patch updates are grouped per ecosystem; each major update comes alone, so read its changelog. They pass the same `check` as any pull request.
+
+The Bun runtime is not updated by Dependabot: the image, CI and the type definitions must stay on the same version. Upgrade it by hand in one pull request:
+
+- `Dockerfile`: both `FROM oven/bun:<version>-debian` lines;
+- `.github/workflows/ci.yml`: `bun-version`;
+- `package.json`: `@types/bun`, then `bun install` to update `bun.lock`;
+- the version in `README.md`, the Setup section above and the `Dockerfile` row of `CLAUDE.md`.
 
 ## Contributing labels
 

@@ -1,0 +1,73 @@
+name: Bug report
+description: The tracer, API, CLI or web UI does not behave as documented.
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste API keys or `.env` contents**; redact them first. Security problems and leaked keys go to [SECURITY.md](https://github.com/tarikcaykara/fund-origin-tracer/blob/master/SECURITY.md), not here.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "`version` from `GET /api/health`, the release tag, or the commit you run."
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - Web UI
+        - REST / SSE API
+        - CLI (fot)
+        - Docker image
+        - Core library
+    validations:
+      required: true
+  - type: dropdown
+    id: chain
+    attributes:
+      label: Chain
+      options:
+        - Ethereum
+        - Polygon
+        - Arbitrum
+        - TRON
+        - Not chain-specific
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Trace input
+      description: Seeds (tx hashes or addresses), direction and limits, or the demo you ran. Public on-chain data only.
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Server or CLI output, the error banner's Copy error text, or the browser console. Redact keys.
+      render: text
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Secrets
+      options:
+        - label: This report contains no API keys, `.env` values or other secrets.
+          required: true
