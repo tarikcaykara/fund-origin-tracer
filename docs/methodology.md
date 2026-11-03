@@ -30,7 +30,7 @@ Source: `packages/core/src/engine/trace.ts`, `engine/score.ts`.
 
 | Seed | What becomes seed edges (depth 0) |
 |---|---|
-| `tx` | All transfers of the transaction with `amount > 0` and neither endpoint a zero address (native, token, and on EVM internal transfers). Sorted by USD value descending (unpriced last, then input order). At most **10** legs are kept (`MAX_SEED_LEGS`). |
+| `tx` | All transfers of the transaction (native, token, and on EVM internal transfers) with `amount > 0`, neither endpoint a zero address, and `from` ≠ `to` after address normalization (self-transfers are skipped, as for address seeds). Sorted by USD value descending (unpriced last, then input order). At most **10** legs are kept (`MAX_SEED_LEGS`). A transaction with only self-transfers gives `seed_empty`. |
 | `address` | The address's transfers in the trace direction, with no time bound, newest first: incoming (`to === address`) for backward, outgoing (`from === address`) for forward. Zero-value, self-transfers and spoofed-token transfers are skipped, duplicates removed. Ranked by USD descending (unpriced counts as 0), ties newest first. The top `maxBranches` become seed edges. |
 
 Seed failures:
