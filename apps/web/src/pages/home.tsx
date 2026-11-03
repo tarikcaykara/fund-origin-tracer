@@ -1,4 +1,4 @@
-import { CHAIN_IDS, isValidAddress } from "@fot/core/chains";
+import { CHAIN_IDS, isValidAddress, normalizeAddress } from "@fot/core/chains";
 import type { ChainId, Label as CoreLabel, Direction } from "@fot/core/schema";
 import { ChevronDown } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -536,27 +536,45 @@ function AdvancedLimits({
   );
 }
 
+/** One screening request and its outcome, tied to the chain and address it was made for. */
+type Screening = { chain: ChainId; address: string } & (
+  | { status: "pending" }
+  | { status: "done"; result: ScreenResult }
+  | { status: "failed"; error: string }
+);
+
 function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null }) {
   const [address, setAddress] = useState("");
-  const [result, setResult] = useState<ScreenResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [screening, setScreening] = useState<Screening | null>(null);
+  const latestRequest = useRef(0);
   const trimmed = address.trim();
   const valid = isValidAddress(chain, trimmed);
+  const query = valid ? { chain, address: normalizeAddress(chain, trimmed) } : null;
+  // Shown only while the input still names the screened chain and address.
+  const current =
+    screening !== null &&
+    query !== null &&
+    screening.chain === query.chain &&
+    screening.address === query.address
+      ? screening
+      : null;
+  const busy = current?.status === "pending";
+  const result = current?.status === "done" ? current.result : null;
+  const error = current?.status === "failed" ? current.error : null;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!valid) return;
-    setBusy(true);
-    setError(null);
-    setResult(null);
+    if (query === null) return;
+    // A newer request supersedes this one; its late answer is dropped.
+    const request = ++latestRequest.current;
+    setScreening({ ...query, status: "pending" });
+    let outcome: Screening;
     try {
-      setResult(await api.screen(chain, trimmed));
+      outcome = { ...query, status: "done", result: await api.screen(query.chain, query.address) };
     } catch (screenError) {
-      setError(errorMessage(screenError));
-    } finally {
-      setBusy(false);
+      outcome = { ...query, status: "failed", error: errorMessage(screenError) };
     }
+    if (request === latestRequest.current) setScreening(outcome);
   };
 
   const sanctionedLabel = (label: CoreLabel) =>

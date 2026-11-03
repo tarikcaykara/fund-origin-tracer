@@ -31,7 +31,7 @@ bun run typecheck   # tsc for core, server, cli, web and the browser smoke
 bun test            # unit and integration tests, fully offline
 ```
 
-`bun run smoke` is the browser smoke: it builds the web app, starts the built app on port 4173 with `DEMO_ONLY=true`, an in-memory database, no keys and no OFAC download, and drives the three demos in Chromium at 1440 px and 390 px (graph, analysis tabs, report, ⌘K palette, phone Path view and menu, no browser console errors). Install the browser once with `cd apps/web && bunx playwright install chromium`. Run it before pull requests that touch `apps/web` or `apps/server`. A failure leaves a trace in `apps/web/smoke/test-results/`; open it from `apps/web` with `bunx playwright show-trace <trace.zip>`.
+`bun run smoke` is the browser smoke: it builds the web app, starts the built app on port 4173 with `DEMO_ONLY=true`, an in-memory database, no keys and no OFAC download, and drives the three demos in Chromium at 1440 px and 390 px (graph, analysis tabs, report, ⌘K palette, Home address screening, phone Path view and menu, no browser console errors). Install the browser once with `cd apps/web && bunx playwright install chromium`. Run it before pull requests that touch `apps/web` or `apps/server`. A failure leaves a trace in `apps/web/smoke/test-results/`; open it from `apps/web` with `bunx playwright show-trace <trace.zip>`.
 
 Behavior changes need a test. Changes to behavior, configuration or the API also update `README.md`, `CLAUDE.md`, `.env.example` and the matching page in `docs/` in the same commit.
 
