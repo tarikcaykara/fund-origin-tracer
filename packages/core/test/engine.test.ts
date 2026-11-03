@@ -603,6 +603,30 @@ describe("seeds", () => {
     expect(seeds.map((e) => e.transfer.amount)).toEqual([21, 20, 19, 18, 17, 16, 15, 14, 13, 12]);
   });
 
+  test("tx seed: self-transfer legs are ignored and raise no cycle or round trip", async () => {
+    const S = addr(0xabc);
+    const self = mkTransfer({
+      tx: 1,
+      from: S,
+      to: `0x${S.slice(2).toUpperCase()}`,
+      amount: 100,
+      ts: T0,
+    });
+    const selfOnly = await run(params(), new FakeProvider({ txs: [mkTx(txHash(1), [self])] }));
+    expect(selfOnly.out.edges).toEqual([]);
+    expect(selfOnly.out.warnings.map((w) => w.code)).toEqual(["seed_empty:s1"]);
+
+    const leg = mkTransfer({ tx: 1, from: addr(2), to: S, amount: 50, ts: T0 });
+    const mixed = await run(
+      params({ maxDepth: 1 }),
+      new FakeProvider({ txs: [mkTx(txHash(1), [self, leg])] }),
+    );
+    expect(mixed.out.edges.map((e) => [e.depth, e.far])).toEqual([[0, addr(2)]]);
+    const flags = flagIds(await runAnalysis(mixed.out.edges));
+    expect(flags).not.toContain("cycle");
+    expect(flags).not.toContain("round_trip");
+  });
+
   test("a missing seed warns and the other seeds still run", async () => {
     const provider = chainProvider(2);
     const { out, log } = await run(

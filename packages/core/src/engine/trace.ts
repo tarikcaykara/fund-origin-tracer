@@ -388,7 +388,11 @@ export async function runTrace(
     if (seed.kind === "tx") {
       const tx = await provider.getTransaction(seed.value, signal);
       const candidates = tx.transfers.filter(
-        (t) => t.amount > 0 && !isZeroAddress(chain, t.from) && !isZeroAddress(chain, t.to),
+        (t) =>
+          t.amount > 0 &&
+          !isZeroAddress(chain, t.from) &&
+          !isZeroAddress(chain, t.to) &&
+          norm(t.from) !== norm(t.to),
       );
       const { usd } = await priceAll(candidates);
       const legs = candidates.map((transfer, i) => ({
