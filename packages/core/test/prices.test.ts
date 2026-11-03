@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { TTL_RECENT_SEC } from "../src/infra/http.ts";
 import { MinIntervalLimiter } from "../src/infra/limiter.ts";
 import { MemoryCacheStore } from "../src/infra/store.ts";
 import {
@@ -134,6 +135,43 @@ describe("PriceService", () => {
     }));
     const res = await make(transport).priceMany([{ asset: ETH, timestamp: OLD_TS }], signal);
     expect(res.prices.get(priceKey(ETH, OLD_TS))).toBe(2);
+  });
+
+  test("a bucket without a point within 600 s is unpriced and asked again soon", async () => {
+    const b1 = 1_699_999_200;
+    const buckets = [b1, b1 + 3600, b1 + 7200, b1 + 14_400];
+    const { urls, transport } = recorder(() => ({
+      status: 200,
+      body: JSON.stringify({
+        coins: {
+          "coingecko:ethereum": {
+            prices: [
+              { timestamp: b1, price: 2000 },
+              { timestamp: b1 + 7200 + 600, price: 2100 },
+              { timestamp: b1 + 14_400 - 601, price: 2200 },
+            ],
+          },
+        },
+      }),
+    }));
+    let now = NOW;
+    const svc = new PriceService({
+      transport,
+      cache: new MemoryCacheStore(() => now),
+      limiter: new MinIntervalLimiter(0, { now: () => now }),
+      now: () => now,
+    });
+    const items = buckets.map((timestamp) => ({ asset: ETH, timestamp }));
+    const res = await svc.priceMany(items, signal);
+    expect(buckets.map((b) => res.prices.get(priceKey(ETH, b)))).toEqual([2000, null, 2100, null]);
+    expect(res.warning).toBeNull();
+
+    // Nulls keep the short TTL, so only the unpriced buckets are requested again.
+    now += (TTL_RECENT_SEC + 1) * 1000;
+    await svc.priceMany(items, signal);
+    expect(urls).toHaveLength(2);
+    const again = JSON.parse(new URL(urls[1] ?? "").searchParams.get("coins") ?? "{}");
+    expect(again).toEqual({ "coingecko:ethereum": [b1 + 3600, b1 + 14_400] });
   });
 
   test("a coin absent from the response is null without a warning", async () => {

@@ -163,11 +163,13 @@ export class PriceService implements PriceSource {
     const nowSec = this.opts.now() / 1000;
     for (const w of chunk) {
       const series = parsed.coins[w.coin]?.prices ?? [];
+      // The series holds points for every bucket asked for this coin: only one within
+      // SEARCH_WIDTH of this bucket prices it.
       let best: number | null = null;
       let bestDist = Number.POSITIVE_INFINITY;
       for (const p of series) {
         const dist = Math.abs(p.timestamp - w.bucket);
-        if (dist < bestDist) {
+        if (dist <= SEARCH_WIDTH && dist < bestDist) {
           bestDist = dist;
           best = p.price;
         }
