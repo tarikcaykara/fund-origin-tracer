@@ -117,6 +117,48 @@ test("⌘K finds an address of the open run", async ({ page }) => {
   await expect(panel.getByText(address, { exact: true })).toBeVisible();
 });
 
+test("the screening result belongs to the screened chain and address", async ({ page }) => {
+  const binance14 = "0x28c6c06298d514db089934071355e5743bf21d60";
+  const unlabeled = "0x1234567890abcdef1234567890abcdef12345678";
+  await page.goto("/");
+  await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
+  const box = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Screen an address", { exact: true }) });
+  const input = box.getByRole("textbox", { name: "Address to screen" });
+  const screen = box.getByRole("button", { name: "Screen", exact: true });
+  const binance = box.getByText("Binance 14", { exact: true });
+
+  await input.fill(binance14);
+  await screen.click();
+  await expect(binance).toBeVisible();
+  await input.fill(unlabeled);
+  await expect(binance).toBeHidden();
+  await expect(box.getByText("○ NO SDN MATCH")).toBeHidden();
+
+  // A response for a superseded query must not replace the current result.
+  const held = Promise.withResolvers<void>();
+  await page.route(`**/api/screen/ethereum/${unlabeled}`, async (route) => {
+    await held.promise;
+    await route.continue();
+  });
+  await screen.click();
+  await input.fill(binance14);
+  await screen.click();
+  await expect(binance).toBeVisible();
+  const late = page.waitForResponse((response) => response.url().endsWith(unlabeled));
+  held.resolve();
+  await late;
+  // Give the late response time to render before checking that it did not.
+  await page.waitForTimeout(250);
+  await expect(binance).toBeVisible();
+  await expect(box.getByText("○ No label")).toBeHidden();
+
+  await page.getByRole("button", { name: /^Chain Ethereum/ }).click();
+  await page.getByRole("menuitem", { name: /^Polygon/ }).click();
+  await expect(binance).toBeHidden();
+});
+
 test.describe("phone (390 px)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
