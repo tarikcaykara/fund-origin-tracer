@@ -60,6 +60,10 @@ export interface FakeOptions {
   onRequest?: (url: URL) => void;
 }
 
+/** A one-entry SDN list; its address is never part of a fake transfer chain. */
+export const FAKE_SDN_XML =
+  "<sdnList><sdnEntry><uid>7</uid><lastName>TEST ENTITY</lastName><sdnType>Entity</sdnType><idList><id><idType>Digital Currency Address - ETH</idType><idNumber>0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb</idNumber></id></idList></sdnEntry></sdnList>";
+
 /** Minimal Etherscan V2 + OFAC stand-in over a list of canonical-USDT transfers. */
 export function fakeTransport(transfers: FakeTransfer[], options: FakeOptions = {}): Transport {
   const ok = (result: unknown) => ({
@@ -79,7 +83,7 @@ export function fakeTransport(transfers: FakeTransfer[], options: FakeOptions = 
     const url = new URL(req.url);
     options.onRequest?.(url);
     if (options.delayMs) await new Promise((r) => setTimeout(r, options.delayMs));
-    if (url.hostname.includes("ofac.treas.gov")) return { status: 200, body: "<sdnList/>" };
+    if (url.hostname.includes("ofac.treas.gov")) return { status: 200, body: FAKE_SDN_XML };
     if (url.hostname !== "api.etherscan.io") return { status: 404, body: "" };
 
     const q = url.searchParams;

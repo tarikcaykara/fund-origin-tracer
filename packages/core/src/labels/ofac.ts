@@ -201,10 +201,15 @@ export class OfacSource {
         ...(signal ? { signal } : {}),
       });
       if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
-      const set: OfacSet = {
-        fetchedAt: new Date(this.#o.now()).toISOString(),
-        ...parseSdnXml(res.body),
-      };
+      // A maintenance page, a format change or a cut-off body must not replace the list.
+      if (!res.body.includes("<sdnList") || !res.body.includes("</sdnList>")) {
+        throw new Error("response is not a complete SDN list");
+      }
+      const parsed = parseSdnXml(res.body);
+      if (parsed.evm.size + parsed.tron.size === 0) {
+        throw new Error("SDN list has no EVM or TRON addresses");
+      }
+      const set: OfacSet = { fetchedAt: new Date(this.#o.now()).toISOString(), ...parsed };
       await this.#o.kv.set(OFAC_KV_KEY, JSON.stringify(ofacSnapshot(set)));
       return { set, warning: null };
     } catch (err) {

@@ -124,7 +124,7 @@ describe("ofac", () => {
       set: async (k: string, v: string) => void m.set(k, v),
     };
   }
-  const ok: Transport = async () => ({ status: 200, body: XML });
+  const ok: Transport = async () => ({ status: 200, body: `<sdnList>${XML}</sdnList>` });
   const fail: Transport = async () => ({ status: 503, body: "" });
   const HOUR = 3_600_000;
 
@@ -190,6 +190,53 @@ describe("ofac", () => {
     }).load();
     expect(r2.warning?.code).toBe("ofac_unavailable");
     expect(r2.set.evm.size).toBe(0);
+  });
+
+  test("a 200 response that is not a complete SDN list with addresses keeps the list and the stored snapshot", async () => {
+    const kv = memKv();
+    let now = Date.parse("2026-01-01T00:00:00Z");
+    const good = await new OfacSource({
+      url: "u",
+      transport: async () => ({ status: 200, body: SDN_FRAGMENT }),
+      kv,
+      now: () => now,
+    }).load();
+    expect(good.warning).toBeNull();
+    expect(good.set.evm.size).toBe(10);
+    expect(good.set.tron.size).toBe(6);
+    const stored = kv.m.get(OFAC_KV_KEY);
+    now += 25 * HOUR;
+
+    const maintenance = "<html><body>Scheduled maintenance</body></html>";
+    for (const body of [
+      maintenance,
+      '<?xml version="1.0" standalone="yes"?><sdnList></sdnList>',
+      SDN_FRAGMENT.slice(0, SDN_FRAGMENT.indexOf("</sdnList>")),
+    ]) {
+      const r = await new OfacSource({
+        url: "u",
+        transport: async () => ({ status: 200, body }),
+        kv,
+        now: () => now,
+      }).load();
+      expect(r.warning?.code).toBe("ofac_unavailable");
+      expect(r.warning?.message).toContain("using stale snapshot");
+      expect(r.set.evm.size).toBe(10);
+      expect(r.set.tron.size).toBe(6);
+      expect(kv.m.get(OFAC_KV_KEY)).toBe(stored);
+    }
+
+    const empty = memKv();
+    const r = await new OfacSource({
+      url: "u",
+      transport: async () => ({ status: 200, body: maintenance }),
+      kv: empty,
+      now: () => now,
+    }).load();
+    expect(r.warning?.code).toBe("ofac_unavailable");
+    expect(r.warning?.message).toContain("sanctions screening disabled");
+    expect(r.set.evm.size).toBe(0);
+    expect(empty.m.has(OFAC_KV_KEY)).toBe(false);
   });
 });
 
