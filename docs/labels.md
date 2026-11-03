@@ -74,7 +74,7 @@ Private labels (your own customers, cases, internal wallets) go in a local file 
 
 ## OFAC SDN
 
-The sanctions list is not bundled. The server downloads OFAC's SDN XML (`OFAC_SDN_URL`) at boot and every `OFAC_REFRESH_HOURS`, and stores the parsed snapshot in SQLite.
+The sanctions list is not bundled. The server downloads OFAC's SDN XML (`OFAC_SDN_URL`) at boot and again whenever the stored snapshot is `OFAC_REFRESH_HOURS` old (fractions are honoured, minimum `0.1`, six minutes), and stores the parsed snapshot in SQLite. One-shot CLI commands (`fot trace`, `fot screen`) load the list once.
 
 - Only `Digital Currency Address` ids that are EVM (`0x` + 40 hex) or TRON (`T` + 33 base58) addresses are kept. The currency tag (`ETH`, `USDT`, `TRX`, …) does not identify the chain, so addresses are classified by format.
 - A sanctioned address gets one label per SDN entry that lists it (an address can sit on more than one entry):
@@ -84,7 +84,8 @@ The sanctions list is not bundled. The server downloads OFAC's SDN XML (`OFAC_SD
   - `category: "sanctioned"`, `origin: "ofac"`.
 - **Order.** SDN labels come first, before the bundled or local label of the same address, so anything that shows only the first label (graph node, Path view, touchpoint names, the first name in the CSV `labels` column) shows the sanctions match; the other label stays in the list. Stops, exposure and flags do not depend on the order: `sanctioned` always ranks first.
 - **Snapshots.** Version 2 (`ofac:sdn` in the SQLite KV, `ofac.json` in demo scenarios) is `{version, fetchedAt, entries: [{uid, name, programs}], evm: {address: [uid]}, tron: {…}}`. Version 1 snapshots (`{fetchedAt, evm[], tron[]}`, addresses only) still load, and their addresses carry the constant label `OFAC SDN` without entity. A version 1 snapshot in the KV is downloaded again at the next load even when it is younger than `OFAC_REFRESH_HOURS`, and is kept if that download fails.
-- **Failed downloads.** A response counts as a download only if it is a complete SDN document (with both `<sdnList` and `</sdnList>`) and holds at least one EVM or TRON address. An HTTP error, a maintenance page, a format change or a cut-off body keeps the previous snapshot in use and in SQLite, and the server logs `OFAC SDN list unavailable (<reason>); using stale snapshot` (at boot as warning `ofac_unavailable`, then at each failed refresh). Without a previous snapshot the list is empty and sanctions screening is off (`… sanctions screening disabled`, `ofacFetchedAt: null` in `GET /api/health`).
+- **Failed downloads.** A response counts as a download only if it is a complete SDN document (with both `<sdnList` and `</sdnList>`) and holds at least one EVM or TRON address. An HTTP error, a maintenance page, a format change or a cut-off body keeps the previous snapshot in use and in SQLite, and the server logs `OFAC SDN list unavailable (<reason>); using stale snapshot` (at boot as warning `ofac_unavailable`, then at each failed retry). Without a previous snapshot the list is empty and sanctions screening is off (`… sanctions screening disabled`, `ofacFetchedAt: null` in `GET /api/health`).
+- **Retries.** While no snapshot younger than `OFAC_REFRESH_HOURS` is loaded (a failed boot load, or only a stale snapshot), `fot serve` retries after 1, 2 and 5 minutes, then every 15 minutes, and returns to the regular refresh after the first good download.
 
 ## Contributing a label
 
