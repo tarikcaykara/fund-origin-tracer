@@ -1,6 +1,7 @@
 import { createApp } from "./app.ts";
 import type { AppConfig } from "./config.ts";
 import { type Db, openDb } from "./db.ts";
+import { scheduleOfacRefresh } from "./ofac-refresh.ts";
 import { RunManager, type RunManagerOptions } from "./runs.ts";
 import { createRuntime, type Runtime } from "./runtime.ts";
 
@@ -48,22 +49,21 @@ export async function startServer(
     idleTimeout: 0,
   });
 
-  const timers = [
-    setInterval(() => db.cache.prune(), HOUR_MS),
-    setInterval(() => {
-      void runtime.refreshOfac().then((warning) => {
-        if (warning) console.warn(`[ofac] ${warning.message}`);
-      });
-    }, Math.max(1, config.ofacRefreshHours) * HOUR_MS),
-  ];
-  for (const t of timers) t.unref();
+  const prune = setInterval(() => db.cache.prune(), HOUR_MS);
+  prune.unref();
+  const ofacRefresh = scheduleOfacRefresh({
+    runtime,
+    refreshHours: config.ofacRefreshHours,
+    onWarning: (message) => console.warn(`[ofac] ${message}`),
+  });
 
   return {
     port: server.port ?? config.port,
     runtime,
     manager,
     async stop() {
-      for (const t of timers) clearInterval(t);
+      clearInterval(prune);
+      ofacRefresh.stop();
       await manager.shutdown();
       await server.stop(true);
       db.close();

@@ -64,7 +64,7 @@ curl -s localhost:3000/api/health
 
 - `chains.<id>` is `ready` when the key for that chain is configured (`ETHERSCAN_API_KEY` covers ethereum, polygon and arbitrum; at least one `TRONSCAN_API_KEYS` entry for tron), else `missing_key`. The keys themselves are not validated here.
 - `explorerMaxPages` is `EXPLORER_MAX_PAGES`: pages fetched per explorer list. The web UI uses it to state the cost of one expansion.
-- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off).
+- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off until a retry succeeds; the server retries after 1, 2, 5, then every 15 minutes).
 - `labelsVersion` is the newest `verifiedAt` across the bundled label files.
 
 ### `GET /api/demo`

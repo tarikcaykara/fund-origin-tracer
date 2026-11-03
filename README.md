@@ -119,7 +119,7 @@ Set in `.env` (see `.env.example`). Blank values behave like unset ones.
 | `FOT_LABELS_PATH` | empty | Path to your local labels JSON file. |
 | `FOT_POLICY_PATH` | empty | Path to your risk-policy override JSON file. |
 | `OFAC_SDN_URL` | `https://sanctionslistservice.ofac.treas.gov/api/publicationpreview/exports/sdn.xml` | Source of the sanctions list. |
-| `OFAC_REFRESH_HOURS` | `24` | How often the sanctions list is refreshed. |
+| `OFAC_REFRESH_HOURS` | `24` | How often the sanctions list is downloaded again, counted from the last download; fractions are honoured (minimum `0.1`). A failed download is retried after 1, 2, 5, then every 15 minutes. |
 | `DEMO_ONLY` | `false` | When `true`, only recorded demos can run (no live traces); for public deployments. |
 
 ## Labels
