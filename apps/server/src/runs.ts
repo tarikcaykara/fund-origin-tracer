@@ -262,19 +262,16 @@ export class RunManager {
     run.stale = true;
     this.refreshProvisional(run);
 
-    this.launch(
-      run,
-      () =>
-        executeRun({
-          params: previous.params,
-          runtime: this.runtime,
-          controller: run.controller,
-          emit: (e) => this.handle(run, e),
-          runId,
-          labels: run.labels,
-          continueFrom: { edgeId, maxDepth, throughEntities, previous },
-        }),
-      previous,
+    this.launch(run, () =>
+      executeRun({
+        params: previous.params,
+        runtime: this.runtime,
+        controller: run.controller,
+        emit: (e) => this.handle(run, e),
+        runId,
+        labels: run.labels,
+        continueFrom: { edgeId, maxDepth, throughEntities, previous },
+      }),
     );
     return { status: "running" };
   }
@@ -451,12 +448,12 @@ export class RunManager {
     return run;
   }
 
-  /** Runs `work` in the background; failures are persisted and streamed, never thrown. */
-  private launch(
-    run: LiveRun,
-    work: () => Promise<AnalysisResult>,
-    fallback?: AnalysisResult,
-  ): void {
+  /**
+   * Runs `work` in the background; failures are persisted and streamed, never thrown. A run that
+   * throws ends `failed` without a result: for an expansion, the stored pre-expansion result no
+   * longer describes the run.
+   */
+  private launch(run: LiveRun, work: () => Promise<AnalysisResult>): void {
     const ticker = setInterval(() => this.refreshProvisional(run), this.provisionalIntervalMs);
     run.finished = (async () => {
       try {
@@ -464,14 +461,15 @@ export class RunManager {
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         const code = isFotError(e) ? e.code : "run_failed";
-        const status = fallback?.status ?? "failed";
         this.db.investigations.update(run.id, {
-          status,
+          status: "failed",
+          riskLevel: null,
           finishedAt: new Date().toISOString(),
+          result: null,
           error: message,
         });
         this.handle(run, { type: "error", code, message });
-        this.handle(run, { type: "done", status });
+        this.handle(run, { type: "done", status: "failed" });
       } finally {
         clearInterval(ticker);
         this.runs.delete(run.id);

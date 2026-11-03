@@ -293,10 +293,15 @@ export class Investigations {
     return this.sqlite.query("DELETE FROM investigations WHERE id = ?1").run(id).changes > 0;
   }
 
-  /** Boot recovery: runs that were live when the process died can never finish. */
+  /**
+   * Boot recovery: runs that were live when the process died can never finish. An interrupted
+   * expansion still holds the pre-expansion result, which no longer describes the run: drop it.
+   */
   markInterrupted(): number {
     return this.sqlite
-      .query("UPDATE investigations SET status = 'interrupted' WHERE status = 'running'")
+      .query(
+        "UPDATE investigations SET status = 'interrupted', risk_level = NULL, result_json = NULL WHERE status = 'running'",
+      )
       .run().changes;
   }
 }

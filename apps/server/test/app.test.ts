@@ -7,7 +7,12 @@ import {
   type RunEvent,
   type RunParams,
 } from "@fot/core";
-import { DEFAULT_EXPAND_DEPTH, DEFAULT_FIXTURES_DIR, executeRun } from "../src/index.ts";
+import {
+  DEFAULT_EXPAND_DEPTH,
+  DEFAULT_FIXTURES_DIR,
+  executeRun,
+  RunManager,
+} from "../src/index.ts";
 import {
   createTestEnv,
   LIVE_SEED_TX,
@@ -409,6 +414,65 @@ describe("expand", () => {
     expect(after.result?.status).toBe("completed");
     expect(after.result?.graph.edges.length).toBeGreaterThan(before.graph.edges.length);
     expect(after.result?.graph.edges.some((e) => e.stopReason === "cancelled")).toBe(true);
+  });
+
+  test("an expansion interrupted by a restart ends failed, without the previous result", async () => {
+    const env = await createTestEnv({
+      transport: fakeTransport(chainOfTransfers(12), { delayMs: 20 }),
+    });
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+    const res = await env.app.request(
+      ...post(`/api/runs/${runId}/expand`, { edgeId: stopped.id, maxDepth: 2 }),
+    );
+    expect(res.status).toBe(202);
+
+    // The process dies mid-expansion; the next boot recovers the row and serves it.
+    expect(env.db.investigations.markInterrupted()).toBe(1);
+    const rebooted = new RunManager({ runtime: env.runtime, db: env.db, replayDelayMs: 0 });
+    const events: RunEvent[] = [];
+    rebooted.subscribe(runId, (e) => events.push(e));
+    expect(events).toEqual([
+      { type: "snapshot", status: "failed", edges: [], stats: {} },
+      { type: "error", code: "interrupted", message: expect.any(String) },
+      { type: "done", status: "failed" },
+    ]);
+    expect(rebooted.get(runId)).toMatchObject({ status: "interrupted", result: null });
+
+    env.manager.cancel(runId);
+    await env.manager.waitForRun(runId);
+  });
+
+  test("an expansion that throws ends failed, without the previous result", async () => {
+    const env = await createTestEnv();
+    const runId = await startLive(env, { maxDepth: 2 });
+    await env.manager.waitForRun(runId);
+    const before = (await getRun(env, runId)).result as AnalysisResult;
+    const stopped = before.graph.edges.find((e) => e.stopReason === "max_depth");
+    if (!stopped) throw new Error("expected a max_depth edge");
+    env.runtime.explorerFor = () => {
+      throw new Error("explorer exploded");
+    };
+
+    // Called on the manager so the subscription is in place before the expansion fails.
+    const expanding = env.manager.expand(runId, stopped.id, { maxDepth: 2 });
+    const live: RunEvent[] = [];
+    env.manager.subscribe(runId, (e) => live.push(e));
+    await expanding;
+    await env.manager.waitForRun(runId);
+
+    expect(live.slice(-2)).toEqual([
+      { type: "error", code: "run_failed", message: "explorer exploded" },
+      { type: "done", status: "failed" },
+    ]);
+    const after = await getRun(env, runId);
+    expect(after).toMatchObject({ status: "failed", riskLevel: null, result: null });
+    const replay = await readEvents(env, runId);
+    expect(replay.map((e) => e.type)).toEqual(["snapshot", "error", "done"]);
+    expect(replay.at(-1)).toEqual({ type: "done", status: "failed" });
   });
 
   test.each([
