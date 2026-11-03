@@ -227,7 +227,7 @@ describe("runtime", () => {
       fetches++;
       return {
         status: 200,
-        body: "<sdnEntry><uid>7</uid><lastName>TEST ENTITY</lastName><sdnType>Entity</sdnType><idList><id><idType>Digital Currency Address - ETH</idType><idNumber>0x00000000000000000000000000000000000000bb</idNumber></id></idList></sdnEntry>",
+        body: "<sdnList><sdnEntry><uid>7</uid><lastName>TEST ENTITY</lastName><sdnType>Entity</sdnType><idList><id><idType>Digital Currency Address - ETH</idType><idNumber>0x00000000000000000000000000000000000000bb</idNumber></id></idList></sdnEntry></sdnList>",
       };
     };
     const first = await createRuntime(loadConfig({}), { db, transport });

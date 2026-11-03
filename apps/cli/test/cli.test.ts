@@ -5,6 +5,7 @@ import { createRuntime, executeRun, loadConfig, MEMORY_DB, openDb } from "@fot/s
 import { tempDir } from "../../server/test/helpers/env.ts";
 import {
   chainOfTransfers,
+  FAKE_SDN_XML,
   fakeTransport,
   txHash,
 } from "../../server/test/helpers/fake-etherscan.ts";
@@ -20,7 +21,7 @@ let baseEnv: Record<string, string>;
 
 beforeAll(() => {
   // OFAC is the only network call the CLI makes at boot; point it at a local stub.
-  ofacServer = Bun.serve({ port: 0, fetch: () => new Response("<sdnList/>") });
+  ofacServer = Bun.serve({ port: 0, fetch: () => new Response(FAKE_SDN_XML) });
   baseEnv = {
     OFAC_SDN_URL: `http://localhost:${ofacServer.port}/sdn.xml`,
     DATA_DIR: tempDir("fot-cli-data-"),
