@@ -273,7 +273,7 @@ Per address the explorer is asked for several lists (Etherscan: ERC-20 `tokentx`
 
 ### Pricing
 
-- USD value is `amount × price` at the transfer time. Prices are looked up per **hour bucket** (`floor(timestamp / 3600) × 3600`), using the nearest DefiLlama price within a 600-second search width.
+- USD value is `amount × price` at the transfer time. Prices are looked up per **hour bucket** (`floor(timestamp / 3600) × 3600`), using the nearest DefiLlama price within 600 seconds of the bucket start. A bucket with no price in that window is **unpriced** (`usd: null`), even when DefiLlama returns prices for other hours of the same coin; the empty answer is cached for 300 seconds only, so a later run asks again.
 - **Canonical stablecoins are priced 1:1 by contract address only**: Ethereum USDT, USDC, DAI, USDP; Polygon USDT, USDC, USDC.e, DAI; Arbitrum USDT, USDC, USDC.e, DAI; TRON USDT. Priced by contract, never by symbol, so a token that merely calls itself "USDT" is not valued as a dollar.
 - Everything else (native coins, WETH, other tokens, TRON USDC/USDD) is looked up on DefiLlama. A token DefiLlama does not know is **unpriced** (`usd: null`).
 - If DefiLlama cannot be reached, prices come back null and the run carries warning `prices_unavailable`; the run is not aborted.
