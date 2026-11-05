@@ -30,7 +30,7 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 | `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Two-stage image on `oven/bun:1.4.3-debian` (build the web app, then ship sources + prod deps + `apps/web/dist`, `packages/core/labels`, `fixtures/demo`); compose pins `PORT`/`DATA_DIR` inside the container and maps `${PORT:-3000}` |
 | `.github/workflows/ci.yml`, `.gitleaksignore` | CI: install, check, typecheck, test, build, gitleaks; a parallel `smoke` job (Node 24, cached Chromium headless shell, `bun run smoke`) uploads `apps/web/smoke/test-results` on failure; the workflow grants `pull-requests: read` because gitleaks-action lists a PR's commits through the API (without it every PR fails with 403); `.gitleaksignore` holds fingerprints of reviewed false positives (TRON contract ids in `tokenId` fixture fields) |
 | `.github/dependabot.yml`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | Weekly Dependabot PRs: `bun` as `build(deps)`, `github-actions` as `ci(deps)`, minor and patch grouped. `@types/bun` is ignored and there is no `docker` ecosystem, because the Bun runtime is bumped by hand in one PR (`Dockerfile` image, `ci.yml` `bun-version`, `@types/bun`, the version in README/CONTRIBUTING/this file). Issue forms (bug, feature, label change; blank issues off; security goes to `SECURITY.md`) and the PR template |
-| `CONTRIBUTING.md`, `SECURITY.md` | Contributor workflow and secrets runbook; private vulnerability reporting |
+| `CONTRIBUTING.md`, `SECURITY.md` | Contributor workflow, testing policy and secrets runbook; private vulnerability reporting (GitHub PVR, email fallback), fixes through private security advisories |
 
 ## Gotchas
 
@@ -72,6 +72,13 @@ Open-source crypto fund-flow tracer (Ethereum, Polygon, Arbitrum, TRON) for comp
 - Gate before every commit: `bun run check && bun run typecheck && bun test`. Biome (2.6+) formats Markdown by default; `biome.json` turns that off (`markdown.formatter.enabled: false`) so the hand-formatted docs stay as written. Upgrade Biome with `biome migrate` so the `$schema` version matches the CLI.
 - Explicit `.ts` import extensions and `import type`.
 - Update `README.md`, `CLAUDE.md` and `.env.example` in the same commit as any behaviour or config change.
+
+## Testing policy
+
+- Every bug fix starts with a regression test that fails before the fix, in the layer where the bug lives: `packages/core/test/`, `apps/server/test/`, `apps/cli/test/` or `apps/web/test/` (web modules).
+- Core logic (engine, analysis, providers, parsers) is written test-first; tests stay offline (captures in `packages/core/test/fixtures/`, fakes in `test/helpers/`).
+- The browser smoke (`apps/web/smoke/`) grows only for new or changed user flows, or for bugs that reproduce only in a browser; it stays a smoke, not a full e2e suite.
+- Each issue's Acceptance names the test that proves each item.
 
 ## Workflow
 

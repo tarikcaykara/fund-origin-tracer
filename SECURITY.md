@@ -6,7 +6,7 @@ Only the `master` branch is supported. Fixes land on `master`; there are no main
 
 ## Reporting a vulnerability
 
-Report vulnerabilities **privately** by email to **tarik@caykara.com**. Please do not open a public issue or pull request for a security problem.
+Report vulnerabilities **privately** through GitHub private vulnerability reporting: open the repository's **Security** tab and choose **Report a vulnerability** ([direct link](https://github.com/tarikcaykara/fund-origin-tracer/security/advisories/new)). If you cannot use GitHub, email **tarik@caykara.com** instead. Please do not open a public issue or pull request for a security problem.
 
 Include:
 
@@ -15,7 +15,7 @@ Include:
 - the commit you tested against;
 - the impact you expect (for example information disclosure, request forgery, denial of service).
 
-Reports are handled privately by the maintainer; a fix lands on `master`.
+The maintainer handles each report in a private GitHub security advisory: the fix is prepared there, lands on `master`, and the advisory is published together with the release that contains the fix.
 
 ## Keys and secrets
 

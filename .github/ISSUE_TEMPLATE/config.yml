@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability or leaked key
     url: https://github.com/tarikcaykara/fund-origin-tracer/blob/master/SECURITY.md
-    about: Report it privately by email as SECURITY.md describes, not in a public issue.
+    about: Report it privately through GitHub private vulnerability reporting (Security tab, Report a vulnerability) as SECURITY.md describes, not in a public issue.

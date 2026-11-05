@@ -9,6 +9,7 @@ Closes #
 ## Checklist
 - [ ] Branch `<type>/<issue-number>-<slug>`; Conventional Commits in English
 - [ ] `bun run check && bun run typecheck && bun test` pass
+- [ ] Bug fix: a regression test fails before the fix
 - [ ] `README.md`, `CLAUDE.md`, `.env.example` and the matching `docs/` page updated for behaviour, configuration or API changes
 - [ ] No API keys, `.env` values or recorded keys in code, fixtures, screenshots or this description
 - [ ] New or changed labels have a public `source` that I opened
