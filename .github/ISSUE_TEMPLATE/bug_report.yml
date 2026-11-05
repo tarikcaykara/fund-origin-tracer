@@ -12,7 +12,7 @@ body:
     attributes:
       label: Version
       description: "`version` from `GET /api/health`, the release tag, or the commit you run."
-      placeholder: 1.2.0
+      placeholder: 1.2.1
     validations:
       required: true
   - type: dropdown
