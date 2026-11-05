@@ -418,6 +418,14 @@
       "verifiedAt": "2026-10-20"
     },
     {
+      "address": "TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn",
+      "name": "MXC",
+      "category": "exchange",
+      "entity": "MEXC",
+      "source": "https://tronscan.org/#/address/TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn",
+      "verifiedAt": "2026-11-05"
+    },
+    {
       "address": "TQqgNg13s2DjvXhW1ky4v6TsR8wZGvb7Y4",
       "name": "SunSwap UniversalRouter",
       "category": "dex",
