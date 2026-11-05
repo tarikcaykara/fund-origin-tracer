@@ -98,19 +98,19 @@ Open a pull request that edits the relevant `packages/core/labels/<chain>.json` 
 
 ## Coverage
 
-Counts as of 2026-10-20 (entries per category):
+Counts as of 2026-11-05 (entries per category):
 
 | Chain | exchange | dex | bridge | mixer | token | Total |
 |---|---:|---:|---:|---:|---:|---:|
 | Ethereum | 61 | 15 | 14 | 26 | 5 | 121 |
 | Polygon | 7 | 10 | 8 | 4 | 6 | 35 |
 | Arbitrum | 0 | 8 | 6 | 4 | 5 | 23 |
-| TRON | 52 | 8 | 0 | 0 | 4 | 64 |
+| TRON | 53 | 8 | 0 | 0 | 4 | 65 |
 
 Known gaps (these are gaps in verified coverage, not statements that the entities are absent):
 
 - **Arbitrum exchanges: none.** Arbiscan blocks automated access, so address tags there could not be opened, and no exchange discloses Arbitrum hot wallets in a source we could check. Arbitrum entries come from official docs and deployment files only.
-- **TRON bridges and mixers: none**, and TRON exchange coverage is Binance, OKX (1), Bybit, Kraken, KuCoin, Gate (1), HTX and Bitget. MEXC and Crypto.com have no tagged TRON addresses that could be verified.
+- **TRON bridges and mixers: none**, and TRON exchange coverage is Binance, OKX (1), Bybit, Kraken, KuCoin, Gate (1), HTX, Bitget and MEXC (1, tagged `MXC`, the exchange's name before its 2021 rebrand to MEXC). Crypto.com has no tagged TRON addresses that could be verified.
 - **Coinbase and Crypto.com**: Ethereum only (Coinbase has no verified Polygon/TRON entries).
 - **Gate on Ethereum** is listed through the explorer's `Gate Deposit` tags only (deposit-side addresses), not hot wallets.
 - **Mixers**: Tornado Cash pools only on Ethereum, Polygon and Arbitrum; Tornado Cash is the only mixer covered.
