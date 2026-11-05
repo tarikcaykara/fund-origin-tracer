@@ -33,7 +33,14 @@ bun test            # unit and integration tests, fully offline
 
 `bun run smoke` is the browser smoke: it builds the web app, starts the built app on port 4173 with `DEMO_ONLY=true`, an in-memory database, no keys and no OFAC download, and drives the three demos in Chromium at 1440 px and 390 px (graph, analysis tabs, report, ⌘K palette, Home address screening, phone Path view and menu, no browser console errors). Install the browser once with `cd apps/web && bunx playwright install chromium`. Run it before pull requests that touch `apps/web` or `apps/server`. A failure leaves a trace in `apps/web/smoke/test-results/`; open it from `apps/web` with `bunx playwright show-trace <trace.zip>`.
 
-Behavior changes need a test. Changes to behavior, configuration or the API also update `README.md`, `CLAUDE.md`, `.env.example` and the matching page in `docs/` in the same commit.
+Changes to behavior, configuration or the API come with tests as the [testing policy](#testing-policy) describes, and update `README.md`, `CLAUDE.md`, `.env.example` and the matching page in `docs/` in the same commit.
+
+## Testing policy
+
+- **A bug fix starts with a regression test** that fails before the fix and passes after it. Write it in the layer where the bug lives: `packages/core/test/` for the engine, analysis, providers and parsers; `apps/server/test/` for routes, runs, storage and the OFAC refresh; `apps/cli/test/` for the CLI; `apps/web/test/` for a web module (run state, graph model, path, palette, formatting).
+- **Core logic is written test-first.** New or changed behavior in the engine, analysis, providers and parsers of `packages/core` gets its test before the implementation. Tests stay offline: JSON captures live in `packages/core/test/fixtures/`, fakes in `packages/core/test/helpers/`.
+- **The browser smoke stays a smoke, not an end-to-end suite.** `apps/web/smoke/` grows only for a new or changed user flow, or for a bug that reproduces only in a browser. Anything a unit test can prove belongs in a unit test.
+- **Each item of an issue's Acceptance checklist names the test that proves it.**
 
 ## Commits and pull requests
 
