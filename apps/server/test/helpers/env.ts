@@ -22,6 +22,7 @@ import {
   openDb,
   RunManager,
   type Runtime,
+  type StreamLimits,
   writeScenario,
 } from "../../src/index.ts";
 import { addr, chainOfTransfers, fakeTransport, txHash } from "./fake-etherscan.ts";
@@ -44,7 +45,12 @@ export interface EnvOptions {
   transport?: Transport;
   fixturesDir?: string;
   maxLiveRuns?: number;
+  maxDemoRuns?: number;
+  maxStoredDemoRuns?: number;
+  /** Per-request latency of demo replays; 0 by default so replays finish at once. */
+  replayDelayMs?: number;
   provisionalIntervalMs?: number;
+  streams?: StreamLimits;
 }
 
 /** Server wired to an in-memory database and a fake explorer; no network, no keys needed. */
@@ -63,13 +69,20 @@ export async function createTestEnv(options: EnvOptions = {}): Promise<TestEnv> 
     runtime,
     db,
     fixturesDir,
-    replayDelayMs: 0,
+    replayDelayMs: options.replayDelayMs ?? 0,
     ...(options.maxLiveRuns ? { maxLiveRuns: options.maxLiveRuns } : {}),
+    ...(options.maxDemoRuns ? { maxDemoRuns: options.maxDemoRuns } : {}),
+    ...(options.maxStoredDemoRuns ? { maxStoredDemoRuns: options.maxStoredDemoRuns } : {}),
     ...(options.provisionalIntervalMs
       ? { provisionalIntervalMs: options.provisionalIntervalMs }
       : {}),
   });
-  const app = createApp({ runtime, manager, webDir: null });
+  const app = createApp({
+    runtime,
+    manager,
+    webDir: null,
+    ...(options.streams ? { streams: options.streams } : {}),
+  });
   return { db, runtime, manager, app, config, fixturesDir };
 }
 

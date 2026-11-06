@@ -20,11 +20,17 @@ import type {
   InvestigationStatus,
   InvestigationSummary,
 } from "./db.ts";
-import { DEFAULT_FIXTURES_DIR, listScenarios, loadScenario, type Scenario } from "./demo.ts";
+import {
+  DEFAULT_FIXTURES_DIR,
+  type LoadedScenario,
+  listScenarios,
+  loadScenario,
+  type Scenario,
+} from "./demo.ts";
 import { executeRun } from "./execute.ts";
 import type { Runtime } from "./runtime.ts";
 
-export type ApiStatus = 400 | 403 | 404 | 409 | 429 | 500;
+export type ApiStatus = 400 | 403 | 404 | 409 | 413 | 429 | 500;
 
 export class ApiError extends Error {
   constructor(
@@ -42,7 +48,11 @@ export const DEFAULT_EXPAND_DEPTH = 3;
 export const DEMO_ONLY_MESSAGE = "This instance only serves recorded demo scenarios.";
 
 export type StartRequest = { params: RunParams } | { demo: string };
-export type RunEventListener = (event: RunEvent) => void;
+/**
+ * Receives every event of a run. `json` serializes the event once for all listeners; call it
+ * synchronously, because the live edge objects keep mutating afterwards.
+ */
+export type RunEventListener = (event: RunEvent, json: () => string) => void;
 
 export interface RunManagerOptions {
   runtime: Runtime;
@@ -53,9 +63,16 @@ export interface RunManagerOptions {
   replayDelayMs?: number;
   /** Concurrent live (non-demo) runs. */
   maxLiveRuns?: number;
+  /** Concurrent demo replays. */
+  maxDemoRuns?: number;
+  /** Demo runs kept in the database on `DEMO_ONLY` instances; older ones are deleted. */
+  maxStoredDemoRuns?: number;
   /** Minimum time between two provisional analyses of a live run. */
   provisionalIntervalMs?: number;
 }
+
+/** A scenario ready to replay; shared by every replay of it. */
+type LoadedDemo = LoadedScenario & { labels: LabelRegistry };
 
 type LiveStatus = "running" | "paused";
 type Stats = Extract<RunEvent, { type: "snapshot" }>["stats"];
@@ -105,8 +122,11 @@ export class RunManager {
   private readonly fixturesDir: string;
   private readonly replayDelayMs: number;
   private readonly maxLiveRuns: number;
+  private readonly maxDemoRuns: number;
+  private readonly maxStoredDemoRuns: number;
   private readonly provisionalIntervalMs: number;
   private readonly runs = new Map<string, LiveRun>();
+  private readonly scenarios = new Map<string, Promise<LoadedDemo | null>>();
 
   constructor(options: RunManagerOptions) {
     this.runtime = options.runtime;
@@ -114,6 +134,8 @@ export class RunManager {
     this.fixturesDir = options.fixturesDir ?? DEFAULT_FIXTURES_DIR;
     this.replayDelayMs = options.replayDelayMs ?? 40;
     this.maxLiveRuns = options.maxLiveRuns ?? 3;
+    this.maxDemoRuns = options.maxDemoRuns ?? 8;
+    this.maxStoredDemoRuns = options.maxStoredDemoRuns ?? 100;
     this.provisionalIntervalMs = options.provisionalIntervalMs ?? 1000;
   }
 
@@ -174,9 +196,12 @@ export class RunManager {
   }
 
   private async startDemo(id: string): Promise<{ runId: string }> {
-    const loaded = await loadScenario(this.fixturesDir, id);
+    const loaded = await this.scenario(id);
     if (!loaded) throw new ApiError(404, "demo_not_found", `Unknown demo scenario "${id}".`);
-    const { scenario, http, ofac } = loaded;
+    // Checked after the await, in the same synchronous block as `register`, so concurrent starts
+    // cannot overshoot the cap.
+    this.assertDemoCapacity();
+    const { scenario, http, ofac, labels } = loaded;
     const runId = crypto.randomUUID();
     this.db.investigations.insert({
       id: runId,
@@ -189,7 +214,7 @@ export class RunManager {
       demo: scenario.id,
       createdAt: new Date().toISOString(),
     });
-    const labels = new LabelRegistry(BUNDLED_LABEL_FILES, null, ofac);
+    if (this.runtime.config.demoOnly) this.db.investigations.pruneDemoRuns(this.maxStoredDemoRuns);
     const run = this.register(runId, false, scenario.params, labels);
     this.launch(run, () =>
       executeRun({
@@ -380,38 +405,39 @@ export class RunManager {
    * unknown run.
    */
   subscribe(runId: string, listener: RunEventListener): (() => void) | null {
+    const send = (event: RunEvent) => listener(event, () => JSON.stringify(event));
     const run = this.runs.get(runId);
     if (run) {
-      listener({
+      send({
         type: "snapshot",
         status: run.status,
         edges: [...run.edges.values()],
         stats: run.stats,
       });
-      if (run.expansion) listener({ type: "expansion", ...run.expansion });
-      if (run.provisional) listener({ type: "provisional", analysis: run.provisional });
+      if (run.expansion) send({ type: "expansion", ...run.expansion });
+      if (run.provisional) send({ type: "provisional", analysis: run.provisional });
       run.subscribers.add(listener);
       return () => run.subscribers.delete(listener);
     }
     const summary = this.visibleSummary(runId);
     if (!summary) return null;
     const result = this.db.investigations.getResult(runId);
-    listener({
+    send({
       type: "snapshot",
       status: summary.status === "interrupted" ? "failed" : summary.status,
       edges: result?.graph.edges ?? [],
       stats: result?.stats ?? {},
     });
     if (result) {
-      listener({ type: "result", result });
-      listener({ type: "done", status: result.status });
+      send({ type: "result", result });
+      send({ type: "done", status: result.status });
     } else {
-      listener({
+      send({
         type: "error",
         code: summary.status === "interrupted" ? "interrupted" : "no_result",
         message: summary.error ?? "The run has no result.",
       });
-      listener({ type: "done", status: "failed" });
+      send({ type: "done", status: "failed" });
     }
     return () => {};
   }
@@ -435,6 +461,39 @@ export class RunManager {
     if (this.liveCount >= this.maxLiveRuns) {
       throw new ApiError(429, "too_many_runs", `At most ${this.maxLiveRuns} live runs at a time.`);
     }
+  }
+
+  private assertDemoCapacity(): void {
+    let replays = 0;
+    for (const r of this.runs.values()) if (!r.live) replays++;
+    if (replays >= this.maxDemoRuns) {
+      throw new ApiError(
+        429,
+        "too_many_runs",
+        `At most ${this.maxDemoRuns} demo replays at a time.`,
+      );
+    }
+  }
+
+  /**
+   * The scenario with its recording and label registry, loaded once and shared by every replay
+   * (a recording is up to ~13 MB of JSON; `FixtureTransport` and `LabelRegistry` only read them).
+   * Unknown ids and failed loads are not kept, so the cache holds at most one entry per scenario.
+   */
+  private scenario(id: string): Promise<LoadedDemo | null> {
+    const cached = this.scenarios.get(id);
+    if (cached) return cached;
+    const loading = loadScenario(this.fixturesDir, id).then((loaded) =>
+      loaded
+        ? { ...loaded, labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, loaded.ofac) }
+        : null,
+    );
+    this.scenarios.set(id, loading);
+    const forget = () => this.scenarios.delete(id);
+    loading.then((loaded) => {
+      if (!loaded) forget();
+    }, forget);
+    return loading;
   }
 
   private register(id: string, live: boolean, params: RunParams, labels: LabelRegistry): LiveRun {
@@ -573,9 +632,14 @@ export class RunManager {
       default:
         break;
     }
+    let json: string | undefined;
+    const serialize = () => {
+      json ??= JSON.stringify(event);
+      return json;
+    };
     for (const listener of [...run.subscribers]) {
       try {
-        listener(event);
+        listener(event, serialize);
       } catch {
         run.subscribers.delete(listener);
       }

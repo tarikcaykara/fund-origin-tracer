@@ -298,6 +298,17 @@ export class Investigations {
     return this.sqlite.query("DELETE FROM investigations WHERE id = ?1").run(id).changes > 0;
   }
 
+  /** Deletes finished demo runs beyond the newest `keep` demo rows; returns how many went. */
+  pruneDemoRuns(keep: number): number {
+    return this.sqlite
+      .query(
+        `DELETE FROM investigations WHERE demo IS NOT NULL AND status != 'running' AND id NOT IN (
+           SELECT id FROM investigations WHERE demo IS NOT NULL
+           ORDER BY created_at DESC, id DESC LIMIT ?1)`,
+      )
+      .run(keep).changes;
+  }
+
   /**
    * Boot recovery: runs that were live when the process died can never finish. An interrupted
    * expansion still holds the pre-expansion result, which no longer describes the run: drop it.

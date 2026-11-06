@@ -8,6 +8,7 @@ There is no authentication: run the server on a trusted network or behind your o
 
 - Request and response bodies are JSON (`Content-Type: application/json`), except SSE and CSV.
 - Run ids are UUID v4 strings.
+- `/api/*` request bodies are limited to 128 KB (`413 payload_too_large`), checked before the body is parsed; the server refuses any body over 1 MB on every route.
 - Errors always use one envelope:
 
   ```json
@@ -27,7 +28,9 @@ There is no authentication: run the server on a trusted network or behind your o
 | 409 | `edge_not_expandable` | The edge is not stopped, or its stop reason cannot be continued |
 | 409 | `demo_only` | `POST /api/runs/:id/expand` while `DEMO_ONLY=true` |
 | 409 | `demo_run_not_expandable` | `POST /api/runs/:id/expand` on a recorded demo run |
-| 429 | `too_many_runs` | More than 3 live runs at once |
+| 413 | `payload_too_large` | Request body over 128 KB |
+| 429 | `too_many_runs` | More than 3 live runs, or more than 8 demo replays, at once |
+| 429 | `too_many_streams` | More than 10 open event streams on one run, or 100 in total |
 | 500 | `internal_error` | Unexpected server error (details are logged, not returned) |
 
 ## Endpoints
@@ -113,7 +116,7 @@ The body is one of two shapes.
 
 Seed formats: EVM tx `0x` + 64 hex; EVM address `0x` + 40 hex; TRON tx 64 hex (no `0x`); TRON address `T` + 33 base58 characters.
 
-Failure cases: `400 invalid_request` (validation), `403 demo_only`, `409 chain_not_ready`, `429 too_many_runs` (live runs only; demo runs do not count), `404 demo_not_found`.
+Failure cases: `400 invalid_request` (validation), `403 demo_only`, `409 chain_not_ready`, `429 too_many_runs` (more than 3 live runs, or more than 8 demo replays, at once; the two limits are separate), `404 demo_not_found`.
 
 ```bash
 curl -s -i -XPOST localhost:3000/api/runs -H 'content-type: application/json' \
@@ -173,7 +176,7 @@ The row above plus `result`: the full `AnalysisResult` once the run is finished,
 
 ### `GET /api/runs/:id/events` (SSE)
 
-See [SSE stream](#sse-stream).
+See [SSE stream](#sse-stream). `429 too_many_streams` beyond 10 open streams on the run or 100 in total.
 
 ### `POST /api/runs/:id/pause`, `/resume`, `/cancel`
 
@@ -352,16 +355,18 @@ data: {"type":"done","status":"completed"}
 
 In a browser, `new EventSource("/api/runs/" + id + "/events")` and one listener per event name is enough; the web app does exactly this.
 
+The server keeps at most 10 open streams per run and 100 in total; more answer `429 too_many_streams` until one closes. A stream is exempt from the idle timeout that closes other quiet connections (Bun's 10 s); a `: keepalive` comment every 15 s keeps proxies from closing it.
+
 ## Demo mode
 
 Recorded scenarios in `fixtures/demo/<id>/` (`scenario.json`, `http.json.gz`, `ofac.json`) let the whole product run **without API keys or network access**.
 
 - `POST /api/runs` with `{"demo":"<id>"}` replays the recorded explorer and price responses through the normal engine and analysis. Responses are served with a 40 ms delay each so the stream visibly animates; the engine runs with concurrency 1, and a demo takes a few seconds.
 - Demo runs use the **bundled labels and the OFAC snapshot recorded with the scenario** (your local labels and the live OFAC list are not applied), a fresh in-memory cache, and are saved in the history like any other run (the row's `demo` field holds the scenario id).
-- They do not count towards the 3-live-run limit and do not need `ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`.
+- They do not count towards the 3-live-run limit and do not need `ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`. At most 8 replays run at once (`429 too_many_runs`); each scenario recording is loaded once and shared by its replays.
 - Everything else (SSE, exports, patch, delete) behaves as for live runs, except `expand`, which is refused with `409 demo_run_not_expandable` so a replay never mixes in live data.
 
-**`DEMO_ONLY=true`** is for hosting a public demo, where every visitor is anonymous. Live runs are refused with `403 demo_only` (and expand with `409 demo_only`). Visitors can start demo runs and screen addresses, and history, reads, the event stream and exports show only demo investigations: any other id answers `404 not_found`, as if it did not exist. Nobody can rename, annotate, delete, pause, resume or cancel an investigation: `PATCH`, `DELETE` and `pause`/`resume`/`cancel` answer `403 demo_only` before the id is looked up, and the web app hides those controls. `GET /api/health` reports `demoOnly: true`.
+**`DEMO_ONLY=true`** is for hosting a public demo, where every visitor is anonymous. Live runs are refused with `403 demo_only` (and expand with `409 demo_only`). Visitors can start demo runs and screen addresses, and history, reads, the event stream and exports show only demo investigations: any other id answers `404 not_found`, as if it did not exist. Nobody can rename, annotate, delete, pause, resume or cancel an investigation: `PATCH`, `DELETE` and `pause`/`resume`/`cancel` answer `403 demo_only` before the id is looked up, and the web app hides those controls. Only the newest 100 demo runs are kept; starting another deletes the oldest finished ones. `GET /api/health` reports `demoOnly: true`.
 
 ```bash
 # stream a demo run end to end

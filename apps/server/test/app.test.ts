@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { rmSync } from "node:fs";
+import { join } from "node:path";
 import {
   type AnalysisResult,
   type CancelReason,
@@ -943,5 +945,155 @@ describe("exports and screening", () => {
     const res = await env.app.request("/api/nope");
     expect(res.status).toBe(404);
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe("not_found");
+  });
+});
+
+describe("resource limits", () => {
+  const codeOf = async (res: Response) =>
+    ((await res.json()) as { error: { code: string } }).error.code;
+
+  async function replayToEnd(env: TestEnv, demoId: string): Promise<string> {
+    const res = await env.app.request(...post("/api/runs", { demo: demoId }));
+    expect(res.status).toBe(201);
+    const { runId } = (await res.json()) as { runId: string };
+    await env.manager.waitForRun(runId);
+    return runId;
+  }
+
+  test("demo replays are capped, exactly under concurrency, and a freed slot admits the next", async () => {
+    const env = await createTestEnv({ maxDemoRuns: 2, replayDelayMs: 50 });
+    const demoId = await recordDemoScenario(env.runtime, env.fixturesDir);
+    const startDemo = () => env.app.request(...post("/api/runs", { demo: demoId }));
+
+    const started = await Promise.all([startDemo(), startDemo(), startDemo()]);
+    expect(started.map((r) => r.status).sort()).toEqual([201, 201, 429]);
+    const refused = started.find((r) => r.status === 429) as Response;
+    expect(await codeOf(refused)).toBe("too_many_runs");
+    const ids = await Promise.all(
+      started
+        .filter((r) => r.status === 201)
+        .map(async (r) => ((await r.json()) as { runId: string }).runId),
+    );
+    for (const id of ids) env.manager.pause(id);
+    expect((await startDemo()).status).toBe(429);
+
+    for (const id of ids) env.manager.cancel(id);
+    await Promise.all(ids.map((id) => env.manager.waitForRun(id)));
+    const next = await startDemo();
+    expect(next.status).toBe(201);
+    await env.manager.waitForRun(((await next.json()) as { runId: string }).runId);
+  });
+
+  test("a scenario recording is loaded once and shared by later replays", async () => {
+    const env = await createTestEnv();
+    const demoId = await recordDemoScenario(env.runtime, env.fixturesDir);
+    const edgesOf = async (runId: string) => (await getRun(env, runId)).result?.graph.edges.length;
+    const first = await edgesOf(await replayToEnd(env, demoId));
+    expect(first).toBeGreaterThan(0);
+
+    rmSync(join(env.fixturesDir, demoId, "http.json.gz"));
+    rmSync(join(env.fixturesDir, demoId, "ofac.json"));
+    expect(await edgesOf(await replayToEnd(env, demoId))).toBe(first);
+  });
+
+  test("DEMO_ONLY keeps only the newest demo runs; other instances keep them all", async () => {
+    const listIds = async (env: TestEnv) => {
+      const page = (await (await env.app.request("/api/runs")).json()) as {
+        items: { id: string }[];
+        totalAll: number;
+      };
+      return { ids: page.items.map((i) => i.id), totalAll: page.totalAll };
+    };
+
+    const demoOnly = await createTestEnv({ env: { DEMO_ONLY: "true" }, maxStoredDemoRuns: 2 });
+    const demoId = await recordDemoScenario(demoOnly.runtime, demoOnly.fixturesDir);
+    const [oldest, middle, newest] = [
+      await replayToEnd(demoOnly, demoId),
+      await replayToEnd(demoOnly, demoId),
+      await replayToEnd(demoOnly, demoId),
+    ];
+    expect(await listIds(demoOnly)).toEqual({ ids: [newest, middle], totalAll: 2 });
+    expect((await demoOnly.app.request(`/api/runs/${oldest}`)).status).toBe(404);
+
+    const regular = await createTestEnv({ maxStoredDemoRuns: 2 });
+    await recordDemoScenario(regular.runtime, regular.fixturesDir);
+    for (let i = 0; i < 3; i++) await replayToEnd(regular, demoId);
+    expect((await listIds(regular)).totalAll).toBe(3);
+  });
+
+  test("request bodies over the limit are refused before they are parsed", async () => {
+    const env = await createTestEnv();
+    const big = JSON.stringify({ ...liveBody(), padding: "x".repeat(200 * 1024) });
+    const sized = await env.app.request("/api/runs", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: big,
+    });
+    expect(sized.status).toBe(413);
+    expect(await codeOf(sized)).toBe("payload_too_large");
+
+    // Without a Content-Length the limit applies while the body is read.
+    const bytes = new TextEncoder().encode(big);
+    const chunked = await env.app.request("/api/runs", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(bytes);
+          controller.close();
+        },
+      }),
+    });
+    expect(chunked.status).toBe(413);
+    expect(env.db.investigations.list().totalAll).toBe(0);
+
+    // The largest legitimate body still fits: 20 000 three-byte characters of notes.
+    const runId = await startLive(env);
+    await env.manager.waitForRun(runId);
+    const notes = "調".repeat(20_000);
+    const patched = await env.app.request(`/api/runs/${runId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ notes }),
+    });
+    expect(patched.status).toBe(200);
+    expect(env.db.investigations.get(runId)?.notes).toBe(notes);
+  });
+
+  test("event streams are capped per run and in total, and a closed stream frees its slot", async () => {
+    const env = await createTestEnv({
+      transport: fakeTransport(chainOfTransfers(8), { delayMs: 20 }),
+      streams: { total: 3, perRun: 2 },
+    });
+    const a = await startLive(env, { maxDepth: 6 });
+    const b = await startLive(env, { maxDepth: 6 });
+    env.manager.pause(a);
+    env.manager.pause(b);
+    const open = (runId: string) => env.app.request(`/api/runs/${runId}/events`);
+
+    const streams = [await open(a), await open(a)];
+    expect(streams.map((s) => s.status)).toEqual([200, 200]);
+    const perRun = await open(a);
+    expect(perRun.status).toBe(429);
+    expect(await codeOf(perRun)).toBe("too_many_streams");
+    streams.push(await open(b));
+    expect(streams[2]?.status).toBe(200);
+    const total = await open(b);
+    expect(total.status).toBe(429);
+    expect(await codeOf(total)).toBe("too_many_streams");
+
+    await streams[0]?.body?.cancel();
+    // The slot is released in the stream's `finally` once the cancel propagates: poll for it.
+    let reopened = await open(b);
+    for (let i = 0; i < 50 && reopened.status === 429; i++) {
+      await Bun.sleep(10);
+      reopened = await open(b);
+    }
+    expect(reopened.status).toBe(200);
+    streams.push(reopened);
+
+    for (const s of streams.slice(1)) await s.body?.cancel();
+    for (const id of [a, b]) env.manager.cancel(id);
+    await Promise.all([a, b].map((id) => env.manager.waitForRun(id)));
   });
 });

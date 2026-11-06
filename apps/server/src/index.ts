@@ -1,4 +1,10 @@
-export { type AppDeps, createApp, LiveRunRequestSchema } from "./app.ts";
+export {
+  type AppDeps,
+  createApp,
+  LiveRunRequestSchema,
+  MAX_BODY_BYTES,
+  type StreamLimits,
+} from "./app.ts";
 export {
   type AppConfig,
   type ChainHealth,

@@ -15,6 +15,7 @@ import {
 } from "@fot/core";
 import { zValidator } from "@hono/zod-validator";
 import { type Context, Hono, type MiddlewareHandler } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
@@ -24,6 +25,8 @@ import { ApiError, DEFAULT_EXPAND_DEPTH, DEMO_ONLY_MESSAGE, type RunManager } fr
 import type { Runtime } from "./runtime.ts";
 
 const KEEPALIVE_MS = 15_000;
+/** `/api/*` request bodies; fits 20 000 notes characters even if every one is `\u`-escaped. */
+export const MAX_BODY_BYTES = 128 * 1024;
 const DEFAULT_WEB_DIST = resolve(import.meta.dir, "../../web/dist");
 
 const SeedInputSchema = z.object({
@@ -99,11 +102,20 @@ const ExpandSchema = z.object({
 
 const CsvKindSchema = z.enum(["edges", "convergences", "exposure", "touchpoints", "addresses"]);
 
+/** Open event streams the server accepts, in total and per run. */
+export interface StreamLimits {
+  total: number;
+  perRun: number;
+}
+
+const DEFAULT_STREAM_LIMITS: StreamLimits = { total: 100, perRun: 10 };
+
 export interface AppDeps {
   runtime: Runtime;
   manager: RunManager;
   /** Built web app; defaults to `apps/web/dist`. Skipped quietly when absent. */
   webDir?: string | null;
+  streams?: StreamLimits;
 }
 
 function isFile(path: string): boolean {
@@ -138,7 +150,12 @@ const onInvalid = (
   }
 };
 
-export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
+export function createApp({
+  runtime,
+  manager,
+  webDir,
+  streams = DEFAULT_STREAM_LIMITS,
+}: AppDeps): Hono {
   const app = new Hono();
   const webRoot = webDir === null ? null : resolve(webDir ?? DEFAULT_WEB_DIST);
 
@@ -161,6 +178,27 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
     if (runtime.config.demoOnly) throw new ApiError(403, "demo_only", DEMO_ONLY_MESSAGE);
     await next();
   };
+
+  app.use(
+    "/api/*",
+    bodyLimit({
+      maxSize: MAX_BODY_BYTES,
+      onError: (c) =>
+        c.json(
+          {
+            error: {
+              code: "payload_too_large",
+              message: `Request bodies are limited to ${MAX_BODY_BYTES / 1024} KB.`,
+            },
+          },
+          413,
+        ),
+    }),
+  );
+
+  // Open event streams per run id; `openStreamTotal` is their sum.
+  const openStreams = new Map<string, number>();
+  let openStreamTotal = 0;
 
   app.get("/api/health", (c) =>
     c.json({
@@ -210,14 +248,30 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
   app.get("/api/runs/:id/events", (c) => {
     const id = c.req.param("id");
     if (!manager.has(id)) throw new ApiError(404, "not_found", "Unknown run.");
+    // Taken before streaming starts, so concurrent requests cannot overshoot the caps.
+    const perRun = openStreams.get(id) ?? 0;
+    if (openStreamTotal >= streams.total || perRun >= streams.perRun) {
+      throw new ApiError(429, "too_many_streams", "Too many open event streams; close one first.");
+    }
+    openStreams.set(id, perRun + 1);
+    openStreamTotal++;
+    const release = () => {
+      openStreamTotal--;
+      const left = (openStreams.get(id) ?? 1) - 1;
+      if (left > 0) openStreams.set(id, left);
+      else openStreams.delete(id);
+    };
+    // Every other connection keeps Bun's idle timeout; a quiet stream would be cut between
+    // keepalives. `c.env` is the Bun server under `Bun.serve`, undefined under `app.request`.
+    (c.env as Bun.Server<unknown> | undefined)?.timeout(c.req.raw, 0);
     return streamSSE(c, async (stream) => {
       const queue: { event: string; data: string }[] = [];
       let wake: (() => void) | null = null;
       let ended = false;
       let aborted = false;
-      const unsubscribe = manager.subscribe(id, (event) => {
+      const unsubscribe = manager.subscribe(id, (event, json) => {
         // Serialize now: the live edge objects keep mutating after this call.
-        queue.push({ event: event.type, data: JSON.stringify(event) });
+        queue.push({ event: event.type, data: json() });
         if (event.type === "done") ended = true;
         wake?.();
       });
@@ -244,6 +298,7 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
         }
       } finally {
         unsubscribe?.();
+        release();
       }
     });
   });

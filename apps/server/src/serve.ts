@@ -7,12 +7,17 @@ import { createRuntime, type Runtime } from "./runtime.ts";
 
 const HOUR_MS = 3_600_000;
 
+/** Transport ceiling for every route; `/api/*` bodies are limited further (`MAX_BODY_BYTES`). */
+const MAX_REQUEST_BODY_BYTES = 1024 * 1024;
+
 export interface ServerOptions {
   /** Open database to use instead of `<dataDir>/fot.sqlite`. */
   db?: Db;
   fixturesDir?: string;
   webDir?: string | null;
   manager?: Pick<RunManagerOptions, "replayDelayMs" | "maxLiveRuns">;
+  /** Seconds before an idle connection is closed; Bun's default (10) when unset. */
+  idleTimeout?: number;
 }
 
 export interface RunningServer {
@@ -45,8 +50,10 @@ export async function startServer(
   const server = Bun.serve({
     port: config.port,
     fetch: app.fetch,
-    // SSE streams are long-lived; keepalive comments keep proxies happy.
-    idleTimeout: 0,
+    maxRequestBodySize: MAX_REQUEST_BODY_BYTES,
+    // Event streams turn the idle timeout off for themselves (`app.ts`); every other connection
+    // keeps it, so idle sockets cannot pile up.
+    ...(options.idleTimeout !== undefined ? { idleTimeout: options.idleTimeout } : {}),
   });
 
   const prune = setInterval(() => db.cache.prune(), HOUR_MS);
