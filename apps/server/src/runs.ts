@@ -39,6 +39,8 @@ export class ApiError extends Error {
 
 export const DEFAULT_EXPAND_DEPTH = 3;
 
+export const DEMO_ONLY_MESSAGE = "This instance only serves recorded demo scenarios.";
+
 export type StartRequest = { params: RunParams } | { demo: string };
 export type RunEventListener = (event: RunEvent) => void;
 
@@ -142,7 +144,7 @@ export class RunManager {
     const { params } = request;
     const { config } = this.runtime;
     if (config.demoOnly) {
-      throw new ApiError(403, "demo_only", "This instance only serves recorded demo scenarios.");
+      throw new ApiError(403, "demo_only", DEMO_ONLY_MESSAGE);
     }
     this.assertLiveCapacity(params.chain);
     const runId = crypto.randomUUID();
@@ -214,7 +216,7 @@ export class RunManager {
     edgeId: string,
     options: { maxDepth?: number } = {},
   ): Promise<{ status: LiveStatus }> {
-    const summary = this.db.investigations.get(runId);
+    const summary = this.visibleSummary(runId);
     if (!summary) throw new ApiError(404, "not_found", "Unknown run.");
     if (this.runs.has(runId)) {
       throw new ApiError(409, "run_active", "The run is still in progress.");
@@ -234,7 +236,7 @@ export class RunManager {
       );
     }
     if (this.runtime.config.demoOnly) {
-      throw new ApiError(409, "demo_only", "This instance only serves recorded demo scenarios.");
+      throw new ApiError(409, "demo_only", DEMO_ONLY_MESSAGE);
     }
     if (summary.demo !== null) {
       throw new ApiError(
@@ -324,7 +326,7 @@ export class RunManager {
   // ----------------------------------------------------------------- read
 
   has(runId: string): boolean {
-    return this.db.investigations.get(runId) !== null;
+    return this.visibleSummary(runId) !== null;
   }
 
   list(query: InvestigationListQuery): {
@@ -332,7 +334,10 @@ export class RunManager {
     total: number;
     totalAll: number;
   } {
-    const page = this.db.investigations.list(query);
+    const page = this.db.investigations.list({
+      ...query,
+      demoOnly: this.runtime.config.demoOnly,
+    });
     // Overlay live status (paused) on the rows still in flight.
     return {
       total: page.total,
@@ -362,7 +367,7 @@ export class RunManager {
   }
 
   get(runId: string): RunDetail | null {
-    const summary = this.db.investigations.get(runId);
+    const summary = this.visibleSummary(runId);
     if (!summary) return null;
     const run = this.runs.get(runId);
     if (run) return { ...summary, status: run.status, result: null };
@@ -388,7 +393,7 @@ export class RunManager {
       run.subscribers.add(listener);
       return () => run.subscribers.delete(listener);
     }
-    const summary = this.db.investigations.get(runId);
+    const summary = this.visibleSummary(runId);
     if (!summary) return null;
     const result = this.db.investigations.getResult(runId);
     listener({
@@ -409,6 +414,12 @@ export class RunManager {
       listener({ type: "done", status: "failed" });
     }
     return () => {};
+  }
+
+  /** The stored row, or null when unknown or hidden: `DEMO_ONLY` instances serve only demo runs. */
+  private visibleSummary(runId: string): InvestigationSummary | null {
+    const summary = this.db.investigations.get(runId);
+    return summary && (!this.runtime.config.demoOnly || summary.demo !== null) ? summary : null;
   }
 
   // ------------------------------------------------------------- internals

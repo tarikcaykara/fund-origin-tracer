@@ -303,6 +303,101 @@ describe("demo mode", () => {
       });
     }
   });
+
+  test("DEMO_ONLY refuses edits, deletes and run controls before looking the run up", async () => {
+    const env = await createTestEnv({ env: { DEMO_ONLY: "true" } });
+    const demoId = await recordDemoScenario(env.runtime, env.fixturesDir);
+    const { runId } = (await (
+      await env.app.request(...post("/api/runs", { demo: demoId }))
+    ).json()) as { runId: string };
+    const expectDemoOnly = async (res: Response) => {
+      expect(res.status).toBe(403);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe("demo_only");
+    };
+
+    for (const action of ["pause", "resume", "cancel"]) {
+      await expectDemoOnly(
+        await env.app.request(`/api/runs/${runId}/${action}`, { method: "POST" }),
+      );
+    }
+    await env.manager.waitForRun(runId);
+    expect((await getRun(env, runId)).status).toBe("completed");
+
+    const before = env.db.investigations.get(runId);
+    await expectDemoOnly(
+      await env.app.request(`/api/runs/${runId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title: "defaced", notes: "x" }),
+      }),
+    );
+    const after = env.db.investigations.get(runId);
+    expect({ title: after?.title, notes: after?.notes }).toEqual({
+      title: before?.title,
+      notes: before?.notes,
+    });
+
+    await expectDemoOnly(await env.app.request(`/api/runs/${runId}`, { method: "DELETE" }));
+    expect((await env.app.request(`/api/runs/${runId}`)).status).toBe(200);
+    // Refused before the lookup: an unknown id gets the same answer, so ids cannot be probed.
+    await expectDemoOnly(
+      await env.app.request(`/api/runs/${crypto.randomUUID()}`, { method: "DELETE" }),
+    );
+  });
+
+  test("DEMO_ONLY lists and serves only demo investigations", async () => {
+    const env = await createTestEnv({ env: { DEMO_ONLY: "true" } });
+    const demoId = await recordDemoScenario(env.runtime, env.fixturesDir);
+    const { runId: demoRun } = (await (
+      await env.app.request(...post("/api/runs", { demo: demoId }))
+    ).json()) as { runId: string };
+    await env.manager.waitForRun(demoRun);
+    const result = env.db.investigations.getResult(demoRun) as AnalysisResult;
+
+    // A live investigation left in DATA_DIR before the instance went demo-only.
+    const liveId = crypto.randomUUID();
+    env.db.investigations.insert({
+      id: liveId,
+      chain: result.chain,
+      direction: result.params.direction,
+      seeds: result.params.seeds,
+      params: result.params,
+      status: "running",
+      title: "Private live case",
+      demo: null,
+      createdAt: new Date().toISOString(),
+    });
+    env.db.investigations.update(liveId, {
+      status: "completed",
+      riskLevel: result.riskLevel,
+      finishedAt: result.finishedAt,
+      result,
+    });
+
+    const list = (await (await env.app.request("/api/runs")).json()) as {
+      items: { id: string }[];
+      total: number;
+      totalAll: number;
+    };
+    expect({
+      ids: list.items.map((i) => i.id),
+      total: list.total,
+      totalAll: list.totalAll,
+    }).toEqual({ ids: [demoRun], total: 1, totalAll: 1 });
+    const search = (await (await env.app.request("/api/runs?q=Private")).json()) as {
+      total: number;
+    };
+    expect(search.total).toBe(0);
+
+    for (const path of ["", "/events", "/export.json", "/export.csv"]) {
+      expect((await env.app.request(`/api/runs/${liveId}${path}`)).status).toBe(404);
+    }
+    const expand = await env.app.request(...post(`/api/runs/${liveId}/expand`, { edgeId: "any" }));
+    expect(expand.status).toBe(404);
+    expect(((await expand.json()) as { error: { code: string } }).error.code).toBe("not_found");
+
+    expect((await env.app.request(`/api/runs/${demoRun}`)).status).toBe(200);
+  });
 });
 
 describe("expand", () => {

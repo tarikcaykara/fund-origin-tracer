@@ -117,6 +117,16 @@ test("⌘K finds an address of the open run", async ({ page }) => {
   await expect(panel.getByText(address, { exact: true })).toBeVisible();
 });
 
+test("a demo-only instance offers no rename, notes or delete", async ({ page }) => {
+  await runDemo(page, FAST_DEMO);
+  await expect(page.getByRole("link", { name: "Open report" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "✎ Rename", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "✎ Notes", exact: true })).toHaveCount(0);
+  await page.goto("/runs");
+  await expect(page.getByRole("link", { name: FAST_DEMO, exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Delete / })).toHaveCount(0);
+});
+
 test("the screening result belongs to the screened chain and address", async ({ page }) => {
   const binance14 = "0x28c6c06298d514db089934071355e5743bf21d60";
   const unlabeled = "0x1234567890abcdef1234567890abcdef12345678";

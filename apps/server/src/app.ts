@@ -14,13 +14,13 @@ import {
   toCsv,
 } from "@fot/core";
 import { zValidator } from "@hono/zod-validator";
-import { type Context, Hono } from "hono";
+import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import pkg from "../package.json" with { type: "json" };
 import { chainHealth } from "./config.ts";
-import { ApiError, DEFAULT_EXPAND_DEPTH, type RunManager } from "./runs.ts";
+import { ApiError, DEFAULT_EXPAND_DEPTH, DEMO_ONLY_MESSAGE, type RunManager } from "./runs.ts";
 import type { Runtime } from "./runtime.ts";
 
 const KEEPALIVE_MS = 15_000;
@@ -156,6 +156,12 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
 
   const badRequest = (message: string) => new ApiError(400, "invalid_request", message);
 
+  /** Public demo instances: visitors replay demos but never change or control investigations. */
+  const refuseOnDemoOnly: MiddlewareHandler = async (_c, next) => {
+    if (runtime.config.demoOnly) throw new ApiError(403, "demo_only", DEMO_ONLY_MESSAGE);
+    await next();
+  };
+
   app.get("/api/health", (c) =>
     c.json({
       version: pkg.version,
@@ -242,16 +248,22 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
     });
   });
 
-  app.post("/api/runs/:id/pause", (c) => c.json(manager.pause(c.req.param("id"))));
-  app.post("/api/runs/:id/resume", (c) => c.json(manager.resume(c.req.param("id"))));
-  app.post("/api/runs/:id/cancel", (c) => c.json(manager.cancel(c.req.param("id"))));
+  app.post("/api/runs/:id/pause", refuseOnDemoOnly, (c) =>
+    c.json(manager.pause(c.req.param("id"))),
+  );
+  app.post("/api/runs/:id/resume", refuseOnDemoOnly, (c) =>
+    c.json(manager.resume(c.req.param("id"))),
+  );
+  app.post("/api/runs/:id/cancel", refuseOnDemoOnly, (c) =>
+    c.json(manager.cancel(c.req.param("id"))),
+  );
 
   app.post("/api/runs/:id/expand", zValidator("json", ExpandSchema, onInvalid), async (c) => {
     const { edgeId, maxDepth } = c.req.valid("json");
     return c.json(await manager.expand(c.req.param("id"), edgeId, { maxDepth }), 202);
   });
 
-  app.patch("/api/runs/:id", zValidator("json", PatchSchema, onInvalid), (c) => {
+  app.patch("/api/runs/:id", refuseOnDemoOnly, zValidator("json", PatchSchema, onInvalid), (c) => {
     const { title, notes } = c.req.valid("json");
     const updated = manager.patch(c.req.param("id"), {
       ...(title !== undefined ? { title } : {}),
@@ -261,7 +273,7 @@ export function createApp({ runtime, manager, webDir }: AppDeps): Hono {
     return c.json(updated);
   });
 
-  app.delete("/api/runs/:id", (c) => {
+  app.delete("/api/runs/:id", refuseOnDemoOnly, (c) => {
     const id = c.req.param("id");
     if (!manager.has(id)) throw new ApiError(404, "not_found", "Unknown run.");
     if (manager.isActive(id))

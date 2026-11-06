@@ -27,6 +27,7 @@ export function WorkspaceHeader({
   onRerun,
   busy,
   onSaved,
+  demoOnly,
 }: {
   run: RunDetail;
   phase: RunPhase;
@@ -36,6 +37,8 @@ export function WorkspaceHeader({
   onRerun: () => void;
   busy: boolean;
   onSaved: () => void;
+  /** The instance refuses renames, notes and run controls (`DEMO_ONLY`), so none are offered. */
+  demoOnly: boolean;
 }) {
   const phone = useBreakpoint() === "phone";
   const [editing, setEditing] = useState(false);
@@ -149,7 +152,7 @@ export function WorkspaceHeader({
                   {title}
                 </h1>
               )}
-              {!phone && !editing ? (
+              {!phone && !editing && !demoOnly ? (
                 <Button variant="ghost" size="sm" onClick={beginRename}>
                   ✎ Rename
                 </Button>
@@ -167,12 +170,16 @@ export function WorkspaceHeader({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem className="min-h-11" onSelect={beginRename}>
-                      ✎ Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="min-h-11" onSelect={() => setNotesOpen(true)}>
-                      ✎ Notes
-                    </DropdownMenuItem>
+                    {demoOnly ? null : (
+                      <>
+                        <DropdownMenuItem className="min-h-11" onSelect={beginRename}>
+                          ✎ Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="min-h-11" onSelect={() => setNotesOpen(true)}>
+                          ✎ Notes
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuItem asChild className="min-h-11">
                       <Link to={`/runs/${encodeURIComponent(run.id)}/report`}>Open report</Link>
                     </DropdownMenuItem>
@@ -196,7 +203,7 @@ export function WorkspaceHeader({
                 {run.seeds.length} seed{run.seeds.length === 1 ? "" : "s"} · {transferCount ?? "—"}{" "}
                 transfers
               </span>
-              {!phone ? notesButton : null}
+              {!phone && !demoOnly ? notesButton : null}
             </div>
 
             {showProgress ? (
@@ -231,17 +238,17 @@ export function WorkspaceHeader({
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end">
-            {phase === "running" ? (
+            {phase === "running" && !demoOnly ? (
               <Button disabled={busy} onClick={() => onControl("pause")}>
                 ❚❚ Pause
               </Button>
             ) : null}
-            {phase === "paused" ? (
+            {phase === "paused" && !demoOnly ? (
               <Button disabled={busy} onClick={() => onControl("resume")}>
                 ▶ Resume
               </Button>
             ) : null}
-            {phase === "running" || phase === "paused" ? (
+            {(phase === "running" || phase === "paused") && !demoOnly ? (
               <Button
                 variant="destructive-outline"
                 disabled={busy}
@@ -270,7 +277,9 @@ export function WorkspaceHeader({
           </div>
         </div>
       </header>
-      <NotesDialog run={run} open={notesOpen} onOpenChange={setNotesOpen} onSaved={onSaved} />
+      {demoOnly ? null : (
+        <NotesDialog run={run} open={notesOpen} onOpenChange={setNotesOpen} onSaved={onSaved} />
+      )}
     </>
   );
 }

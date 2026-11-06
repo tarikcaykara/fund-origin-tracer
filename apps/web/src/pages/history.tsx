@@ -118,7 +118,8 @@ function RowActions({
   alwaysVisible = false,
 }: {
   run: RunSummary;
-  onDelete(): void;
+  /** Null hides Delete: `DEMO_ONLY` instances refuse it. */
+  onDelete: (() => void) | null;
   desktop: boolean;
   alwaysVisible?: boolean;
 }) {
@@ -139,23 +140,25 @@ function RowActions({
           <Link to={`/runs/${run.id}`}>Open</Link>
         </Button>
       ) : null}
-      <Button
-        type="button"
-        variant="ghost"
-        size="xs"
-        disabled={active}
-        title={
-          active ? "Running or paused investigations cannot be deleted." : "Delete investigation"
-        }
-        aria-label={`Delete ${runTitle(run)}`}
-        onClick={(event) => {
-          event.stopPropagation();
-          onDelete();
-        }}
-        className="text-risk-high hover:text-risk-high"
-      >
-        Delete
-      </Button>
+      {onDelete ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          disabled={active}
+          title={
+            active ? "Running or paused investigations cannot be deleted." : "Delete investigation"
+          }
+          aria-label={`Delete ${runTitle(run)}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDelete();
+          }}
+          className="text-risk-high hover:text-risk-high"
+        >
+          Delete
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -206,6 +209,8 @@ export function HistoryPage() {
       }),
     [q, chain, status, page],
   );
+  const health = useAsync(() => api.health(), []);
+  const demoOnly = health.data?.demoOnly ?? false;
   const deleteDetail = useAsync(
     () => (deleteTarget ? api.getRun(deleteTarget.id) : Promise.resolve(null)),
     [deleteTarget?.id],
@@ -450,7 +455,11 @@ export function HistoryPage() {
                         <span className="hidden xl:inline">{formatUtcMinute(run.createdAt)}</span>
                       </TableCell>
                       <TableCell className="px-1">
-                        <RowActions run={run} onDelete={() => setDeleteTarget(run)} desktop />
+                        <RowActions
+                          run={run}
+                          onDelete={demoOnly ? null : () => setDeleteTarget(run)}
+                          desktop
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -492,7 +501,7 @@ export function HistoryPage() {
                       </span>
                       <RowActions
                         run={run}
-                        onDelete={() => setDeleteTarget(run)}
+                        onDelete={demoOnly ? null : () => setDeleteTarget(run)}
                         desktop={false}
                         alwaysVisible
                       />

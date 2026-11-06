@@ -17,8 +17,8 @@ There is no authentication: run the server on a trusted network or behind your o
 | Status | `error.code` | Raised by |
 |---|---|---|
 | 400 | `invalid_request` | Validation failed (the message lists each `path: problem`), bad query, unknown chain/kind |
-| 403 | `demo_only` | `POST /api/runs` with live parameters while `DEMO_ONLY=true` |
-| 404 | `not_found` | Unknown run, unknown route |
+| 403 | `demo_only` | While `DEMO_ONLY=true`: `POST /api/runs` with live parameters, `PATCH` and `DELETE /api/runs/:id`, `POST /api/runs/:id/pause`, `/resume` and `/cancel` |
+| 404 | `not_found` | Unknown run, unknown route; with `DEMO_ONLY=true` also a run that is not a demo |
 | 404 | `demo_not_found` | `POST /api/runs` with an unknown `demo` id |
 | 404 | `edge_not_found` | `POST /api/runs/:id/expand` with an edge that is not in the run |
 | 409 | `chain_not_ready` | No API key for the chain (`ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`) |
@@ -153,7 +153,7 @@ History, newest first. Query:
 | `chain` | – | one of the four chains |
 | `status` | – | `running`, `completed`, `cancelled`, `timed_out`, `failed`, `interrupted` |
 
-Response `{items, total, totalAll}`: `total` counts the rows matching `q`/`chain`/`status`, `totalAll` counts every stored investigation ignoring those filters. Each item is a run row **without** the result:
+Response `{items, total, totalAll}`: `total` counts the rows matching `q`/`chain`/`status`, `totalAll` counts every stored investigation ignoring those filters. With `DEMO_ONLY=true` only demo investigations are listed and counted. Each item is a run row **without** the result:
 
 ```json
 {"total":1,"totalAll":1,"items":[{"id":"d5a99a54-…","chain":"ethereum","direction":"backward",
@@ -183,6 +183,7 @@ No body. Response `{"status": "<status>"}` with the run's status after the call:
 - `cancel` returns the current status (`running` or `paused`); the run then finishes as `cancelled` with its partial result, announced by `result` and `done` on the stream. Cancelling a paused run also stops it.
 - On a run that is not active, all three are idempotent and return its stored status (for example `completed`).
 - `404 not_found` for an unknown id.
+- `403 demo_only` while `DEMO_ONLY=true`, before the id is looked up.
 
 ### `POST /api/runs/:id/expand`
 
@@ -222,11 +223,11 @@ Edits the investigation's metadata. Both fields optional; `null` clears.
 | `title` | string, trimmed, up to 200 characters, or `null` |
 | `notes` | string up to 20 000 characters, or `null` |
 
-Returns the updated row (no result). `400` on a wrong type, `404` for an unknown id.
+Returns the updated row (no result). `400` on a wrong type, `404` for an unknown id, `403 demo_only` while `DEMO_ONLY=true` (before validation and lookup).
 
 ### `DELETE /api/runs/:id`
 
-Returns `{"deleted":true}`. `409 run_active` while the run is in progress (cancel it first), `404 not_found` for an unknown id.
+Returns `{"deleted":true}`. `409 run_active` while the run is in progress (cancel it first), `404 not_found` for an unknown id, `403 demo_only` while `DEMO_ONLY=true` (before the lookup).
 
 ### `GET /api/runs/:id/export.json`
 
@@ -360,7 +361,7 @@ Recorded scenarios in `fixtures/demo/<id>/` (`scenario.json`, `http.json.gz`, `o
 - They do not count towards the 3-live-run limit and do not need `ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`.
 - Everything else (SSE, exports, patch, delete) behaves as for live runs, except `expand`, which is refused with `409 demo_run_not_expandable` so a replay never mixes in live data.
 
-**`DEMO_ONLY=true`** is for hosting a public demo: live runs are refused with `403 demo_only` (and expand with `409 demo_only`), while demo runs, screening, history and exports keep working. `GET /api/health` reports `demoOnly: true`.
+**`DEMO_ONLY=true`** is for hosting a public demo, where every visitor is anonymous. Live runs are refused with `403 demo_only` (and expand with `409 demo_only`). Visitors can start demo runs and screen addresses, and history, reads, the event stream and exports show only demo investigations: any other id answers `404 not_found`, as if it did not exist. Nobody can rename, annotate, delete, pause, resume or cancel an investigation: `PATCH`, `DELETE` and `pause`/`resume`/`cancel` answer `403 demo_only` before the id is looked up, and the web app hides those controls. `GET /api/health` reports `demoOnly: true`.
 
 ```bash
 # stream a demo run end to end

@@ -164,6 +164,8 @@ export interface InvestigationListQuery {
   q?: string | undefined;
   chain?: string | undefined;
   status?: string | undefined;
+  /** Only rows of recorded demo runs; `DEMO_ONLY` instances list nothing else. */
+  demoOnly?: boolean;
 }
 
 const UPDATE_COLUMNS: Record<keyof InvestigationUpdate, string> = {
@@ -263,6 +265,7 @@ export class Investigations {
       args.push(v);
       return `?${args.length}`;
     };
+    if (query.demoOnly) where.push("demo IS NOT NULL");
     if (query.chain) where.push(`chain = ${arg(query.chain)}`);
     if (query.status) where.push(`status = ${arg(query.status)}`);
     if (query.q) {
@@ -277,7 +280,9 @@ export class Investigations {
       .query(`SELECT COUNT(*) AS total FROM investigations ${clause}`)
       .get(...args) as { total: number };
     const { totalAll } = this.sqlite
-      .query("SELECT COUNT(*) AS totalAll FROM investigations")
+      .query(
+        `SELECT COUNT(*) AS totalAll FROM investigations ${query.demoOnly ? "WHERE demo IS NOT NULL" : ""}`,
+      )
       .get() as { totalAll: number };
     const limit = arg(Math.min(100, Math.max(1, query.limit ?? 50)));
     const offset = arg(Math.max(0, query.offset ?? 0));

@@ -417,6 +417,7 @@ export function WorkspacePage() {
         onRerun={() => void rerun()}
         busy={busy}
         onSaved={detail.reload}
+        demoOnly={healthData?.demoOnly ?? false}
       />
       <WorkspaceBanners
         run={run}
