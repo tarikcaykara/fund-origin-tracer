@@ -23,6 +23,9 @@ COPY --from=build /app/apps/web/dist apps/web/dist
 RUN mkdir -p /app/data && chown bun:bun /app/data
 USER bun
 ENV DATA_DIR=/app/data
+# The container listens on every interface so the published port reaches it; compose publishes it
+# on 127.0.0.1 only.
+ENV HOST=0.0.0.0
 EXPOSE 3000
-HEALTHCHECK CMD bun -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1))"
+HEALTHCHECK CMD bun -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1))"
 CMD ["bun","apps/cli/src/main.ts","serve"]

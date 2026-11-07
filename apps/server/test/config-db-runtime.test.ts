@@ -16,6 +16,8 @@ describe("loadConfig", () => {
     const c = loadConfig({});
     expect(c).toMatchObject({
       port: 3000,
+      host: "127.0.0.1",
+      allowedHosts: [],
       dataDir: "./data",
       etherscanApiKey: "",
       etherscanRps: 3,
@@ -42,6 +44,18 @@ describe("loadConfig", () => {
     const c = loadConfig({ TRONSCAN_API_KEYS: " k1, k2 ,,k1", DEMO_ONLY: "true" });
     expect(c.tronscanApiKeys).toEqual(["k1", "k2"]);
     expect(c.demoOnly).toBe(true);
+  });
+
+  test("HOST is trimmed and ALLOWED_HOSTS is normalized, rejecting ports, schemes and paths", () => {
+    expect(loadConfig({ HOST: " 0.0.0.0 " }).host).toBe("0.0.0.0");
+    expect(loadConfig({ HOST: "" }).host).toBe("127.0.0.1");
+    expect(
+      loadConfig({ ALLOWED_HOSTS: " Fot.Example , [FD00::1],fot.example,, 192.168.1.10" })
+        .allowedHosts,
+    ).toEqual(["fot.example", "[fd00::1]", "192.168.1.10"]);
+    for (const bad of ["fot.example:3000", "http://fot.example", "fot.example/x", "fd00::1"]) {
+      expect(() => loadConfig({ ALLOWED_HOSTS: bad })).toThrow(/ALLOWED_HOSTS/);
+    }
   });
 
   test("rejects EXPLORER_MAX_PAGES outside 1-4 and names the variable", () => {

@@ -17,6 +17,7 @@ import { zValidator } from "@hono/zod-validator";
 import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
+import { secureHeaders } from "hono/secure-headers";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import pkg from "../package.json" with { type: "json" };
@@ -28,6 +29,8 @@ const KEEPALIVE_MS = 15_000;
 /** `/api/*` request bodies; fits 20 000 notes characters even if every one is `\u`-escaped. */
 export const MAX_BODY_BYTES = 128 * 1024;
 const DEFAULT_WEB_DIST = resolve(import.meta.dir, "../../web/dist");
+/** Host names always served; any other name must be listed in `ALLOWED_HOSTS`. */
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
 
 const SeedInputSchema = z.object({
   id: SeedSchema.shape.id.optional(),
@@ -170,6 +173,51 @@ export function createApp({
     return c.json({ error: { code: "internal_error", message: "Internal server error." } }, 500);
   });
   app.notFound((c) => c.json({ error: { code: "not_found", message: "Not found." } }, 404));
+
+  // Registered first so refusals and errors get the headers too: `onError` runs inside the
+  // inner dispatch, before this middleware sets them.
+  app.use(
+    "*",
+    secureHeaders({
+      contentSecurityPolicy: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        // Radix (react-remove-scroll) and sonner inject <style> elements at runtime.
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+      xFrameOptions: "DENY",
+      // The server speaks plain HTTP; an HTTPS proxy in front sets its own.
+      strictTransportSecurity: false,
+    }),
+  );
+
+  const allowedHosts = new Set([...LOOPBACK_HOSTS, ...runtime.config.allowedHosts]);
+  /**
+   * DNS rebinding points an attacker's name at this server, and the browser sends that name as
+   * Host; only names the operator listed are served. IP literals are not allowed automatically.
+   */
+  const refuseForeignHost: MiddlewareHandler = async (c, next) => {
+    // `app.request` in tests sends no Host header; `Bun.serve` always passes the real one.
+    const host = c.req.header("host") ?? new URL(c.req.url).host;
+    // Lowercases, keeps IPv6 brackets and drops the port.
+    const hostname = URL.parse(`http://${host}`)?.hostname;
+    if (hostname === undefined || !allowedHosts.has(hostname)) {
+      throw new ApiError(
+        403,
+        "host_not_allowed",
+        "This host name is not allowed; add it to ALLOWED_HOSTS to serve it.",
+      );
+    }
+    await next();
+  };
+  app.use("*", refuseForeignHost);
 
   const badRequest = (message: string) => new ApiError(400, "invalid_request", message);
 

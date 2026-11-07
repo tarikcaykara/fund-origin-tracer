@@ -1,13 +1,15 @@
 # REST and SSE API
 
-The server (`bun run start`, default `http://localhost:3000`) exposes a JSON API under `/api`. All result payloads use the types in `packages/core/src/schema.ts` (`AnalysisResult`, `TraceEdge`, `RunEvent`, …); this page does not repeat them. Field names are camelCase.
+The server (`bun run start`, default `http://127.0.0.1:3000`) exposes a JSON API under `/api`. All result payloads use the types in `packages/core/src/schema.ts` (`AnalysisResult`, `TraceEdge`, `RunEvent`, …); this page does not repeat them. Field names are camelCase.
 
-There is no authentication: run the server on a trusted network or behind your own proxy.
+There is no authentication: run the server on a trusted network or behind your own proxy. It listens on `127.0.0.1` unless `HOST` says otherwise.
 
 ## Conventions
 
 - Request and response bodies are JSON (`Content-Type: application/json`), except SSE and CSV.
 - Run ids are UUID v4 strings.
+- Every route, the web app included, answers only requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or a name in `ALLOWED_HOSTS` (any port); anything else gets `403 host_not_allowed`, so a DNS-rebinding page cannot reach the API.
+- Every response carries `Content-Security-Policy` (`default-src 'self'`, no inline scripts, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer`. No `Strict-Transport-Security`: the server speaks plain HTTP, and a TLS proxy in front sets its own.
 - `/api/*` request bodies are limited to 128 KB (`413 payload_too_large`), checked before the body is parsed; the server refuses any body over 1 MB on every route.
 - Errors always use one envelope:
 
@@ -19,6 +21,7 @@ There is no authentication: run the server on a trusted network or behind your o
 |---|---|---|
 | 400 | `invalid_request` | Validation failed (the message lists each `path: problem`), bad query, unknown chain/kind |
 | 403 | `demo_only` | While `DEMO_ONLY=true`: `POST /api/runs` with live parameters, `PATCH` and `DELETE /api/runs/:id`, `POST /api/runs/:id/pause`, `/resume` and `/cancel` |
+| 403 | `host_not_allowed` | Every route, when the `Host` header is not `localhost`, `127.0.0.1`, `[::1]` or listed in `ALLOWED_HOSTS` |
 | 404 | `not_found` | Unknown run, unknown route; with `DEMO_ONLY=true` also a run that is not a demo |
 | 404 | `demo_not_found` | `POST /api/runs` with an unknown `demo` id |
 | 404 | `edge_not_found` | `POST /api/runs/:id/expand` with an edge that is not in the run |

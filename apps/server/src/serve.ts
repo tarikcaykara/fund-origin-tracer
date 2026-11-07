@@ -48,6 +48,7 @@ export async function startServer(
   });
 
   const server = Bun.serve({
+    hostname: config.host,
     port: config.port,
     fetch: app.fetch,
     maxRequestBodySize: MAX_REQUEST_BODY_BYTES,

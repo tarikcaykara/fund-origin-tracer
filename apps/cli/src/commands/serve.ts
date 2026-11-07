@@ -23,7 +23,10 @@ export async function serveCommand(
   });
   const server = await startServer(config);
   for (const w of server.runtime.bootWarnings) io.stderr(`warning: ${w.code}: ${w.message}\n`);
-  io.stderr(`fund-origin-tracer listening on http://localhost:${server.port}\n`);
+  // IPv6 literals need brackets in a URL.
+  const host =
+    config.host.includes(":") && !config.host.startsWith("[") ? `[${config.host}]` : config.host;
+  io.stderr(`fund-origin-tracer listening on http://${host}:${server.port}\n`);
   await new Promise<void>((resolve) => {
     process.once("SIGINT", resolve);
     process.once("SIGTERM", resolve);

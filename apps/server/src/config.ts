@@ -24,6 +24,36 @@ const boolFrom = z.preprocess(
 
 const EnvSchema = z.object({
   PORT: intFrom(0, 65535, 3000),
+  HOST: z.preprocess(blankToUndefined, z.string().trim().min(1).default("127.0.0.1")),
+  /** Extra Host names served besides loopback; a host, never a port, scheme or path. */
+  ALLOWED_HOSTS: z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .default("")
+      .transform((s, ctx) => {
+        const hosts = [
+          ...new Set(
+            s
+              .split(",")
+              .map((h) => h.trim().toLowerCase())
+              .filter((h) => h !== ""),
+          ),
+        ];
+        // The URL parser normalizes hosts; an entry that comes back changed is not a bare host.
+        const invalid = hosts.filter((entry) => {
+          const url = URL.parse(`http://${entry}`);
+          return url === null || url.port !== "" || url.host !== entry;
+        });
+        for (const entry of invalid) {
+          ctx.addIssue({
+            code: "custom",
+            message: `"${entry}" is not a host name (no scheme, port or path; IPv6 in brackets)`,
+          });
+        }
+        return invalid.length > 0 ? z.NEVER : hosts;
+      }),
+  ),
   DATA_DIR: z.preprocess(blankToUndefined, z.string().default("./data")),
   ETHERSCAN_API_KEY: z.preprocess(blankToUndefined, z.string().trim().default("")),
   ETHERSCAN_RPS: z.preprocess(blankToUndefined, z.coerce.number().min(0.1).max(100).default(3)),
@@ -54,6 +84,10 @@ const EnvSchema = z.object({
 
 export interface AppConfig {
   port: number;
+  /** Interface `Bun.serve` binds; `127.0.0.1` unless `HOST` says otherwise. */
+  host: string;
+  /** Host names answered besides `localhost`, `127.0.0.1` and `[::1]`; lowercase, no port. */
+  allowedHosts: string[];
   dataDir: string;
   etherscanApiKey: string;
   etherscanRps: number;
@@ -91,6 +125,8 @@ export function loadConfig(
   const e = parsed.data;
   return {
     port: overrides.port ?? e.PORT,
+    host: e.HOST,
+    allowedHosts: e.ALLOWED_HOSTS,
     dataDir: overrides.dataDir ?? e.DATA_DIR,
     etherscanApiKey: e.ETHERSCAN_API_KEY,
     etherscanRps: e.ETHERSCAN_RPS,

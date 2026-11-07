@@ -9,8 +9,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // SSE streams are long-lived: no proxy timeout, and no response buffering.
-      "/api": { target: "http://localhost:3000", changeOrigin: true, timeout: 0, proxyTimeout: 0 },
+      // SSE streams are long-lived: no proxy timeout, and no response buffering. The API listens
+      // on IPv4 loopback only, and `localhost` may resolve to ::1 first.
+      "/api": { target: "http://127.0.0.1:3000", changeOrigin: true, timeout: 0, proxyTimeout: 0 },
     },
   },
   build: { outDir: "dist", emptyOutDir: true },

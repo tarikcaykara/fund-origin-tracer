@@ -63,7 +63,7 @@ Requires [Bun](https://bun.sh) 1.4.3.
 
 3. Open <http://localhost:5173>. Without keys, use a **Run demo** card on the Home page: demos replay recorded API responses offline. Demo runs cannot be expanded (**Expand further** would mix live data into the recording); start a live trace for that. Press ⌘K (Ctrl+K) on any page to search the open run's addresses, transfers and flags and your saved runs; on a phone, use Search in the ☰ menu.
 
-For a production-style run (`bun run build`, then `bun run start`) the server serves the built UI on `PORT`.
+For a production-style run (`bun run build`, then `bun run start`) the server serves the built UI on `http://127.0.0.1:PORT`.
 
 ## Docker
 
@@ -72,7 +72,9 @@ cp .env.example .env          # optional: add API keys
 docker compose up -d --build  # http://localhost:3000 (override the host port with PORT=3100)
 ```
 
-The image runs the server only (the web UI is prebuilt into it). Results and the response cache live in the `data` named volume at `/app/data`. Inside the container `PORT` is fixed at 3000 and `DATA_DIR` at `/app/data`; the compose file sets both after reading `.env`, and `PORT` in `.env` only changes the host port.
+The image runs the server only (the web UI is prebuilt into it). Results and the response cache live in the `data` named volume at `/app/data`. Inside the container `PORT` is fixed at 3000, `DATA_DIR` at `/app/data` and `HOST` at `0.0.0.0`; the compose file sets them after reading `.env`, and `PORT` in `.env` only changes the host port.
+
+**Upgrading from 1.2.x:** compose now publishes the port on `127.0.0.1` only, so other machines on your network can no longer reach it. For LAN access, change the mapping in `docker-compose.yml` (for example `"0.0.0.0:${PORT:-3000}:3000"`) or put a reverse proxy in front, and list the names or addresses clients use in `ALLOWED_HOSTS`.
 
 ## CLI
 
@@ -99,7 +101,7 @@ Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout
 
 ## API
 
-REST endpoints plus an SSE event stream per run, with no authentication (run it on a trusted network). See [docs/api.md](docs/api.md).
+REST endpoints plus an SSE event stream per run, with no authentication (run it on a trusted network). By default the server listens on `127.0.0.1` only and answers only requests addressed to `localhost`, `127.0.0.1` or `[::1]` (see `HOST` and `ALLOWED_HOSTS` below). See [docs/api.md](docs/api.md).
 
 ## Configuration
 
@@ -108,6 +110,8 @@ Set in `.env` (see `.env.example`). Blank values behave like unset ones.
 | Variable | Default | Purpose |
 |---|---|---|
 | `PORT` | `3000` | HTTP port of the server. |
+| `HOST` | `127.0.0.1` | Interface the server listens on. `0.0.0.0` listens on every interface; the Docker image sets it. |
+| `ALLOWED_HOSTS` | empty | Extra host names the server answers besides `localhost`, `127.0.0.1` and `[::1]`, comma-separated, without port (IPv6 in brackets). Requests with any other `Host` header get `403 host_not_allowed`, which blocks DNS rebinding. Set it when the instance is reached by a name or a LAN address, as a public `DEMO_ONLY` deployment is. |
 | `DATA_DIR` | `./data` | Directory for the SQLite database (runs, response cache). |
 | `ETHERSCAN_API_KEY` | empty | Etherscan V2 key for Ethereum, Polygon and Arbitrum. |
 | `ETHERSCAN_RPS` | `3` | Etherscan requests per second (free tier: 3). |

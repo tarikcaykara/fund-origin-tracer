@@ -28,6 +28,8 @@ export default defineConfig({
     // Every EnvSchema variable is set (blank = default) and `--no-env-file` skips `.env`, so neither the shell nor `.env` changes the replay.
     env: {
       PORT: String(PORT),
+      HOST: "",
+      ALLOWED_HOSTS: "",
       DATA_DIR: ":memory:",
       DEMO_ONLY: "true",
       // Unreachable on purpose: demos use their own ofac.json, so the 29 MB SDN list is never downloaded.

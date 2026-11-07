@@ -10,6 +10,7 @@ import {
   type RunParams,
 } from "@fot/core";
 import {
+  createApp,
   DEFAULT_EXPAND_DEPTH,
   DEFAULT_FIXTURES_DIR,
   executeRun,
@@ -22,6 +23,7 @@ import {
   post,
   recordDemoScenario,
   type TestEnv,
+  tempDir,
 } from "./helpers/env.ts";
 import { chainOfTransfers, fakeTransport, twoBranches, txHash } from "./helpers/fake-etherscan.ts";
 
@@ -1095,5 +1097,72 @@ describe("resource limits", () => {
     for (const s of streams.slice(1)) await s.body?.cancel();
     for (const id of [a, b]) env.manager.cancel(id);
     await Promise.all([a, b].map((id) => env.manager.waitForRun(id)));
+  });
+});
+
+describe("host check and security headers", () => {
+  /** `Content-Security-Policy` as directive name → source list. */
+  function cspOf(res: Response): Map<string, string> {
+    const directives = new Map<string, string>();
+    for (const part of (res.headers.get("content-security-policy") ?? "").split(";")) {
+      const [name, ...sources] = part.trim().split(/\s+/);
+      if (name) directives.set(name, sources.join(" "));
+    }
+    return directives;
+  }
+
+  test("requests for a host that is not allowed get 403 host_not_allowed on every route", async () => {
+    const env = await createTestEnv();
+    const responses = [
+      await env.app.request("http://rebound.example:3000/api/health"),
+      await env.app.request("http://rebound.example/"),
+      await env.app.request(`http://rebound.example/api/runs/${crypto.randomUUID()}`, {
+        method: "DELETE",
+      }),
+    ];
+    for (const res of responses) {
+      expect(res.status).toBe(403);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe(
+        "host_not_allowed",
+      );
+    }
+  });
+
+  test("loopback names and ALLOWED_HOSTS entries are served", async () => {
+    const env = await createTestEnv();
+    for (const url of [
+      "http://localhost:3000/api/health",
+      "http://LOCALHOST/api/health",
+      "http://127.0.0.1:3000/api/health",
+      "http://[::1]:3000/api/health",
+    ]) {
+      expect((await env.app.request(url)).status).toBe(200);
+    }
+    const listed = await createTestEnv({ env: { ALLOWED_HOSTS: "fot.example" } });
+    expect((await listed.app.request("http://fot.example:8080/api/health")).status).toBe(200);
+    expect((await listed.app.request("http://other.example/api/health")).status).toBe(403);
+  });
+
+  test("every response carries the security headers, refusals and the web app included", async () => {
+    const env = await createTestEnv();
+    const dir = tempDir();
+    await Bun.write(join(dir, "index.html"), "<!doctype html><title>fot</title>");
+    const web = createApp({ runtime: env.runtime, manager: env.manager, webDir: dir });
+    const responses = [
+      await env.app.request("/api/health"),
+      await env.app.request("http://rebound.example/api/health"),
+      await web.request("/"),
+    ];
+    expect(responses.map((r) => r.status)).toEqual([200, 403, 200]);
+    for (const res of responses) {
+      const csp = cspOf(res);
+      expect(csp.get("script-src")).toBe("'self'");
+      expect(csp.get("frame-ancestors")).toBe("'none'");
+      expect(csp.get("object-src")).toBe("'none'");
+      expect(res.headers.get("x-frame-options")).toBe("DENY");
+      expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(res.headers.get("referrer-policy")).toBe("no-referrer");
+      expect(res.headers.get("strict-transport-security")).toBeNull();
+    }
   });
 });
