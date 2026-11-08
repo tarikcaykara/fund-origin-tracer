@@ -1,7 +1,7 @@
 import { CHAIN_IDS, ChainIdSchema, isValidAddress } from "@fot/core";
 import { globalsOf, type parseCli } from "../args.ts";
 import { boot, type CliIo, UsageError } from "../io.ts";
-import { EXIT_OK } from "./shared.ts";
+import { EXIT_INCOMPLETE, EXIT_OK } from "./shared.ts";
 
 export async function screenCommand(
   parsed: ReturnType<typeof parseCli>,
@@ -19,10 +19,13 @@ export async function screenCommand(
   const { db, runtime } = await boot(globalsOf(values), io);
   try {
     const labels = runtime.labels.lookup(chain.data, address);
+    const available = runtime.ofacFetchedAt !== null;
     const lines = [
       `Address:   ${address}`,
       `Chain:     ${chain.data}`,
-      `Sanctioned (OFAC SDN): ${runtime.labels.isSanctioned(chain.data, address) ? "YES" : "no"}`,
+      available
+        ? `Sanctioned (OFAC SDN): ${runtime.labels.isSanctioned(chain.data, address) ? "YES" : "no"}`
+        : "Sanctioned (OFAC SDN): Sanctions list unavailable: not screened against OFAC",
       "Labels:",
       ...(labels.length === 0
         ? ["  none"]
@@ -33,7 +36,7 @@ export async function screenCommand(
           })),
     ];
     await io.stdout(`${lines.join("\n")}\n`);
-    return EXIT_OK;
+    return available ? EXIT_OK : EXIT_INCOMPLETE;
   } finally {
     db.close();
   }

@@ -246,6 +246,18 @@ describe("fot screen", () => {
     expect(r.stdout).toContain("Sanctioned (OFAC SDN): no");
   });
 
+  test("reports an unavailable OFAC list and exits 4", async () => {
+    const r = await cli(["screen", "--chain", "ethereum", ETH_ADDRESS], {
+      OFAC_SDN_URL: "http://127.0.0.1:9/sdn.xml",
+      DATA_DIR: tempDir("fot-cli-no-ofac-"),
+    });
+    expect(r.code).toBe(4);
+    expect(r.stdout).toContain("Binance");
+    expect(r.stdout).toContain("Sanctions list unavailable: not screened against OFAC");
+    expect(r.stdout).not.toContain("Sanctioned (OFAC SDN): no");
+    expect(r.stderr).toContain("ofac_unavailable");
+  });
+
   test("honours a local label file", async () => {
     const file = join(tempDir(), "local.json");
     const mine = "0x00000000000000000000000000000000000000aa";

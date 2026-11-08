@@ -418,9 +418,11 @@ export function createApp({
     if (!isValidAddress(chain.data, address)) {
       throw badRequest(`not a valid ${chain.data} address`);
     }
+    const fetchedAt = runtime.ofacFetchedAt;
     return c.json({
       labels: runtime.labels.lookup(chain.data, address),
       sanctioned: runtime.labels.isSanctioned(chain.data, address),
+      ofac: { available: fetchedAt !== null, fetchedAt },
     });
   });
 
