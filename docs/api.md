@@ -70,7 +70,7 @@ curl -s localhost:3000/api/health
 
 - `chains.<id>` is `ready` when the key for that chain is configured (`ETHERSCAN_API_KEY` covers ethereum, polygon and arbitrum; at least one `TRONSCAN_API_KEYS` entry for tron), else `missing_key`. The keys themselves are not validated here.
 - `explorerMaxPages` is `EXPLORER_MAX_PAGES`: pages fetched per explorer list. The web UI uses it to state the cost of one expansion.
-- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off until a retry succeeds; the server retries after 1, 2, 5, then every 15 minutes).
+- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off until a retry succeeds, and `GET /api/screen` answers `ofac.available: false`; the server retries after 1, 2, 5, then every 15 minutes).
 - `labelsVersion` is the newest `verifiedAt` across the bundled label files.
 
 ### `GET /api/demo`
@@ -276,7 +276,7 @@ curl -s localhost:3000/api/screen/ethereum/0x28c6c06298d514db089934071355e5743bf
 ```
 
 ```json
-{"labels":[{"name":"Binance 14","category":"exchange","entity":"Binance","source":"https://etherscan.io/address/0x28c6c06298d514db089934071355e5743bf21d60","origin":"bundled"}],"sanctioned":false}
+{"labels":[{"name":"Binance 14","category":"exchange","entity":"Binance","source":"https://etherscan.io/address/0x28c6c06298d514db089934071355e5743bf21d60","origin":"bundled"}],"sanctioned":false,"ofac":{"available":true,"fetchedAt":"2026-11-05T12:00:00.000Z"}}
 ```
 
 A sanctioned address gets one label per SDN entry that lists it, before any bundled or local label:
@@ -286,10 +286,20 @@ curl -s localhost:3000/api/screen/ethereum/0x098b716b8aaf21512996dc57eb0615e2383
 ```
 
 ```json
-{"labels":[{"name":"LAZARUS GROUP","category":"sanctioned","entity":"LAZARUS GROUP","programs":["DPRK3"],"source":"https://sanctionssearch.ofac.treas.gov/Details.aspx?id=27307","origin":"ofac"}],"sanctioned":true}
+{"labels":[{"name":"LAZARUS GROUP","category":"sanctioned","entity":"LAZARUS GROUP","programs":["DPRK3"],"source":"https://sanctionssearch.ofac.treas.gov/Details.aspx?id=27307","origin":"ofac"}],"sanctioned":true,"ofac":{"available":true,"fetchedAt":"2026-11-05T12:00:00.000Z"}}
 ```
 
-`labels` is the list of `Label` objects (empty when unknown); `sanctioned` is true when the address is on the OFAC list. SDN labels carry the entry name as `name` and `entity`, its `programs`, and the entry's OFAC page as `source` (see [labels.md](labels.md#ofac-sdn)). `400 invalid_request` for an unknown chain or a malformed address.
+Without a loaded OFAC list (see `ofacFetchedAt` in `GET /api/health`):
+
+```bash
+curl -s localhost:3000/api/screen/ethereum/0x098b716b8aaf21512996dc57eb0615e2383e2f96
+```
+
+```json
+{"labels":[],"sanctioned":false,"ofac":{"available":false,"fetchedAt":null}}
+```
+
+`labels` is the list of `Label` objects (empty when unknown); `sanctioned` is true when the address is on the OFAC list. SDN labels carry the entry name as `name` and `entity`, its `programs`, and the entry's OFAC page as `source` (see [labels.md](labels.md#ofac-sdn)). `ofac.available` is false and `ofac.fetchedAt` null while no OFAC list is loaded; `sanctioned` is then always false and means "not screened", not "not sanctioned". `ofac.fetchedAt` is otherwise the time of the snapshot that was checked. `400 invalid_request` for an unknown chain or a malformed address.
 
 ## SSE stream
 

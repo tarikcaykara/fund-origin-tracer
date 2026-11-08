@@ -138,13 +138,16 @@ test("the screening result belongs to the screened chain and address", async ({ 
   const input = box.getByRole("textbox", { name: "Address to screen" });
   const screen = box.getByRole("button", { name: "Screen", exact: true });
   const binance = box.getByText("Binance 14", { exact: true });
+  const unavailable = box.getByText("Sanctions list unavailable: not screened against OFAC");
 
   await input.fill(binance14);
   await screen.click();
   await expect(binance).toBeVisible();
+  await expect(unavailable).toBeVisible();
+  await expect(box.getByText("○ NO SDN MATCH")).toHaveCount(0);
   await input.fill(unlabeled);
   await expect(binance).toBeHidden();
-  await expect(box.getByText("○ NO SDN MATCH")).toBeHidden();
+  await expect(unavailable).toBeHidden();
 
   // A response for a superseded query must not replace the current result.
   const held = Promise.withResolvers<void>();

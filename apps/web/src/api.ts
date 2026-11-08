@@ -85,6 +85,8 @@ export interface LiveRunRequest {
 export interface ScreenResult {
   labels: Label[];
   sanctioned: boolean;
+  /** `available` is false (and `fetchedAt` null) when no OFAC list is loaded; `sanctioned` then means "not screened". */
+  ofac: { available: boolean; fetchedAt: string | null };
 }
 
 export class ApiError extends Error {

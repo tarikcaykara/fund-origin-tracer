@@ -920,12 +920,34 @@ describe("exports and screening", () => {
     const baseline = calls; // boot-time OFAC fetch
     const binance = "0x28c6c06298d514db089934071355e5743bf21d60";
     const res = await env.app.request(`/api/screen/ethereum/${binance}`);
-    const body = (await res.json()) as { labels: { category: string }[]; sanctioned: boolean };
+    const body = (await res.json()) as {
+      labels: { category: string }[];
+      sanctioned: boolean;
+      ofac: { available: boolean; fetchedAt: string | null };
+    };
     expect(body.labels.some((l) => l.category === "exchange")).toBe(true);
     expect(body.sanctioned).toBe(false);
+    expect(typeof env.runtime.ofacFetchedAt).toBe("string");
+    expect(body.ofac).toEqual({ available: true, fetchedAt: env.runtime.ofacFetchedAt });
+    const listed = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    const sdn = (await (await env.app.request(`/api/screen/ethereum/${listed}`)).json()) as {
+      sanctioned: boolean;
+    };
+    expect(sdn.sanctioned).toBe(true);
     expect(calls).toBe(baseline);
     expect((await env.app.request("/api/screen/ethereum/0x123")).status).toBe(400);
     expect((await env.app.request("/api/screen/btc/0x123")).status).toBe(400);
+  });
+
+  test("marks the OFAC list unavailable when screening without it", async () => {
+    const env = await createTestEnv({ transport: async () => ({ status: 503, body: "down" }) });
+    const listed = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    const body = (await (await env.app.request(`/api/screen/ethereum/${listed}`)).json()) as {
+      sanctioned: boolean;
+      ofac: { available: boolean; fetchedAt: string | null };
+    };
+    expect(body.ofac).toEqual({ available: false, fetchedAt: null });
+    expect(body.sanctioned).toBe(false);
   });
 
   test("health reports chain readiness, version and label data", async () => {

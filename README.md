@@ -97,7 +97,7 @@ bun apps/cli/src/main.ts labels validate my-labels.json
 bun apps/cli/src/main.ts serve --port 3000
 ```
 
-Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints|addresses`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 cancelled or timed out. `bun apps/cli/src/main.ts --help` prints the full usage.
+Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints|addresses`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 incomplete (trace cancelled or timed out; `fot screen` without the OFAC list). `bun apps/cli/src/main.ts --help` prints the full usage.
 
 ## API
 

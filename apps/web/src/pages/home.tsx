@@ -543,7 +543,7 @@ type Screening = { chain: ChainId; address: string } & (
   | { status: "failed"; error: string }
 );
 
-function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null }) {
+function ScreenBox({ chain }: { chain: ChainId }) {
   const [address, setAddress] = useState("");
   const [screening, setScreening] = useState<Screening | null>(null);
   const latestRequest = useRef(0);
@@ -588,7 +588,8 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
   const sdnNames = orderedLabels.flatMap((label) =>
     label.origin === "ofac" ? [label.entity ?? label.name] : [],
   );
-  const fetchedAt = health?.ofacFetchedAt;
+  const ofacAvailable = result?.ofac.available ?? false;
+  const fetchedAt = result?.ofac.fetchedAt ?? null;
 
   return (
     <Card className="min-w-0">
@@ -670,9 +671,13 @@ function ScreenBox({ chain, health }: { chain: ChainId; health: Health | null })
                   flag.
                 </p>
               </div>
-            ) : (
+            ) : ofacAvailable ? (
               <span className="inline-flex rounded-sm border border-risk-low px-1.5 py-0.5 type-mono-node font-semibold text-risk-low">
                 ○ NO SDN MATCH
+              </span>
+            ) : (
+              <span className="inline-flex rounded-sm border border-risk-medium px-1.5 py-0.5 type-mono-node font-semibold text-risk-medium">
+                ◌ Sanctions list unavailable: not screened against OFAC
               </span>
             )}
             {fetchedAt ? (
@@ -954,7 +959,7 @@ export function HomePage() {
           </Card>
 
           <aside className="grid min-w-0 content-start gap-4">
-            <ScreenBox chain={chain} health={healthData} />
+            <ScreenBox chain={chain} />
             <RecentCard runs={recent.data?.items ?? []} />
             {!prominentDemos ? (
               <DemoCards demos={demoItems} prominent={false} busy={busy} onStart={runDemo} />
