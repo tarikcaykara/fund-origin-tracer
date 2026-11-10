@@ -37,6 +37,7 @@ export function AddressChip({
 }) {
   const displayAddress = fullAddress(chain, address);
   const { copied, copy } = useCopyText();
+  const shown = full ? displayAddress : shortAddress(chain, displayAddress);
 
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -44,7 +45,8 @@ export function AddressChip({
         <TooltipTrigger asChild>
           <button
             type="button"
-            aria-label={`Copy ${displayAddress}`}
+            // Starts with the visible text (WCAG 2.5.3); the tooltip describes the full address.
+            aria-label={copied ? undefined : `${shown}, copy address`}
             onClick={() =>
               void copy(displayAddress, {
                 title: "⧉ Copied to clipboard",
@@ -57,7 +59,7 @@ export function AddressChip({
               full && "whitespace-normal break-all",
             )}
           >
-            {copied ? "✓ copied" : full ? displayAddress : shortAddress(chain, displayAddress)}
+            {copied ? "✓ copied" : shown}
           </button>
         </TooltipTrigger>
         <TooltipContent className="max-w-sm break-all type-mono-node">

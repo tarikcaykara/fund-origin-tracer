@@ -134,6 +134,7 @@ export function Layout() {
   const previousPathname = useRef(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const breakpoint = useBreakpoint();
   const isPhone = breakpoint === "phone";
   const items = navigationItems(pathname);
@@ -192,7 +193,7 @@ export function Layout() {
                 type="button"
                 onClick={() => setPaletteOpen(true)}
                 aria-keyshortcuts="Meta+K Control+K"
-                className="hidden h-7 w-[280px] shrink-0 items-center gap-2 rounded-[4px] border border-border bg-background px-2.5 text-xs text-faint-foreground hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:flex"
+                className="hidden h-7 w-[280px] shrink-0 items-center gap-2 rounded-[4px] border border-border bg-background px-2.5 text-xs text-muted-foreground hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:flex"
               >
                 <span>Search address, tx or label</span>
                 <span className="flex-1" />
@@ -205,6 +206,7 @@ export function Layout() {
               </div>
               {isPhone ? (
                 <button
+                  ref={menuButton}
                   type="button"
                   aria-label={menuOpen ? "Close menu" : "Open menu"}
                   aria-expanded={menuOpen}
@@ -239,6 +241,8 @@ export function Layout() {
                     type="button"
                     className="flex min-h-12 w-full items-center gap-2 px-4 type-body text-foreground"
                     onClick={() => {
+                      // This item unmounts with the menu; the palette returns focus to ☰ instead.
+                      menuButton.current?.focus();
                       setMenuOpen(false);
                       setPaletteOpen(true);
                     }}

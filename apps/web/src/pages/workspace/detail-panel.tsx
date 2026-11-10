@@ -290,7 +290,7 @@ function AddressPanel({
           <AddressChip chain={chain} address={address} />{" "}
           <ExplorerLink chain={chain} kind="address" value={address} />
         </div>
-        <code className="block break-all type-mono-sm text-faint-foreground">{address}</code>
+        <code className="block break-all type-mono-sm text-muted-foreground">{address}</code>
         <div className="flex flex-wrap gap-1.5 type-mono-sm">
           <PanelBadge>hop {graphNode?.hop ?? 0}</PanelBadge>
           {stopReason ? (
@@ -408,7 +408,7 @@ function AddressPanel({
                           </span>
                         ) : null}
                       </span>
-                      <time className="block text-[10.5px] text-faint-foreground">
+                      <time className="block text-[10.5px] text-muted-foreground">
                         {formatTimestamp(edge.transfer.timestamp)}
                       </time>
                     </span>
@@ -546,7 +546,7 @@ function PairPanel({
         <div className="overflow-x-auto">
           <table className="w-full border-collapse type-mono-sm">
             <thead>
-              <tr className="text-left text-faint-foreground">
+              <tr className="text-left text-muted-foreground">
                 <th className="px-4 py-2 font-normal">time · tx</th>
                 <th className="px-2 py-2 text-right font-normal">amount</th>
                 <th className="px-4 py-2 text-right font-normal">score</th>

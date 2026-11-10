@@ -22,6 +22,7 @@ export function PanelHost({
   onExpand,
   onSelect,
   onClose,
+  returnFocus,
   onPrev,
   onNext,
 }: {
@@ -41,6 +42,8 @@ export function PanelHost({
   onExpand: (edgeId: string) => void;
   onSelect: (selection: Selection | null) => void;
   onClose: () => void;
+  /** Phone sheet only: focus target on close when the element that opened it is gone. */
+  returnFocus?: (() => HTMLElement | null) | undefined;
   onPrev?: (() => void) | undefined;
   onNext?: (() => void) | undefined;
 }) {
@@ -77,6 +80,7 @@ export function PanelHost({
       <ModalLayer
         label="Selection details"
         onClose={onClose}
+        returnFocus={returnFocus}
         className="fixed inset-0 z-50 flex min-h-0 flex-col bg-card"
       >
         <div className="min-h-0 flex-1 overflow-y-auto">{content}</div>

@@ -49,9 +49,7 @@ export function WorkspaceTabBar({
           }
         >
           <span>{tab.label}</span>
-          {tab.count !== null ? (
-            <span className="type-mono-node opacity-75">{tab.count}</span>
-          ) : null}
+          {tab.count !== null ? <span className="type-mono-node">{tab.count}</span> : null}
         </TabsTrigger>
       ))}
     </TabsList>
