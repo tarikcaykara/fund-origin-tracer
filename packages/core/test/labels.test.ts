@@ -58,6 +58,30 @@ describe("spoof", () => {
     const usdcBridgedPolygon = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
     expect(isSpoofed(token("USDC", usdcBridgedPolygon, "polygon"))).toBe(false);
   });
+
+  test.each([
+    ["Cyrillic DZE", "U\u0405DT"],
+    ["a combining acute accent", "U\u0301SDT"],
+    ["T with dot above", "USD\u1E6A"],
+    ["Lisu letters", "\uA4F4\uA4E2\uA4D3\uA4D4"],
+    ["small capitals", "\u1D1C\uA731\u1D05\u1D1B"],
+    ["fullwidth letters", "\uFF35\uFF33\uFF24\uFF34"],
+    ["a zero-width space", "US\u200BDT"],
+  ])("a USDT look-alike with %s folds to USDT and is a spoof", (_, variant) => {
+    expect(foldSymbol(variant)).toBe("USDT");
+    expect(isSpoofed(token(variant, EVM_A))).toBe(true);
+  });
+
+  test("a letter without a Latin look-alike is kept, never folded away", () => {
+    expect(foldSymbol("USD\u0416T")).toBe("USD\u0416T");
+    expect(isSpoofed(token("USD\u0416T", EVM_A))).toBe(false);
+  });
+
+  test("other stablecoins and ordinary tokens are not spoofs", () => {
+    for (const symbol of ["TUSD", "USDE", "FDUSD", "PYUSD", "USD1", "USDS", "EURC", "WBTC"]) {
+      expect(isSpoofed(token(symbol, EVM_A))).toBe(false);
+    }
+  });
 });
 
 /** A captured SDN XML fragment: four entries with digital currency addresses and one without. */
