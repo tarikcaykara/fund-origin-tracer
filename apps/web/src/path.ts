@@ -2,20 +2,22 @@ import type { AnalysisResult, Direction, RunParams, TraceEdge } from "@fot/core/
 
 /**
  * Returns the highest-USD greedy path in display order (origin → seed backward, seed → origin
- * forward). Edge depths are 0-based, so a run holds up to `maxDepth + 1` edges per path; edges
- * added by "Expand further" may sit deeper, so the walk is bounded by the deepest edge too.
+ * forward). The walk ends where the trace ended: at an edge with a stop reason, or where no
+ * further edge was traced. Labels never end it by themselves, because the engine's stop depends
+ * on the label category and on whether the run (or an expansion) traced through entities.
+ * Edge depths are 0-based, so a run holds up to `maxDepth + 1` edges per path; edges added by
+ * "Expand further" may sit deeper, so the walk is bounded by the deepest edge too.
  */
 export function highestValuePath(
   edges: readonly TraceEdge[],
   result: AnalysisResult | null,
   direction: Direction,
-  params: Pick<RunParams, "maxDepth" | "traceThroughEntities">,
+  params: Pick<RunParams, "maxDepth">,
 ): TraceEdge[] {
   const deepest = edges.reduce((depth, edge) => Math.max(depth, edge.depth), 0);
   const stepLimit = Math.max(params.maxDepth, deepest) + 1;
   if (edges.length === 0) return [];
 
-  const addresses = new Map((result?.graph.addresses ?? []).map((node) => [node.address, node]));
   const seeds = new Set<string>();
   for (const node of result?.graph.addresses ?? []) if (node.isSeedSubject) seeds.add(node.address);
   for (const edge of edges) if (edge.seedId !== null) seeds.add(edge.near);
@@ -42,20 +44,6 @@ export function highestValuePath(
     const walked: TraceEdge[] = [];
 
     for (let step = 0; step < stepLimit; step++) {
-      // Entity labels end the walk like the engine's `entity` stop, unless the run traced through
-      // entities. The seed itself is the start of the trace, never a stop.
-      if (step > 0 && !params.traceThroughEntities) {
-        const currentLabels = addresses.get(current)?.labels ?? [];
-        if (
-          currentLabels.some(
-            (label) =>
-              label.category === "exchange" ||
-              (label.entity !== undefined && label.entity.length > 0),
-          )
-        )
-          break;
-      }
-
       const candidates = direction === "backward" ? incoming.get(current) : outgoing.get(current);
       let selected: TraceEdge | null = null;
       for (const edge of candidates ?? []) {
