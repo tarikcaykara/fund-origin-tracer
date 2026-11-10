@@ -118,6 +118,8 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
       );
   }
 
+  // `timeoutSec` bounds the trace and the convergence follow-up together (per expansion).
+  const deadline = Date.now() + params.timeoutSec * 1000;
   const trace = await runTrace(
     params,
     {
@@ -137,15 +139,24 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
     trace.status = statusAfterExpand(previous.status, trace.status, trace.edges);
   }
 
-  const result = await analyze(trace, params, labels, runtime.policy, {
-    provider,
-    prices,
-    signal: controller.signal,
-    runId,
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    ofacFetchedAt: opts.ofacFetchedAt === undefined ? runtime.ofacFetchedAt : opts.ofacFetchedAt,
-  });
+  // The trace's own timer is gone once it returns; the follow-up gets what is left of the budget.
+  // The reason matches `RunController.cancel`, so skipped follow-ups name the time limit.
+  const budget = new AbortController();
+  const budgetTimer = setTimeout(() => budget.abort("timeout"), deadline - Date.now());
+  let result: AnalysisResult;
+  try {
+    result = await analyze(trace, params, labels, runtime.policy, {
+      provider,
+      prices,
+      signal: AbortSignal.any([controller.signal, budget.signal]),
+      runId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      ofacFetchedAt: opts.ofacFetchedAt === undefined ? runtime.ofacFetchedAt : opts.ofacFetchedAt,
+    });
+  } finally {
+    clearTimeout(budgetTimer);
+  }
   emit({ type: "result", result });
   emit({ type: "done", status: result.status });
   return result;

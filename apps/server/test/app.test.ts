@@ -8,6 +8,7 @@ import {
   RunController,
   type RunEvent,
   type RunParams,
+  type Transport,
 } from "@fot/core";
 import {
   createApp,
@@ -25,7 +26,14 @@ import {
   type TestEnv,
   tempDir,
 } from "./helpers/env.ts";
-import { chainOfTransfers, fakeTransport, twoBranches, txHash } from "./helpers/fake-etherscan.ts";
+import {
+  addr,
+  chainOfTransfers,
+  fakeTransport,
+  T0,
+  twoBranches,
+  txHash,
+} from "./helpers/fake-etherscan.ts";
 
 async function startLive(env: TestEnv, extra: Record<string, unknown> = {}): Promise<string> {
   const res = await env.app.request(...post("/api/runs", liveBody(extra)));
@@ -154,6 +162,53 @@ describe("run lifecycle", () => {
     second?.();
     await env.manager.waitForRun(runId);
   });
+
+  test("the convergence follow-up stops when the run's time budget runs out", async () => {
+    // a104 funds a102 and a103, which both fund a101: a104 is a linked wallet (convergence).
+    const hour = 3600;
+    const explorer = fakeTransport([
+      { tx: 1, from: 101, to: 100, amount: 1000, ts: T0 + 5 * hour },
+      { tx: 2, from: 102, to: 101, amount: 500, ts: T0 + 4 * hour },
+      { tx: 3, from: 103, to: 101, amount: 500, ts: T0 + 4 * hour },
+      { tx: 4, from: 104, to: 102, amount: 500, ts: T0 + 3 * hour },
+      { tx: 5, from: 104, to: 103, amount: 500, ts: T0 + 3 * hour },
+    ]);
+    // Trace listings of an address carry a block range; the follow-up listing does not, and never
+    // answers.
+    const transport: Transport = (req) => {
+      const q = new URL(req.url).searchParams;
+      if (!q.has("address") || q.has("startblock") || q.has("endblock")) return explorer(req);
+      const { promise, reject } = Promise.withResolvers<never>();
+      req.signal?.addEventListener("abort", () => reject(req.signal?.reason), { once: true });
+      return promise;
+    };
+    const env = await createTestEnv({ transport });
+    const params: RunParams = {
+      chain: "ethereum",
+      direction: "backward",
+      seeds: [{ id: "s1", kind: "tx", value: LIVE_SEED_TX }],
+      maxDepth: 5,
+      maxBranches: 3,
+      maxEdges: 50,
+      minUsd: 0,
+      traceThroughEntities: false,
+      followUnpriced: false,
+      // Below the API minimum (10 s) to keep the test short; the trace itself needs well under 1 s.
+      timeoutSec: 2,
+    };
+    const started = performance.now();
+    const result = await executeRun({
+      params,
+      runtime: env.runtime,
+      controller: new RunController(),
+      runId: crypto.randomUUID(),
+      emit: () => {},
+    });
+    expect(performance.now() - started).toBeLessThan(4000);
+    expect(result.status).toBe("completed");
+    expect(result.convergences.map((c) => c.address)).toEqual([addr(104)]);
+    expect(result.warnings.map((w) => w.code)).toContain("convergence_followup_failed");
+  }, 10_000);
 
   test("unknown runs 404 on every read endpoint", async () => {
     const env = await createTestEnv();

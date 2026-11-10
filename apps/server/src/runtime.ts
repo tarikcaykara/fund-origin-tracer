@@ -27,7 +27,6 @@ import {
 import type { AppConfig } from "./config.ts";
 import type { Db } from "./db.ts";
 
-const OFAC_LOAD_TIMEOUT_MS = 90_000;
 const PRICE_INTERVAL_MS = 200;
 
 export interface ProviderOptions {
@@ -138,7 +137,7 @@ export async function createRuntime(config: AppConfig, options: RuntimeOptions):
   let labels = new LabelRegistry(BUNDLED_LABEL_FILES, localLabels, ofacSet);
 
   async function loadOfac(): Promise<{ code: string; message: string } | null> {
-    const res = await ofacSource.load(AbortSignal.timeout(OFAC_LOAD_TIMEOUT_MS));
+    const res = await ofacSource.load();
     ofacSet = res.set;
     labels = new LabelRegistry(BUNDLED_LABEL_FILES, localLabels, ofacSet);
     return res.warning;

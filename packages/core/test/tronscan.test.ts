@@ -20,7 +20,7 @@ interface Call {
   params: Record<string, string>;
   apiKey: string;
 }
-type Reply = { status: number; body: unknown };
+type Reply = { status: number; body: unknown; retryAfter?: string };
 type Handler = (call: Call, n: number) => Reply;
 
 function setup(keys: string[], handler: Handler, maxPages = 2) {
@@ -34,7 +34,11 @@ function setup(keys: string[], handler: Handler, maxPages = 2) {
     };
     calls.push(call);
     const r = handler(call, calls.length - 1);
-    return { status: r.status, body: JSON.stringify(r.body) };
+    return {
+      status: r.status,
+      body: JSON.stringify(r.body),
+      ...(r.retryAfter === undefined ? {} : { retryAfter: r.retryAfter }),
+    };
   };
   const keyPool = new TronscanKeyPool({
     keys,
@@ -203,6 +207,17 @@ describe("TronscanProvider key rotation", () => {
     );
     await provider.getTransaction(txInfoTrx.hash, signal);
     expect(calls.map((c) => c.apiKey)).toEqual(["k1", "k1", "k1", "k1", "k2"]);
+    expect(keyPool.activeKeyCount).toBe(1);
+  });
+
+  test("HTTP 429 with a Retry-After beyond the cap retires the key without waiting", async () => {
+    const { provider, keyPool, calls } = setup(["k1", "k2"], (c) =>
+      c.apiKey === "k1"
+        ? { status: 429, body: { message: "slow down" }, retryAfter: "86400" }
+        : ok(txInfoTrx),
+    );
+    await provider.getTransaction(txInfoTrx.hash, signal);
+    expect(calls.map((c) => c.apiKey)).toEqual(["k1", "k2"]);
     expect(keyPool.activeKeyCount).toBe(1);
   });
 

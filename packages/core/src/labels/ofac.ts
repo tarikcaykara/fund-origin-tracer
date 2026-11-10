@@ -157,6 +157,9 @@ export interface OfacKv {
   set(key: string, value: string): Promise<void>;
 }
 
+/** Deadline of the SDN download (about 29 MB), longer than the default request timeout. */
+const OFAC_DOWNLOAD_TIMEOUT_MS = 90_000;
+
 export interface OfacSourceOptions {
   url: string;
   transport: Transport;
@@ -177,7 +180,7 @@ export class OfacSource {
     this.#o = options;
   }
 
-  async load(signal?: AbortSignal): Promise<OfacLoadResult> {
+  async load(): Promise<OfacLoadResult> {
     const refreshMs = (this.#o.refreshHours ?? 24) * 3_600_000;
     let stale: OfacSet | null = null;
     const raw = await this.#o.kv.get(OFAC_KV_KEY);
@@ -198,7 +201,7 @@ export class OfacSource {
     try {
       const res = await this.#o.transport({
         url: this.#o.url,
-        ...(signal ? { signal } : {}),
+        timeoutMs: OFAC_DOWNLOAD_TIMEOUT_MS,
       });
       if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
       // A maintenance page, a format change or a cut-off body must not replace the list.

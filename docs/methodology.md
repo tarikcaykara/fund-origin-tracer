@@ -45,7 +45,7 @@ Seed failures:
 - Queue order: depth ascending, then seed order, then selection rank, then creation order. Shallow, high-ranked edges are expanded first.
 - `concurrency` expansions in flight (default 4, `ENGINE_CONCURRENCY` 1–32; demo replays use 1).
 - `maxEdges` counts **expansions started**, reserved before the first network call, so the limit is exact under concurrency.
-- Pause stops new work at the next gate; resume continues. Cancel and timeout (`timeoutSec`, measured from the start of the trace phase) stop in-flight and queued edges with `cancelled` / `timeout`.
+- Pause stops new work at the next gate; resume continues. Cancel and timeout (`timeoutSec`, measured from the start of the trace phase) stop in-flight and queued edges with `cancelled` / `timeout`. The same budget also bounds the convergence follow-up after the trace (see [Linked wallets](#linked-wallets-convergences)).
 - A progress event is emitted every 1000 ms.
 
 ### Per-edge checks
@@ -170,7 +170,7 @@ A convergence is an **unlabeled** address (no label of any category, including `
 
 An address can carry both kinds. `role` is `common_source` for backward traces and `common_destination` for forward traces. Each convergence lists its edges, counterparties, per-asset totals, USD sum (non-null values only) and the minimum depth. Results are sorted by USD descending (unknown last), then depth.
 
-**Follow-up ("who else did this funder pay?").** For the top **10** convergences by USD, one listing is fetched (page 1 only, no time bound): the address's other outgoing transfers when backward, incoming when forward. Transfers whose counterparty is already in the graph, zero-value and spoofed-token transfers are removed; up to **20** are kept in `otherCounterparties`, sorted by USD descending. A failure only adds warning `convergence_followup_failed`.
+**Follow-up ("who else did this funder pay?").** For the top **10** convergences by USD, one listing is fetched (page 1 only, no time bound): the address's other outgoing transfers when backward, incoming when forward. Transfers whose counterparty is already in the graph, zero-value and spoofed-token transfers are removed; up to **20** are kept in `otherCounterparties`, sorted by USD descending. A failure only adds warning `convergence_followup_failed`. The follow-up gets what is left of `timeoutSec` after the trace (of the expansion's own budget after "Expand further"); when that runs out, the open lookup and the remaining convergences end with the same warning and the run status does not change. After a cancel or a timeout during the trace, the follow-up is skipped.
 
 ### Exposure
 
@@ -270,6 +270,8 @@ Settings: `severity` is `high`, `medium`, `low`, `info` or `off`. Numeric ranges
 | Labels | Bundled `packages/core/labels/*.json` and your local file | See [labels.md](labels.md). |
 
 Per address the explorer is asked for several lists (Etherscan: ERC-20 `tokentx`, native `txlist`, internal `txlistinternal`; Tronscan: TRC20 transfers and TRX transactions). Failed transactions and reverted TRC20 transfers are ignored. Responses are cached (SQLite on the server, memory for demos) for 30 days when the queried time bound or transaction is older than one hour, otherwise 300 seconds; error responses are never cached.
+
+Every request times out after 30 seconds, response body included (the OFAC download after 90), and then counts as a `network_error`. Network errors, HTTP 429 and 5xx responses and rate-limit replies are tried up to 4 times, waiting 1, 2 and 4 seconds in between; a `Retry-After` header lengthens a wait up to 60 seconds, and a longer `Retry-After` ends the request at once as `rate_limited` (after a Tronscan HTTP 429 or 403 the key is retired and the next key is tried). An expansion whose listing still fails stops its edge with `fetch_failed` (`stopDetail` = the error code); a failed price lookup leaves the prices null with warning `prices_unavailable`.
 
 ### Pricing
 

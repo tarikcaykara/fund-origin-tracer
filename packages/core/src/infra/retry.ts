@@ -1,6 +1,9 @@
 import { FotError } from "../errors.ts";
 import { abortableSleep } from "./limiter.ts";
 
+/** The longest Retry-After waited out; a longer one ends the request as `rate_limited`. */
+export const MAX_RETRY_AFTER_SEC = 60;
+
 export interface RetryOptions {
   attempts?: number;
   baseMs?: number;
@@ -20,12 +23,28 @@ export async function withRetry<T>(fn: () => Promise<T>, opts: RetryOptions = {}
     } catch (e) {
       if (!(e instanceof FotError) || !e.retryable || i >= attempts - 1) throw e;
       if (opts.signal?.aborted) throw e;
+      if (e.retryAfterSec !== undefined && e.retryAfterSec > MAX_RETRY_AFTER_SEC) {
+        throw retryAfterTooLong(e, e.retryAfterSec);
+      }
       const backoff = Math.min(capMs, baseMs * 2 ** i);
       const wait =
         e.retryAfterSec !== undefined ? Math.max(backoff, e.retryAfterSec * 1000) : backoff;
       await sleep(wait, opts.signal);
     }
   }
+}
+
+/**
+ * A `rate_limited` error passes through unchanged, so callers that handle its subclass still
+ * see it (Tronscan retires the key); any other code becomes `rate_limited`.
+ */
+function retryAfterTooLong(e: FotError, retryAfterSec: number): FotError {
+  if (e.code === "rate_limited") return e;
+  return new FotError(
+    "rate_limited",
+    `${e.message} (Retry-After ${retryAfterSec} s exceeds ${MAX_RETRY_AFTER_SEC} s)`,
+    { retryAfterSec, cause: e },
+  );
 }
 
 export function parseRetryAfter(value: string | undefined, nowMs: number): number | undefined {
