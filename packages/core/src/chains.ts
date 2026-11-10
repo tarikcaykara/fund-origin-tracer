@@ -104,6 +104,9 @@ export function listingCalls(
   return { min: 2, max: 2 * maxPages * (direction === "forward" ? 2 : 1) };
 }
 
+/** Largest token decimals accepted from an explorer or a contract; `decimals()` returns a uint8. */
+export const MAX_TOKEN_DECIMALS = 255;
+
 export interface CanonicalToken {
   symbol: string;
   contract: string;

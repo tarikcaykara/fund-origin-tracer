@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { findCanonicalToken, normalizeTx } from "../chains.ts";
+import { findCanonicalToken, MAX_TOKEN_DECIMALS, normalizeTx } from "../chains.ts";
 import { FotError } from "../errors.ts";
 import { cachedRequest, ttlForTimestamp } from "../infra/http.ts";
 import {
@@ -181,6 +181,7 @@ export class TronscanProvider implements ExplorerProvider {
     const timestamp = Math.floor(info.timestamp / 1000);
     const transfers: Transfer[] = [];
     for (const t of info.trc20TransferInfo ?? []) {
+      const asset = tokenAsset(t.contract_address, t.symbol, t.name, t.decimals);
       transfers.push({
         chain: "tron",
         txHash: info.hash,
@@ -188,9 +189,9 @@ export class TronscanProvider implements ExplorerProvider {
         timestamp,
         from: t.from_address,
         to: t.to_address,
-        asset: tokenAsset(t.contract_address, t.symbol, t.name, t.decimals),
+        asset,
         amountRaw: t.amount_str,
-        amount: rawToAmount(t.amount_str, tokenDecimals(t.contract_address, t.decimals)),
+        amount: rawToAmount(t.amount_str, asset.decimals),
       });
     }
     const trx = info.contractData?.amount;
@@ -451,16 +452,12 @@ function errorMessage(raw: unknown): string | null {
   return null;
 }
 
-function tokenDecimals(contract: string, rowDecimals: number | undefined): number {
-  return findCanonicalToken("tron", contract)?.decimals ?? rowDecimals ?? 18;
-}
-
 function tokenAsset(
   contract: string,
   symbol: string | undefined,
   name: string | undefined,
   decimals: number | undefined,
-): Asset {
+): Extract<Asset, { kind: "token" }> {
   const canonical = findCanonicalToken("tron", contract);
   if (canonical) {
     return {
@@ -473,7 +470,11 @@ function tokenAsset(
       decimalsGuessed: false,
     };
   }
-  const known = decimals !== undefined && Number.isInteger(decimals) && decimals >= 0;
+  const known =
+    decimals !== undefined &&
+    Number.isInteger(decimals) &&
+    decimals >= 0 &&
+    decimals <= MAX_TOKEN_DECIMALS;
   return {
     chain: "tron",
     kind: "token",
@@ -507,7 +508,7 @@ function trc20ToTransfer(r: Trc20Row): Transfer | null {
     to: r.to_address,
     asset,
     amountRaw: r.quant,
-    amount: rawToAmount(r.quant, asset.kind === "token" ? asset.decimals : TRX_DECIMALS),
+    amount: rawToAmount(r.quant, asset.decimals),
   };
 }
 

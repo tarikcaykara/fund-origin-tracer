@@ -50,6 +50,24 @@ export function priceKey(asset: Asset, timestamp: number): string {
   return `${assetId(asset)}@${Math.floor(timestamp / 3600) * 3600}`;
 }
 
+/** Token decimals were guessed (18): `amount` may be off by orders of magnitude, so it is never priced. */
+export function hasGuessedDecimals(asset: Asset): boolean {
+  return asset.kind === "token" && asset.decimalsGuessed;
+}
+
+/**
+ * USD value of `transfer` from a `priceMany` result: null when its hour bucket is unpriced or its
+ * token decimals were guessed.
+ */
+export function transferUsd(
+  transfer: Transfer,
+  prices: ReadonlyMap<string, number | null>,
+): number | null {
+  if (hasGuessedDecimals(transfer.asset)) return null;
+  const price = prices.get(priceKey(transfer.asset, transfer.timestamp));
+  return price == null ? null : transfer.amount * price;
+}
+
 export interface PriceResult {
   /** Keyed by `priceKey(asset, timestamp)`; null = unpriced. */
   prices: Map<string, number | null>;

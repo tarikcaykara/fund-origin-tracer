@@ -439,6 +439,25 @@ describe("listTransfers", () => {
       });
     });
 
+    test("explorer decimals outside 0–255 are guessed as 18 instead of being converted", async () => {
+      const contract = (n: number) => `0xc0ffee${n.toString(16).padStart(34, "0")}`;
+      const t = pagedTransport({
+        1: [
+          { ...tokenRow(1, contract(1), "MAX"), value: "1000", tokenDecimal: "255" },
+          { ...tokenRow(2, contract(2), "OVER"), value: "1000", tokenDecimal: "256" },
+          { ...tokenRow(3, contract(3), "HUGE"), value: "1000", tokenDecimal: "100000" },
+        ],
+      });
+      const res = await list(make(t.transport));
+      const bySymbol = (s: string) =>
+        res.rows.find((r) => r.asset.kind === "token" && r.asset.symbol === s);
+      expect(bySymbol("MAX")?.asset).toMatchObject({ decimals: 255, decimalsGuessed: false });
+      for (const s of ["OVER", "HUGE"]) {
+        expect(bySymbol(s)?.asset).toMatchObject({ decimals: 18, decimalsGuessed: true });
+        expect(bySymbol(s)?.amount).toBe(1e-15);
+      }
+    });
+
     test("failed and zero-value native rows are dropped; zero-value tokens are kept", async () => {
       const norm = (over: Record<string, string>) => ({
         blockNumber: "10",

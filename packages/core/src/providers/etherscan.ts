@@ -4,6 +4,7 @@ import {
   CHAINS,
   type ChainId,
   findCanonicalToken,
+  MAX_TOKEN_DECIMALS,
   normalizeAddress,
   normalizeTx,
 } from "../chains.ts";
@@ -206,7 +207,14 @@ function decodeSymbol(hex: string): string | null {
 function validDecimals(hex: unknown): number | null {
   if (typeof hex !== "string" || !/^0x[0-9a-fA-F]{1,64}$/.test(hex)) return null;
   const n = BigInt(hex);
-  return n <= 255n ? Number(n) : null;
+  return n <= BigInt(MAX_TOKEN_DECIMALS) ? Number(n) : null;
+}
+
+/** Explorer-reported decimals (a decimal string) when within 0–255; null otherwise. */
+function rowDecimals(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null;
+  const n = Number(value);
+  return n <= MAX_TOKEN_DECIMALS ? n : null;
 }
 
 export class EtherscanV2Provider implements ExplorerProvider {
@@ -555,7 +563,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
   private tokenRowTransfer(r: z.infer<typeof TokenRow>): Transfer {
     const contract = normalizeAddress(this.chain, r.contractAddress);
     const canonical = findCanonicalToken(this.chain, contract);
-    const parsedDecimals = /^\d+$/.test(r.tokenDecimal) ? Number(r.tokenDecimal) : null;
+    const parsedDecimals = rowDecimals(r.tokenDecimal);
     const decimals = canonical?.decimals ?? parsedDecimals ?? 18;
     const symbol = canonical?.symbol ?? r.tokenSymbol;
     return {
