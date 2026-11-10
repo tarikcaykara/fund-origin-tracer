@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { listingCalls } from "../src/chains.ts";
+import { runTrace } from "../src/engine/trace.ts";
 import { FotError } from "../src/errors.ts";
+import { RunController } from "../src/infra/controller.ts";
 import { MinIntervalLimiter } from "../src/infra/limiter.ts";
 import { MemoryCacheStore } from "../src/infra/store.ts";
 import {
@@ -8,8 +10,11 @@ import {
   type Transport,
   type TransportResponse,
 } from "../src/infra/transport.ts";
+import { LabelRegistry } from "../src/labels/registry.ts";
 import { type EtherscanChain, EtherscanV2Provider } from "../src/providers/etherscan.ts";
+import { RunParamsSchema, transferId } from "../src/schema.ts";
 import recorded from "./fixtures/etherscan/recorded.json";
+import { FakePrices } from "./helpers/fakes.ts";
 
 const SWAP_TX = "0xdd2bac0374e8ba8981b491643c5e8f2fde652efdf77a121daa88204a8c16828a";
 const SWAP_TS = 1765584371;
@@ -364,6 +369,19 @@ describe("listTransfers", () => {
       expect(res.truncated).toBe(false);
     });
 
+    test("identical rows on one page are separate transfers; a row repeated on the next page is the same transfer", async () => {
+      const page1 = fullPage(1);
+      const row = page1[48] as (typeof page1)[number];
+      page1[49] = { ...row };
+      const t = pagedTransport({ 1: page1, 2: [{ ...row }, tokenRow(50, "0xc0ffee", "AAA")] });
+      const res = await list(make(t.transport, { maxPages: 2 }));
+      expect(res.rows.filter((r) => r.txHash === row.hash).map((r) => r.repeat)).toEqual([
+        undefined,
+        1,
+        undefined,
+      ]);
+    });
+
     test("listingCalls bounds the requests of one listing (the UI's expand cost hint)", async () => {
       const empty = scripted(() => json(emptyEnvelope));
       await list(make(empty.transport, { maxPages: 2 }));
@@ -527,6 +545,56 @@ describe("getTransaction", () => {
   const UNKNOWN = "0x1111111111111111111111111111111111111111";
   const A = "0x00000000000000000000000000000000000000aa";
   const B = "0x00000000000000000000000000000000000000bb";
+
+  test("identical Transfer logs stay separate transfers and seed edges", async () => {
+    const USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
+    const log = { address: USDT, topics: [NFT_TOPIC, pad(A), pad(B)], data: hex32(10_000_000n) };
+    const t = scripted((p) => {
+      switch (p.get("action")) {
+        case "eth_getTransactionByHash":
+          return json({
+            result: { hash: SWAP_TX, blockNumber: "0x10", from: A, to: USDT, value: "0x0" },
+          });
+        case "eth_getBlockByNumber":
+          return json({ result: { timestamp: "0x1000" } });
+        case "eth_getTransactionReceipt":
+          return json({
+            result: { status: "0x1", contractAddress: null, logs: [log, { ...log }] },
+          });
+        case "getblocknobytime":
+          return json({ status: "1", message: "OK", result: "16" });
+        default:
+          return json(emptyEnvelope);
+      }
+    });
+    const provider = make(t.transport);
+
+    const tx = await provider.getTransaction(SWAP_TX, signal);
+    expect(tx.transfers).toHaveLength(2);
+    expect(new Set(tx.transfers.map(transferId)).size).toBe(2);
+
+    const out = await runTrace(
+      RunParamsSchema.parse({
+        chain: "ethereum",
+        direction: "backward",
+        seeds: [{ id: "s1", kind: "tx", value: SWAP_TX }],
+        maxDepth: 1,
+      }),
+      {
+        provider,
+        prices: new FakePrices(),
+        labels: new LabelRegistry([], null, null),
+        now: () => NOW_MS,
+        concurrency: 1,
+      },
+      new RunController(),
+      () => {},
+    );
+    expect(out.edges).toHaveLength(2);
+    expect(new Set(out.edges.map((e) => e.id)).size).toBe(2);
+    expect(out.edges.reduce((sum, e) => sum + (e.usd ?? 0), 0)).toBe(20);
+    expect(out.warnings.map((w) => w.code)).not.toContain("seed_duplicate:s1");
+  });
 
   function syntheticTx(opts: { decimals: string | null; symbolHex: string }) {
     return scripted((p) => {

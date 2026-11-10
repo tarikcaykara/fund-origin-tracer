@@ -6,6 +6,7 @@ import {
   EXPANDABLE_REASONS,
   type RunParams,
   type TraceEdge,
+  transferId,
 } from "@fot/core/schema";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -876,7 +877,7 @@ function TransferPanel({
                       : candidate.transfer.from;
                   return (
                     <li
-                      key={`${candidate.transfer.txHash}:${candidate.transfer.from}:${candidate.transfer.to}:${candidate.transfer.amountRaw}:${candidate.reason}`}
+                      key={transferId(candidate.transfer)}
                       className="grid grid-cols-[minmax(0,1fr)_auto_30px] gap-1 py-1.5 type-mono-sm"
                     >
                       <span className="min-w-0">

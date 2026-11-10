@@ -10,7 +10,7 @@ import {
 } from "../infra/retry.ts";
 import { type CacheStore, cacheKey } from "../infra/store.ts";
 import type { Transport } from "../infra/transport.ts";
-import type { Asset, Transfer, TxDetail } from "../schema.ts";
+import { type Asset, numberRepeats, type Transfer, type TxDetail } from "../schema.ts";
 import type { TronscanKeyPool } from "./tronscan-key-pool.ts";
 import type {
   ExplorerProvider,
@@ -122,8 +122,9 @@ const TxInfoSchema = z.looseObject({
 type Trc20Row = z.infer<typeof Trc20RowSchema>;
 type TxRow = z.infer<typeof TxRowSchema>;
 
-interface ListFetch<R> {
-  rows: R[];
+interface ListFetch {
+  /** Transfers kept, repeats numbered per page (see `numberRepeats`). */
+  rows: Transfer[];
   /** Raw rows fetched across pages (before filtering). */
   fetched: number;
   rangeTotal: number | undefined;
@@ -214,7 +215,7 @@ export class TronscanProvider implements ExplorerProvider {
       from: info.ownerAddress,
       to: info.toAddress ?? info.contractData?.to_address ?? null,
       status: "success",
-      transfers,
+      transfers: numberRepeats(transfers),
     };
   }
 
@@ -235,6 +236,7 @@ export class TronscanProvider implements ExplorerProvider {
           "token_trc20/transfers",
           Trc20PageSchema,
           (p) => p.token_transfers,
+          trc20ToTransfer,
           {
             relatedAddress: q.address,
             direction: q.direction,
@@ -247,6 +249,7 @@ export class TronscanProvider implements ExplorerProvider {
           "transaction",
           TxPageSchema,
           (p) => p.data,
+          txRowToTransfer,
           {
             address: q.address,
             direction: q.direction,
@@ -272,15 +275,7 @@ export class TronscanProvider implements ExplorerProvider {
       truncated = true;
     }
 
-    const rows: Transfer[] = [];
-    for (const r of trc20.rows) {
-      if (r.finalResult !== "SUCCESS" || r.revert === true) continue;
-      rows.push(trc20ToTransfer(r));
-    }
-    for (const r of txs.rows) {
-      const t = txRowToTransfer(r);
-      if (t) rows.push(t);
-    }
+    const rows = [...trc20.rows, ...txs.rows];
     rows.sort((a, b) => (forward ? a.timestamp - b.timestamp : b.timestamp - a.timestamp));
     return { rows, truncated };
   }
@@ -289,11 +284,12 @@ export class TronscanProvider implements ExplorerProvider {
     endpoint: string,
     schema: z.ZodType<P>,
     rowsOf: (page: P) => R[],
+    toTransfer: (row: R) => Transfer | null,
     params: Record<string, string | number>,
     q: ListTransfersQuery,
     ttlTs: number | undefined,
-  ): Promise<ListFetch<R>> {
-    const out: ListFetch<R> = { rows: [], fetched: 0, rangeTotal: undefined, capped: false };
+  ): Promise<ListFetch> {
+    const out: ListFetch = { rows: [], fetched: 0, rangeTotal: undefined, capped: false };
     const maxPages = Math.max(1, Math.min(q.maxPages ?? this.maxPages, this.maxPages));
     for (let page = 0; page < maxPages; page++) {
       const parsed = await this.fetchParsed(
@@ -304,7 +300,10 @@ export class TronscanProvider implements ExplorerProvider {
         (raw) => parseWith(schema, raw, endpoint),
       );
       const rows = rowsOf(parsed);
-      out.rows.push(...rows);
+      // Per page: a row that reappears on the next page of a shifted listing is the same event.
+      out.rows.push(
+        ...numberRepeats(rows.map(toTransfer).filter((t): t is Transfer => t !== null)),
+      );
       out.fetched += rows.length;
       const total = (parsed as { rangeTotal?: number }).rangeTotal;
       if (total !== undefined) out.rangeTotal = total;
@@ -405,7 +404,7 @@ function window(startMs: number | undefined, endSec: number | undefined) {
   };
 }
 
-function isIncomplete<R>(l: ListFetch<R>): boolean {
+function isIncomplete(l: ListFetch): boolean {
   return l.rangeTotal !== undefined && l.rangeTotal > l.fetched;
 }
 
@@ -490,7 +489,8 @@ function rawToAmount(raw: string, decimals: number): number {
   return Number(BigInt(raw)) / 10 ** decimals;
 }
 
-function trc20ToTransfer(r: Trc20Row): Transfer {
+function trc20ToTransfer(r: Trc20Row): Transfer | null {
+  if (r.finalResult !== "SUCCESS" || r.revert === true) return null;
   const contract = r.contract_address ?? r.tokenInfo?.tokenId ?? "";
   const asset = tokenAsset(
     contract,

@@ -31,7 +31,7 @@ Source: `packages/core/src/engine/trace.ts`, `engine/score.ts`.
 | Seed | What becomes seed edges (depth 0) |
 |---|---|
 | `tx` | All transfers of the transaction (native, token, and on EVM internal transfers) with `amount > 0`, neither endpoint a zero address, and `from` ≠ `to` after address normalization (self-transfers are skipped, as for address seeds). Sorted by USD value descending (unpriced last, then input order). At most **10** legs are kept (`MAX_SEED_LEGS`). A transaction with only self-transfers gives `seed_empty`. |
-| `address` | The address's transfers in the trace direction, with no time bound, newest first: incoming (`to === address`) for backward, outgoing (`from === address`) for forward. Zero-value, self-transfers and spoofed-token transfers are skipped, duplicates removed. Ranked by USD descending (unpriced counts as 0), ties newest first. The top `maxBranches` become seed edges. |
+| `address` | The address's transfers in the trace direction, with no time bound, newest first: incoming (`to === address`) for backward, outgoing (`from === address`) for forward. Zero-value, self-transfers and spoofed-token transfers are skipped, duplicates removed ([transfer identity](#transfer-identity)). Ranked by USD descending (unpriced counts as 0), ties newest first. The top `maxBranches` become seed edges. |
 
 Seed failures:
 
@@ -74,7 +74,7 @@ For the subject address the engine asks the explorer for its transfers in the tr
 - backward: incoming transfers with a time bound at the edge's timestamp `t`;
 - forward: outgoing transfers starting at `t`.
 
-Rows are deduplicated, then each is priced (one batched price lookup per expansion) and put through the drop checks.
+Rows are deduplicated by [transfer identity](#transfer-identity), then each is priced (one batched price lookup per expansion) and put through the drop checks.
 
 #### Drop reasons
 
@@ -272,6 +272,16 @@ Settings: `severity` is `high`, `medium`, `low`, `info` or `off`. Numeric ranges
 Per address the explorer is asked for several lists (Etherscan: ERC-20 `tokentx`, native `txlist`, internal `txlistinternal`; Tronscan: TRC20 transfers and TRX transactions). Failed transactions and reverted TRC20 transfers are ignored. Responses are cached (SQLite on the server, memory for demos) for 30 days when the queried time bound or transaction is older than one hour, otherwise 300 seconds; error responses are never cached.
 
 Every request times out after 30 seconds, response body included (the OFAC download after 90), and then counts as a `network_error`. Network errors, HTTP 429 and 5xx responses and rate-limit replies are tried up to 4 times, waiting 1, 2 and 4 seconds in between; a `Retry-After` header lengthens a wait up to 60 seconds, and a longer `Retry-After` ends the request at once as `rate_limited` (after a Tronscan HTTP 429 or 403 the key is retired and the next key is tried). An expansion whose listing still fails stops its edge with `fetch_failed` (`stopDetail` = the error code); a failed price lookup leaves the prices null with warning `prices_unavailable`.
+
+### Transfer identity
+
+Source: `packages/core/src/schema.ts` (`transferId`, `numberRepeats`).
+
+A transfer is identified by its transaction hash, asset, `from`, `to` and raw amount. Equal transfers in one transaction (a token contract that emits the same Transfer event twice, or two identical internal calls) are separate transfers: each becomes its own edge and counts in every total.
+
+The explorers give no event index in their listings: Etherscan `tokentx` rows carry no log index, `txlistinternal` trace ids repeat across distinct calls, and Tronscan has none. Equal rows of one response are therefore numbered in order: the second copy gets `repeat` 1, the third `repeat` 2, and so on. `repeat` is part of the identity and so of the edge id. A transfer without repeats keeps the identity it had before `repeat` existed, so stored results keep their edge ids and can still be expanded.
+
+Listings are numbered per page. A row that appears again on the next page of a listing that shifted between requests is the same transfer and is removed. Equal events split across a page boundary therefore count once.
 
 ### Pricing
 

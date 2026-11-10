@@ -21,7 +21,7 @@ import {
   fullAddress,
   shortAddress,
 } from "@/format.ts";
-import { cn } from "@/lib/utils.ts";
+import { cn, withUniqueKeys } from "@/lib/utils.ts";
 import { RISK_META, STOP_TAGS } from "@/meta.ts";
 
 function Section({
@@ -211,6 +211,11 @@ function TouchpointTable({ result }: { result: AnalysisResult }) {
     return (
       <p className="type-body-sm text-muted-foreground">No exchange touchpoints were found.</p>
     );
+  const rows = withUniqueKeys(
+    exchangeTouchpoints,
+    (point) =>
+      `${point.kind}:${point.txHash}:${point.exchangeAddress}:${point.counterparty ?? ""}:${point.assetId}:${point.amount}`,
+  );
   return (
     <>
       <div className="hidden md:block print:block">
@@ -229,10 +234,8 @@ function TouchpointTable({ result }: { result: AnalysisResult }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {exchangeTouchpoints.map((point) => (
-              <TableRow
-                key={`${point.kind}:${point.txHash}:${point.exchangeAddress}:${point.assetId}:${point.amount}`}
-              >
+            {rows.map(({ key, item: point }) => (
+              <TableRow key={key}>
                 <TableCell className="break-words">■ {point.entity}</TableCell>
                 <TableCell>
                   <ReportAddress chain={chain} address={point.exchangeAddress} />
@@ -266,10 +269,8 @@ function TouchpointTable({ result }: { result: AnalysisResult }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {exchangeTouchpoints.map((point) => (
-              <TableRow
-                key={`${point.kind}:${point.txHash}:${point.exchangeAddress}:${point.assetId}:${point.amount}`}
-              >
+            {rows.map(({ key, item: point }) => (
+              <TableRow key={key}>
                 <TableCell className="break-words">
                   <span className="block font-medium">■ {point.entity}</span>
                   <span className="block type-mono-node text-muted-foreground">

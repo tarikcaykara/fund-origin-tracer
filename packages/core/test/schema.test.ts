@@ -64,7 +64,9 @@ test("asset and transfer ids", () => {
     amountRaw: "5",
     amount: 5e-6,
   };
+  // Unrepeated transfers keep their v1.2 id, so stored results still link.
   expect(transferId(t)).toBe("h|tron:TC|a|b|5");
+  expect(transferId({ ...t, repeat: 2 })).toBe("h|tron:TC|a|b|5|2");
 });
 
 test("RunEvent discriminates on type", () => {

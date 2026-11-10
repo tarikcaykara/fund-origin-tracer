@@ -931,6 +931,44 @@ describe("continueFrom", () => {
       [A, "cycle"],
     ]);
   });
+
+  test("a stored result keeps its edge ids: a continuation links its transfers and adds their repeats", async () => {
+    const [A, Q, W, Y] = [addr(1), addr(3), addr(4), addr(5)];
+    const l1 = mkTransfer({ tx: 1, from: Y, to: A, amount: 100, ts: T0 });
+    const l2 = mkTransfer({ tx: 1, from: Q, to: A, amount: 90, ts: T0 });
+    const f = mkTransfer({ tx: 2, from: W, to: Y, amount: 100, ts: T0 - 100 });
+    const m = mkTransfer({ tx: 3, from: Y, to: Q, amount: 90, ts: T0 - 50 });
+    const txs = [mkTx(txHash(1), [l1, l2])];
+    // Stored by a provider without repeats (v1.2.x): one `f`.
+    const stored = await run(
+      params({ maxDepth: 1 }),
+      new FakeProvider({ transfers: [l1, l2, f, m], txs }),
+    );
+    const viaQ = edgeBy(stored.out, (e) => e.transfer.txHash === m.txHash);
+    expect(viaQ.stopReason).toBe("max_depth");
+    const storedF = edgeBy(stored.out, (e) => e.transfer.txHash === f.txHash);
+
+    const next = await run(
+      params({ maxDepth: 1 }),
+      new FakeProvider({ transfers: [l1, l2, f, { ...f, repeat: 1 }, m], txs }),
+      {
+        continueFrom: {
+          edges: stored.out.edges,
+          edgeId: viaQ.id,
+          maxDepth: 1,
+          throughEntities: false,
+        },
+      },
+    );
+    expect(
+      next.out.edges
+        .filter((e) => e.transfer.txHash === f.txHash)
+        .map((e) => [e.id, e.parents, e.transfer.repeat]),
+    ).toEqual([
+      [storedF.id, [...storedF.parents, viaQ.id], undefined],
+      [edgeIdFor({ ...f, repeat: 1 }), [viaQ.id], 1],
+    ]);
+  });
 });
 
 describe("asset scoring", () => {
