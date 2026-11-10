@@ -7,6 +7,7 @@ import { RunController } from "../src/infra/controller.ts";
 import type { BundledLabelFile } from "../src/labels/files.ts";
 import { LabelRegistry } from "../src/labels/registry.ts";
 import {
+  type Asset,
   assetId,
   type LabelCategory,
   type RunParams,
@@ -24,6 +25,7 @@ import {
   mkTransfer,
   mkTx,
   T0,
+  token,
   txHash,
   USDC,
   USDT,
@@ -335,6 +337,56 @@ describe("candidate selection and drops", () => {
     const followedRoot = followed.out.edges[0] as TraceEdge;
     const fars = followedRoot.children.map((id) => edgeBy(followed.out, (e) => e.id === id).far);
     expect(fars.sort()).toEqual([addr(10), addr(11)].sort());
+  });
+
+  test("a token with guessed decimals is never priced, even when its contract has a price", async () => {
+    const contract = "0x00000000000000000000000000000000000000d5";
+    const known = token("ODD", contract, 8);
+    const guessed: Asset = {
+      chain: "ethereum",
+      kind: "token",
+      contract,
+      symbol: "ODD",
+      name: "ODD",
+      decimals: 18,
+      decimalsGuessed: true,
+    };
+    const legKnown = mkTransfer({
+      tx: 1,
+      from: addr(2),
+      to: addr(1),
+      amount: 10,
+      ts: T0,
+      asset: known,
+    });
+    const legGuessed = mkTransfer({
+      tx: 1,
+      from: addr(3),
+      to: addr(1),
+      amount: 10,
+      ts: T0,
+      asset: guessed,
+    });
+    const candidate = mkTransfer({
+      tx: 2,
+      from: addr(10),
+      to: addr(2),
+      amount: 10,
+      ts: T0 - 20,
+      asset: guessed,
+    });
+    const provider = new FakeProvider({
+      transfers: [legKnown, legGuessed, candidate],
+      txs: [mkTx(txHash(1), [legKnown, legGuessed])],
+    });
+    const prices = new FakePrices({ [assetId(known)]: 2 });
+    const { out } = await run(params({ followUnpriced: false, maxDepth: 1 }), provider, { prices });
+    const knownRoot = edgeBy(out, (e) => e.far === addr(2));
+    expect(knownRoot.usd).toBe(20);
+    expect(edgeBy(out, (e) => e.far === addr(3)).usd).toBeNull();
+    expect(knownRoot.dropped).toEqual([
+      { transfer: candidate, usd: null, reason: "unpriced", score: null },
+    ]);
   });
 
   test("prices every candidate with one batched lookup per expansion", async () => {

@@ -1,6 +1,6 @@
 import { isSpoofed } from "../labels/spoof.ts";
 import type { ExplorerProvider, PriceSource } from "../providers/types.ts";
-import { priceKey } from "../providers/types.ts";
+import { hasGuessedDecimals, transferUsd } from "../providers/types.ts";
 import { assetId, type Convergence, type TraceEdge, type Transfer, transferId } from "../schema.ts";
 import { type AnalysisContext, compareUsdDesc, sumUsd, symbolOf, unique } from "./shared.ts";
 
@@ -139,16 +139,18 @@ export async function followUpConvergences(
       }
 
       const priced = await deps.prices.priceMany(
-        rows.map((r) => ({ asset: r.transfer.asset, timestamp: r.transfer.timestamp })),
+        rows
+          .filter((r) => !hasGuessedDecimals(r.transfer.asset))
+          .map((r) => ({ asset: r.transfer.asset, timestamp: r.transfer.timestamp })),
         deps.signal,
       );
       if (priced.warning && !warnings.some((w) => w.code === priced.warning?.code)) {
         warnings.push(priced.warning);
       }
-      const scored = rows.map((r) => {
-        const price = priced.prices.get(priceKey(r.transfer.asset, r.transfer.timestamp));
-        return { transfer: r.transfer, usd: price == null ? null : price * r.transfer.amount };
-      });
+      const scored = rows.map((r) => ({
+        transfer: r.transfer,
+        usd: transferUsd(r.transfer, priced.prices),
+      }));
       scored.sort(
         (a, b) => compareUsdDesc(a.usd, b.usd) || b.transfer.timestamp - a.transfer.timestamp,
       );

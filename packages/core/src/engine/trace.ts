@@ -2,7 +2,7 @@ import { isZeroAddress, normalizeAddress } from "../chains.ts";
 import { isFotError } from "../errors.ts";
 import type { RunController } from "../infra/controller.ts";
 import { isSpoofed } from "../labels/spoof.ts";
-import { priceKey } from "../providers/types.ts";
+import { hasGuessedDecimals, priceKey, transferUsd } from "../providers/types.ts";
 import {
   assetId,
   type DropReason,
@@ -314,6 +314,7 @@ export async function runTrace(
     await gate();
     const items = new Map<string, { asset: Transfer["asset"]; timestamp: number }>();
     for (const t of transfers) {
+      if (hasGuessedDecimals(t.asset)) continue;
       items.set(priceKey(t.asset, t.timestamp), { asset: t.asset, timestamp: t.timestamp });
     }
     let map: Map<string, number | null>;
@@ -332,10 +333,7 @@ export async function runTrace(
       map = new Map();
     }
     if (signal.aborted) throw new InterruptedError();
-    const usd = transfers.map((t) => {
-      const p = map.get(priceKey(t.asset, t.timestamp));
-      return p === undefined || p === null ? null : t.amount * p;
-    });
+    const usd = transfers.map((t) => transferUsd(t, map));
     return { usd, complete };
   }
 

@@ -166,6 +166,29 @@ describe("TronscanProvider.getTransaction", () => {
     ]);
   });
 
+  test("token decimals outside 0–255 are guessed as 18 for the asset and the amount", async () => {
+    const lse = trc20Page.token_transfers[0];
+    const info = {
+      ...txInfoTrc20,
+      trc20TransferInfo: txInfoTrc20.trc20TransferInfo.map((t) => ({
+        ...t,
+        contract_address: lse?.contract_address,
+        symbol: "LSE",
+        name: "Liquid Stake Energy",
+        decimals: 100000,
+        amount_str: "1000000000000000000",
+      })),
+    };
+    const { provider } = setup(["k1"], () => ok(info));
+    const tx = await provider.getTransaction(info.hash, signal);
+    expect(tx.transfers[0]?.asset).toMatchObject({
+      contract: lse?.contract_address,
+      decimals: 18,
+      decimalsGuessed: true,
+    });
+    expect(tx.transfers[0]?.amount).toBe(1);
+  });
+
   test("non-SUCCESS contractRet → tx_failed", async () => {
     const { provider } = setup(["k1"], () => ok({ ...txInfoTrc20, contractRet: "OUT_OF_ENERGY" }));
     const err = await provider.getTransaction(txInfoTrc20.hash, signal).catch((e: unknown) => e);

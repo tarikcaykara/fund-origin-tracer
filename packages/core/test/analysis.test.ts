@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { AnalysisResultSchema, DerivedAnalysisSchema } from "../src/schema.ts";
+import { AnalysisResultSchema, type Asset, assetId, DerivedAnalysisSchema } from "../src/schema.ts";
 import {
   addr,
   buildEdges,
@@ -12,6 +12,7 @@ import {
   T0,
   transferRow,
   USDC,
+  USDT,
 } from "./helpers/analysis-fixtures.ts";
 
 const BINANCE = {
@@ -252,6 +253,36 @@ describe("analyze: convergences", () => {
       "t-usdc",
       "t-small",
       "t-unpriced",
+    ]);
+  });
+
+  test("follow-up ranks a token with guessed decimals as unpriced", async () => {
+    const x = addr(10);
+    const odd: Asset = {
+      chain: "ethereum",
+      kind: "token",
+      contract: addr(0xd5),
+      symbol: "ODD",
+      name: "ODD",
+      decimals: 18,
+      decimalsGuessed: true,
+    };
+    const provider = fakeProvider(() => ({
+      truncated: false,
+      rows: [
+        transferRow({ tx: "t-guessed", from: x, to: addr(30), amount: 5000, asset: odd }),
+        transferRow({ tx: "t-usdt", from: x, to: addr(31), amount: 50 }),
+      ],
+    }));
+    const result = await runAnalysis(twoSeedGraph(), {
+      seedIds: ["s1", "s2"],
+      labels: [BINANCE],
+      provider,
+      prices: fakePrices({ [assetId(USDT)]: 1, [assetId(odd)]: 1 }),
+    });
+    expect(result.convergences[0]?.otherCounterparties.map((t) => t.txHash)).toEqual([
+      "t-usdt",
+      "t-guessed",
     ]);
   });
 
