@@ -62,7 +62,7 @@ function result(address: string, labels: Label[] = []): AnalysisResult {
   } as unknown as AnalysisResult;
 }
 
-const PARAMS = { maxDepth: 6, traceThroughEntities: false };
+const PARAMS = { maxDepth: 6 };
 
 const exchangeLabel: Label = {
   name: "Origin",
@@ -72,10 +72,23 @@ const exchangeLabel: Label = {
   origin: "bundled",
 };
 
-function labelled(analysis: AnalysisResult, address: string, isSeedSubject = false) {
+const defiLabel: Label = {
+  name: "Pool",
+  category: "defi",
+  entity: "Pool",
+  source: "test",
+  origin: "bundled",
+};
+
+function labelled(
+  analysis: AnalysisResult,
+  address: string,
+  isSeedSubject = false,
+  label = exchangeLabel,
+) {
   analysis.graph.addresses.push({
     address,
-    labels: [exchangeLabel],
+    labels: [label],
     sanctioned: false,
     isSeedSubject,
     seedIds: [],
@@ -116,22 +129,32 @@ describe("highestValuePath", () => {
     expect(pathIds([toSeed, back], null, "backward")).toEqual(["back", "to-seed"]);
   });
 
-  test("stops at a labelled entity", () => {
-    const seedLeg = edge("seed", "exchange", "seed", 8, 2, { seedId: "s1" });
+  test("stops at the edge where the trace stopped", () => {
+    const seedLeg = edge("seed", "exchange", "seed", 8, 2, {
+      seedId: "s1",
+      status: "stopped",
+      stopReason: "entity",
+      stopDetail: "Origin",
+    });
     const beyond = edge("beyond", "older", "exchange", 99, 1);
     const analysis = result("seed");
     labelled(analysis, "exchange");
     expect(pathIds([seedLeg, beyond], analysis, "backward")).toEqual(["seed"]);
   });
 
-  test("continues past a labelled entity when the run traced through entities", () => {
-    const seedLeg = edge("seed", "exchange", "seed", 8, 2, { seedId: "s1" });
-    const beyond = edge("beyond", "older", "exchange", 99, 1);
+  test("continues through labelled addresses where the trace did not stop", () => {
+    // `defi` is outside the engine's stop set; the exchange was traced (or expanded) through.
+    const seedLeg = edge("seed", "pool", "seed", 8, 3, { seedId: "s1" });
+    const middle = edge("middle", "exchange", "pool", 6, 2);
+    const beyond = edge("beyond", "origin", "exchange", 5, 1);
     const analysis = result("seed");
+    labelled(analysis, "pool", false, defiLabel);
     labelled(analysis, "exchange");
-    expect(
-      pathIds([seedLeg, beyond], analysis, "backward", { maxDepth: 6, traceThroughEntities: true }),
-    ).toEqual(["beyond", "seed"]);
+    expect(pathIds([seedLeg, middle, beyond], analysis, "backward")).toEqual([
+      "beyond",
+      "middle",
+      "seed",
+    ]);
   });
 
   test("a labelled seed address does not end the path before it starts", () => {
@@ -156,7 +179,7 @@ describe("highestValuePath", () => {
         }),
       );
     }
-    const ids = pathIds(chain, null, "backward", { maxDepth: 20, traceThroughEntities: false });
+    const ids = pathIds(chain, null, "backward", { maxDepth: 20 });
     expect(ids).toHaveLength(15);
     expect(ids[0]).toBe("e14");
     expect(ids.at(-1)).toBe("e0");
