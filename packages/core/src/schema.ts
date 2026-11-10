@@ -32,11 +32,35 @@ export const TransferSchema = z.object({
   asset: AssetSchema,
   amountRaw: z.string().regex(/^\d+$/),
   amount: z.number(),
+  /**
+   * The k-th repeat (1, 2, …) of an identical transfer (same tx, asset, endpoints and raw amount)
+   * within one explorer response; absent on the first. Explorers return one row per event, so
+   * repeats are separate events (several equal Transfer logs or internal calls in one tx).
+   */
+  repeat: z.number().int().min(1).optional(),
 });
 export type Transfer = z.infer<typeof TransferSchema>;
 
+/** Transfer identity. Unrepeated transfers keep the id they had before `repeat` existed. */
 export function transferId(t: Transfer): string {
-  return `${t.txHash}|${assetId(t.asset)}|${t.from}|${t.to}|${t.amountRaw}`;
+  const base = `${t.txHash}|${assetId(t.asset)}|${t.from}|${t.to}|${t.amountRaw}`;
+  return t.repeat === undefined ? base : `${base}|${t.repeat}`;
+}
+
+/**
+ * Numbers repeats of identical transfers in one explorer response, in input order: the k-th
+ * further copy gets `repeat: k`. Number each listing page on its own: a row that reappears on the
+ * next page of a listing that shifted between requests is the same event, keeps the id of its
+ * first copy and is deduplicated by the engine.
+ */
+export function numberRepeats(transfers: readonly Transfer[]): Transfer[] {
+  const counts = new Map<string, number>();
+  return transfers.map((t) => {
+    const id = transferId(t);
+    const n = counts.get(id) ?? 0;
+    counts.set(id, n + 1);
+    return n === 0 ? t : { ...t, repeat: n };
+  });
 }
 
 export const TxDetailSchema = z.object({

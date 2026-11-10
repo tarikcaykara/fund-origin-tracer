@@ -19,7 +19,7 @@ import type { MinIntervalLimiter } from "../infra/limiter.ts";
 import { assertHttpOk, type RetryOptions, toNetworkError } from "../infra/retry.ts";
 import { type CacheStore, cacheKey } from "../infra/store.ts";
 import type { Transport, TransportResponse } from "../infra/transport.ts";
-import type { Asset, Transfer, TxDetail } from "../schema.ts";
+import { type Asset, numberRepeats, type Transfer, type TxDetail } from "../schema.ts";
 import type {
   ExplorerProvider,
   ListTransfersQuery,
@@ -387,7 +387,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       from: normalizeAddress(this.chain, tx.from),
       to: tx.to === null ? null : normalizeAddress(this.chain, tx.to),
       status: "success",
-      transfers,
+      transfers: numberRepeats(transfers),
     };
   }
 
@@ -496,8 +496,14 @@ export class EtherscanV2Provider implements ExplorerProvider {
     const maxPages = Math.max(1, Math.min(q.maxPages ?? this.maxPages, this.maxPages));
     const sort = ascending ? "asc" : "desc";
 
-    const fetchList = async <T>(action: string, schema: z.ZodType<T>) => {
-      const rows: T[] = [];
+    // Repeats are numbered per page: a row that reappears on the next page of a listing that
+    // shifted between requests is the same event, not a repeat (see `numberRepeats`).
+    const fetchList = async <T>(
+      action: string,
+      schema: z.ZodType<T>,
+      toTransfer: (row: T) => Transfer | null,
+    ) => {
+      const rows: Transfer[] = [];
       let truncated = false;
       for (let page = 1; page <= maxPages; page++) {
         const raw = await this.call(
@@ -509,7 +515,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
           (r) => (ascending && !(Array.isArray(r) && r.length >= PAGE_SIZE) ? TTL_RECENT_SEC : ttl),
         );
         const batch = parseArray(schema, raw, action);
-        rows.push(...batch);
+        rows.push(...numberRepeats(batch.map(toTransfer).filter((t): t is Transfer => t !== null)));
         if (batch.length < PAGE_SIZE) break;
         if (page === maxPages) truncated = true;
       }
@@ -517,33 +523,33 @@ export class EtherscanV2Provider implements ExplorerProvider {
     };
 
     const [tokens, normals, internals] = await Promise.all([
-      fetchList("tokentx", TokenRow),
-      fetchList("txlist", NormalRow),
-      fetchList("txlistinternal", NormalRow),
+      fetchList("tokentx", TokenRow, (r) => this.tokenRowTransfer(r)),
+      fetchList("txlist", NormalRow, (r) => this.nativeRowTransfer(r)),
+      fetchList("txlistinternal", NormalRow, (r) => this.nativeRowTransfer(r)),
     ]);
 
-    const out: Transfer[] = [];
-    for (const r of tokens.rows) out.push(this.tokenRowTransfer(r));
-    for (const r of [...normals.rows, ...internals.rows]) {
-      if (r.isError !== "0" || r.value === "0") continue;
-      const to = r.to || r.contractAddress;
-      if (!to) continue;
-      out.push({
-        chain: this.chain,
-        txHash: r.hash.toLowerCase(),
-        blockNumber: Number(r.blockNumber),
-        timestamp: Number(r.timeStamp),
-        from: normalizeAddress(this.chain, r.from),
-        to: normalizeAddress(this.chain, to),
-        asset: { chain: this.chain, kind: "native" },
-        amountRaw: r.value,
-        amount: this.toAmount(r.value, CHAINS[this.chain].nativeDecimals),
-      });
-    }
-
+    const out = [...tokens.rows, ...normals.rows, ...internals.rows];
     const dir = ascending ? 1 : -1;
     out.sort((a, b) => dir * (a.timestamp - b.timestamp) || dir * (a.blockNumber - b.blockNumber));
     return { rows: out, truncated: tokens.truncated || normals.truncated || internals.truncated };
+  }
+
+  /** A successful, non-zero native transfer (top-level or internal); `null` otherwise. */
+  private nativeRowTransfer(r: z.infer<typeof NormalRow>): Transfer | null {
+    if (r.isError !== "0" || r.value === "0") return null;
+    const to = r.to || r.contractAddress;
+    if (!to) return null;
+    return {
+      chain: this.chain,
+      txHash: r.hash.toLowerCase(),
+      blockNumber: Number(r.blockNumber),
+      timestamp: Number(r.timeStamp),
+      from: normalizeAddress(this.chain, r.from),
+      to: normalizeAddress(this.chain, to),
+      asset: { chain: this.chain, kind: "native" },
+      amountRaw: r.value,
+      amount: this.toAmount(r.value, CHAINS[this.chain].nativeDecimals),
+    };
   }
 
   private tokenRowTransfer(r: z.infer<typeof TokenRow>): Transfer {

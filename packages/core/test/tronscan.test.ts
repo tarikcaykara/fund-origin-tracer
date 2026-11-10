@@ -321,6 +321,29 @@ describe("TronscanProvider.listTransfers", () => {
     expect(res.rows[0]?.amount).toBe(0.000001);
   });
 
+  test("identical TRC-20 events in one response stay separate transfers", async () => {
+    const row = trc20Page.token_transfers[2];
+    const { provider } = setup(["k1"], (c) =>
+      ok(
+        c.endpoint === "transaction"
+          ? { rangeTotal: 0, data: [] }
+          : { rangeTotal: 2, token_transfers: [row, row] },
+      ),
+    );
+    const res = await provider.listTransfers({
+      address: ADDR,
+      direction: "in",
+      window: {},
+      signal,
+    });
+    expect(res.rows.map((r) => r.repeat)).toEqual([undefined, 1]);
+
+    const info = txInfoTrc20.trc20TransferInfo[0];
+    const detail = setup(["k1"], () => ok({ ...txInfoTrc20, trc20TransferInfo: [info, info] }));
+    const tx = await detail.provider.getTransaction(txInfoTrc20.hash, signal);
+    expect(tx.transfers.map((t) => t.repeat)).toEqual([undefined, 1]);
+  });
+
   test("empty window sends no timestamps and returns newest first", async () => {
     const { provider, calls } = setup(["k1"], (c) =>
       ok(
