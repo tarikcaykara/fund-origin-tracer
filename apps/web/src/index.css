@@ -103,8 +103,10 @@
   --muted-foreground: #9a978f;
   --accent: #0d0e10;
   --accent-foreground: #e8e6e1;
-  --destructive: #c9302c;
-  --destructive-foreground: #ffffff;
+  /* Lighter than the light theme's red so destructive text reaches 4.5:1 on every dark surface;
+     a destructive fill therefore carries dark text, like --primary. */
+  --destructive: #ff6b5e;
+  --destructive-foreground: #121315;
   --border: #27282c;
   --input: #3a3b40;
   --ring: #86a8ff;

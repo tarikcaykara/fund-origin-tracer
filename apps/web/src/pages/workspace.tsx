@@ -1,6 +1,15 @@
 import type { AnalysisResult, DerivedAnalysis } from "@fot/core/schema";
 import { CircleSlash, Clock3 } from "lucide-react";
-import { lazy, type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  type ReactNode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import type { LiveRunRequest } from "@/api.ts";
@@ -258,6 +267,13 @@ export function WorkspacePage() {
   }, [control]);
 
   const onClosePanel = useCallback(() => setSelection(null), []);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  // Where the phone sheet returns focus when its opener is gone: a palette option, or a Flags or
+  // Linked button whose tab was switched to the graph by `selectInGraph`.
+  const focusActiveTab = useCallback(
+    () => tabsRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ?? null,
+    [],
+  );
   const closeFullGraph = useCallback(() => setFullGraph(false), []);
   const onPanelSelect = useCallback((next: Selection | null) => setSelection(next), []);
   const selectInGraph = useCallback((next: Selection) => {
@@ -400,6 +416,7 @@ export function WorkspacePage() {
       onExpand={onExpand}
       onSelect={onPanelSelect}
       onClose={onClosePanel}
+      returnFocus={focusActiveTab}
       onPrev={selectedEdgeIndex > 0 ? previousEdge : undefined}
       onNext={selectedEdgeIndex >= 0 && selectedEdgeIndex < edges.length - 1 ? nextEdge : undefined}
     />
@@ -428,7 +445,7 @@ export function WorkspacePage() {
         busy={busy}
       />
 
-      <Tabs value={tab} onValueChange={setTab} className="min-w-0 gap-0">
+      <Tabs ref={tabsRef} value={tab} onValueChange={setTab} className="min-w-0 gap-0">
         <WorkspaceTabBar edgeCount={edges.length} result={analysis} />
         <div
           className={

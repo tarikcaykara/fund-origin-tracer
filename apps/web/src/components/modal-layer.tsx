@@ -16,30 +16,36 @@ function syncInert() {
 /**
  * Full-screen modal surface (phone detail sheet, full-graph overlay). While mounted it moves
  * focus in, makes the page and any lower layer inert, locks body scroll, closes on Escape (top
- * layer only) and restores focus to the previously focused element on unmount.
+ * layer only) and on unmount restores focus to the element focused when it opened. When that
+ * element is gone (an opener that unmounted, such as a palette option or a tab switched away),
+ * focus goes to `returnFocus()` instead.
  */
 export function ModalLayer({
   label,
   onClose,
+  returnFocus,
   className,
   children,
 }: {
   label: string;
   onClose: () => void;
+  returnFocus?: (() => HTMLElement | null) | undefined;
   className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const returnFocusRef = useRef(returnFocus);
   useEffect(() => {
     onCloseRef.current = onClose;
+    returnFocusRef.current = returnFocus;
   });
 
   useEffect(() => {
     const layer = ref.current;
     if (!layer) return;
-    const previousFocus =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const active = document.activeElement;
+    const previousFocus = active instanceof HTMLElement && active !== document.body ? active : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     openLayers.push(layer);
@@ -56,7 +62,8 @@ export function ModalLayer({
       openLayers.splice(openLayers.indexOf(layer), 1);
       syncInert();
       document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      const target = previousFocus?.isConnected ? previousFocus : returnFocusRef.current?.();
+      target?.focus({ preventScroll: true });
     };
   }, []);
 

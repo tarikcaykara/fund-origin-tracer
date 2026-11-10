@@ -81,7 +81,6 @@ function FilterMenu({
           type="button"
           variant="outline"
           size="default"
-          aria-label={`${label} filter: ${selectedLabel}`}
           className={`h-[34px] gap-1.5 rounded-sm px-2.5 type-body-sm ${active ? "border-foreground bg-muted font-semibold" : "border-border-strong"}`}
         >
           <span className="text-muted-foreground">{label}</span>

@@ -222,8 +222,11 @@ export function CommandPalette({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  // Set by a pick so closing does not move focus back to the trigger (it would leave the
-  // phone detail sheet, which focuses itself on mount).
+  // Radix returns focus only to a `DialogTrigger`, and the palette has several openers (top-bar
+  // button, ☰ menu, ⌘K), so the element focused at open is kept and refocused on close.
+  const returnFocus = useRef<HTMLElement | null>(null);
+  // Set by a pick so closing does not move focus back to the opener (it would leave the phone
+  // detail sheet, which focuses itself on mount).
   const picked = useRef(false);
   const pick = useCallback(
     (action: () => void) => {
@@ -240,8 +243,16 @@ export function CommandPalette({
       <DialogContent
         showCloseButton={false}
         className="flex flex-col gap-0 overflow-hidden bg-popover p-0 text-popover-foreground md:top-[12vh] md:max-w-[560px] md:translate-y-0 max-md:top-0 max-md:h-dvh max-md:max-h-none max-md:overflow-hidden max-md:rounded-none"
+        onOpenAutoFocus={() => {
+          // Runs before focus moves into the palette.
+          returnFocus.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
         onCloseAutoFocus={(event) => {
-          if (picked.current) event.preventDefault();
+          event.preventDefault();
+          const target = returnFocus.current;
+          if (!picked.current && target?.isConnected) target.focus();
+          returnFocus.current = null;
           picked.current = false;
         }}
       >

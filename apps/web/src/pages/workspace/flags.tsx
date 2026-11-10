@@ -69,7 +69,7 @@ export function FlagsTab({
               <div className="min-w-0 space-y-2">
                 <div>
                   <h3 className="type-heading">{flag.title}</h3>
-                  <p className="type-mono-node text-faint-foreground">{flag.id}</p>
+                  <p className="type-mono-node text-muted-foreground">{flag.id}</p>
                 </div>
                 <p className="type-body-sm text-muted-foreground">{flag.detail}</p>
                 <div className="flex flex-wrap gap-1.5">

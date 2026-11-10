@@ -127,7 +127,7 @@ export function StopTag({ reason }: { reason: StopReason | null }) {
         <button
           type="button"
           className="inline-flex items-center rounded-sm border border-border-strong bg-muted px-1.5 py-0.5 font-mono text-3xs font-semibold"
-          aria-label={tag.text}
+          aria-label={`${tag.code}, ${tag.text}`}
         >
           {tag.code}
         </button>

@@ -95,16 +95,22 @@ for (const demo of DEMOS) {
   });
 }
 
-test("⌘K finds an address of the open run", async ({ page }) => {
+test("⌘K finds an address of the open run; Esc returns focus to the opener", async ({ page }) => {
   const runId = await runDemo(page, FAST_DEMO);
   const response = await page.request.get(`/api/runs/${runId}`);
   expect(response.ok()).toBe(true);
   const run: { result: AnalysisResult | null } = await response.json();
   const address = run.result?.graph.addresses[0]?.address;
   if (!address) throw new Error("The finished run has no addresses");
+  const palette = page.getByRole("dialog", { name: "Search" });
+  const searchButton = page.getByRole("button", { name: /^Search address, tx or label/ });
+  await searchButton.click();
+  await expect(palette).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(palette).toBeHidden();
+  await expect(searchButton).toBeFocused();
 
   await page.keyboard.press("ControlOrMeta+k");
-  const palette = page.getByRole("dialog", { name: "Search" });
   await expect(palette).toBeVisible();
   await palette.getByPlaceholder("Search address, tx or label").fill(address);
   const short = new RegExp(`${address.slice(0, 6)}…${address.slice(-4)}`, "i");
@@ -175,12 +181,22 @@ test("the screening result belongs to the screened chain and address", async ({ 
 test.describe("phone (390 px)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("Path view, full graph and the ☰ menu", async ({ page }) => {
+  test("Path view, exposure, full graph and the ☰ menu", async ({ page }) => {
     await runDemo(page, FAST_DEMO);
     await expect(page.getByRole("tab", { name: /^Path/ })).toHaveAttribute("aria-selected", "true");
     const path = page.getByRole("region", { name: "Highest-value path" });
     await expect(path.getByRole("listitem").first()).toBeVisible();
 
+    // Stacked rows keep every USD amount inside the 390 px viewport.
+    await page.getByRole("tab", { name: /^Exposure/ }).click();
+    const byCategory = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { level: 2, name: "By category" }) });
+    await byCategory.scrollIntoViewIfNeeded();
+    const amounts = byCategory.getByText(/^\$[\d,]+\.\d{2}$/);
+    await expect(amounts.first()).toBeVisible();
+    for (const amount of await amounts.all()) await expect(amount).toBeInViewport({ ratio: 1 });
+    await page.getByRole("tab", { name: /^Path/ }).click();
     await page.getByRole("button", { name: "Full graph" }).click();
     const fullGraph = page.getByRole("dialog", { name: "Full graph" });
     await expect(fullGraph.getByRole("region", { name: "Transfer graph" })).toBeVisible();
@@ -199,5 +215,7 @@ test.describe("phone (390 px)", () => {
     await expect(palette).toBeVisible();
     await palette.getByRole("button", { name: "Cancel" }).click();
     await expect(palette).toBeHidden();
+    // The menu item is gone with the menu, so focus returns to ☰.
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
   });
 });
