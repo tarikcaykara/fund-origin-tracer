@@ -1,9 +1,14 @@
 import { FotError } from "../errors.ts";
 
+/** Default deadline of one `fetchTransport` request, response body included. */
+export const REQUEST_TIMEOUT_MS = 30_000;
+
 export interface TransportRequest {
   url: string;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Deadline for this request, response body included; `fetchTransport` defaults to `REQUEST_TIMEOUT_MS`. */
+  timeoutMs?: number;
 }
 export interface TransportResponse {
   status: number;
@@ -30,27 +35,32 @@ export function requestKey(req: { url: string }): string {
   return `GET ${u.origin}${u.pathname}${qs ? `?${qs}` : ""}`;
 }
 
+/**
+ * `GET` with redirects followed. A request that has not finished (body included) after its
+ * timeout fails as a retryable `network_error`; an abort of the caller's signal passes through.
+ */
 export const fetchTransport: Transport = async (req) => {
-  let res: Response;
+  const timeoutMs = req.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const deadline = AbortSignal.timeout(timeoutMs);
   try {
-    res = await fetch(req.url, {
+    const res = await fetch(req.url, {
       redirect: "follow",
       headers: { "User-Agent": "fund-origin-tracer", ...req.headers },
-      ...(req.signal ? { signal: req.signal } : {}),
+      signal: req.signal ? AbortSignal.any([req.signal, deadline]) : deadline,
     });
+    const retryAfter = res.headers.get("retry-after");
+    return {
+      status: res.status,
+      body: await res.text(),
+      ...(retryAfter === null ? {} : { retryAfter }),
+    };
   } catch (e) {
     if (req.signal?.aborted) throw e;
-    throw new FotError("network_error", `Network request failed: ${String(e)}`, {
-      retryable: true,
-      cause: e,
-    });
+    const message = deadline.aborted
+      ? `Request timed out after ${timeoutMs / 1000} s`
+      : `Network request failed: ${String(e)}`;
+    throw new FotError("network_error", message, { retryable: true, cause: e });
   }
-  const retryAfter = res.headers.get("retry-after");
-  return {
-    status: res.status,
-    body: await res.text(),
-    ...(retryAfter === null ? {} : { retryAfter }),
-  };
 };
 
 export function RecordingTransport(inner: Transport, sink: (rec: Recording) => void): Transport {

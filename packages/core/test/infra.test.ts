@@ -2,9 +2,19 @@ import { describe, expect, test } from "bun:test";
 import { FotError } from "../src/errors.ts";
 import { RunController } from "../src/infra/controller.ts";
 import { MinIntervalLimiter } from "../src/infra/limiter.ts";
-import { assertHttpOk, parseRetryAfter, withRetry } from "../src/infra/retry.ts";
+import {
+  assertHttpOk,
+  MAX_RETRY_AFTER_SEC,
+  parseRetryAfter,
+  withRetry,
+} from "../src/infra/retry.ts";
 import { cacheKey, MemoryCacheStore } from "../src/infra/store.ts";
-import { FixtureTransport, RecordingTransport, requestKey } from "../src/infra/transport.ts";
+import {
+  FixtureTransport,
+  fetchTransport,
+  RecordingTransport,
+  requestKey,
+} from "../src/infra/transport.ts";
 
 describe("transport", () => {
   test("requestKey sorts params and strips apikey", () => {
@@ -27,6 +37,43 @@ describe("transport", () => {
     const miss = await fixtures({ url: "https://x.io/zzz" }).catch((e) => e);
     expect(miss).toBeInstanceOf(FotError);
     expect(miss.code).toBe("fixture_miss");
+  });
+
+  test("fetchTransport ends a silent or stalled request as network_error at its timeout", async () => {
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      idleTimeout: 0,
+      fetch(req) {
+        if (new URL(req.url).pathname === "/silent") return new Promise<Response>(() => {});
+        // Headers and a first chunk, then nothing.
+        const body = new ReadableStream({ start: (c) => c.enqueue(new TextEncoder().encode("{")) });
+        return new Response(body);
+      },
+    });
+    try {
+      for (const path of ["/silent", "/stalled"]) {
+        const started = performance.now();
+        const err = await fetchTransport({
+          url: new URL(path, server.url).href,
+          timeoutMs: 200,
+        }).catch((e: unknown) => e);
+        expect(err).toBeInstanceOf(FotError);
+        expect(err).toMatchObject({ code: "network_error", retryable: true });
+        expect(performance.now() - started).toBeLessThan(2000);
+      }
+      // The caller's abort is not a network failure: it keeps the caller's reason.
+      const ac = new AbortController();
+      const pending = fetchTransport({
+        url: new URL("/silent", server.url).href,
+        signal: ac.signal,
+        timeoutMs: 5000,
+      }).catch((e: unknown) => e);
+      ac.abort("cancelled");
+      expect(await pending).toBe("cancelled");
+    } finally {
+      server.stop(true);
+    }
   });
 });
 
@@ -151,6 +198,43 @@ describe("withRetry", () => {
       { sleep: s.sleep },
     );
     expect(s.waits).toEqual([7000]);
+  });
+
+  test("fails as rate_limited instead of waiting out a Retry-After beyond the cap", async () => {
+    const s = noSleep();
+    let n = 0;
+    const limited = await withRetry(
+      async () => {
+        n++;
+        throw new FotError("rate_limited", "HTTP 429", { retryable: true, retryAfterSec: 86400 });
+      },
+      { sleep: s.sleep },
+    ).catch((e) => e);
+    expect(limited).toMatchObject({ code: "rate_limited" });
+    const unavailable = await withRetry(
+      async () => {
+        n++;
+        throw new FotError("provider_error", "HTTP 503", { retryable: true, retryAfterSec: 86400 });
+      },
+      { sleep: s.sleep },
+    ).catch((e) => e);
+    expect(unavailable).toMatchObject({ code: "rate_limited", retryable: false });
+    expect(n).toBe(2);
+    expect(s.waits).toEqual([]);
+
+    // A Retry-After at the cap is waited out.
+    await withRetry(
+      async () => {
+        if (++n < 4) {
+          throw new FotError("rate_limited", "HTTP 429", {
+            retryable: true,
+            retryAfterSec: MAX_RETRY_AFTER_SEC,
+          });
+        }
+      },
+      { sleep: s.sleep },
+    );
+    expect(s.waits).toEqual([MAX_RETRY_AFTER_SEC * 1000]);
   });
 
   test("assertHttpOk maps statuses", () => {

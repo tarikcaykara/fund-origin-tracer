@@ -117,6 +117,8 @@ The body is one of two shapes.
 | `followUnpriced` | boolean | false | |
 | `timeoutSec` | integer | 600 | 10–3600 |
 
+`timeoutSec` bounds the trace and then the convergence follow-up, which gets whatever time the trace left; see [methodology](methodology.md#linked-wallets-convergences).
+
 Seed formats: EVM tx `0x` + 64 hex; EVM address `0x` + 40 hex; TRON tx 64 hex (no `0x`); TRON address `T` + 33 base58 characters.
 
 Failure cases: `400 invalid_request` (validation), `403 demo_only`, `409 chain_not_ready`, `429 too_many_runs` (more than 3 live runs, or more than 8 demo replays, at once; the two limits are separate), `404 demo_not_found`.
