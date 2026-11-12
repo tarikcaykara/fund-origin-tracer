@@ -55,6 +55,8 @@ Changes to behavior, configuration or the API come with tests as the [testing po
 
 Dependabot opens update pull requests every week: Bun packages as `build(deps)` / `build(deps-dev)`, GitHub Actions as `ci(deps)`. Minor and patch updates are grouped per ecosystem; each major update comes alone, so read its changelog. They pass the same `check` and `smoke` jobs as any pull request.
 
+CI also runs `bun audit --audit-level=moderate` right after install, so a moderate or higher advisory in any locked package, dev tools included, fails the `check` job. Run it locally after adding or upgrading a dependency. To clear an advisory, upgrade within the existing range (`bun audit fix`), raise the range, or add an `overrides` entry in the root `package.json` when the dependent pins a vulnerable version. When no fixed release exists, prefer dropping the dependency: the shadcn CLI was removed this way, and its stylesheet is vendored in `apps/web/src/vendor/`. Ignore an advisory only after checking it cannot reach the server, the CLI or the browser bundle, with `--ignore=<GHSA id>` on that step and a comment saying why.
+
 The Bun runtime is not updated by Dependabot: the image, CI and the type definitions must stay on the same version. Upgrade it by hand in one pull request:
 
 - `Dockerfile`: both `FROM oven/bun:<version>-debian` lines;

@@ -3,7 +3,7 @@
    Fonts: IBM Plex Sans + IBM Plex Mono (Google Fonts or @fontsource/ibm-plex-sans, @fontsource/ibm-plex-mono; SIL OFL). */
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "./vendor/shadcn-tailwind.css";
 @import "@fontsource/ibm-plex-sans/latin-400.css";
 @import "@fontsource/ibm-plex-sans/latin-500.css";
 @import "@fontsource/ibm-plex-sans/latin-600.css";
