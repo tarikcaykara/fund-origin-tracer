@@ -75,6 +75,43 @@ describe("transport", () => {
       server.stop(true);
     }
   });
+
+  test("fetchTransport follows no redirect unless asked, so a key header never reaches another host", async () => {
+    const keysSeen: (string | null)[] = [];
+    const target = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(req) {
+        keysSeen.push(req.headers.get("TRON-PRO-API-KEY"));
+        return new Response("moved here");
+      },
+    });
+    // `localhost` instead of `127.0.0.1`: a different origin, as a real cross-host redirect.
+    const origin = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch: () =>
+        new Response(null, {
+          status: 302,
+          headers: { location: `http://localhost:${target.port}/elsewhere` },
+        }),
+    });
+    try {
+      const res = await fetchTransport({
+        url: origin.url.href,
+        headers: { "TRON-PRO-API-KEY": "secret" },
+      });
+      expect(res.status).toBe(302);
+      expect(keysSeen).toEqual([]);
+
+      const followed = await fetchTransport({ url: origin.url.href, followRedirects: true });
+      expect(followed).toMatchObject({ status: 200, body: "moved here" });
+      expect(keysSeen).toEqual([null]);
+    } finally {
+      origin.stop(true);
+      target.stop(true);
+    }
+  });
 });
 
 describe("limiter", () => {

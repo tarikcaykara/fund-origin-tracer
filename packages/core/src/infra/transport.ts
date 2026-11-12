@@ -9,6 +9,11 @@ export interface TransportRequest {
   signal?: AbortSignal;
   /** Deadline for this request, response body included; `fetchTransport` defaults to `REQUEST_TIMEOUT_MS`. */
   timeoutMs?: number;
+  /**
+   * Follow redirects (`fetchTransport` returns a 3xx as its status otherwise). Only for requests
+   * without credentials: `fetch` resends `headers` to the redirect target, whatever its host.
+   */
+  followRedirects?: boolean;
 }
 export interface TransportResponse {
   status: number;
@@ -36,15 +41,16 @@ export function requestKey(req: { url: string }): string {
 }
 
 /**
- * `GET` with redirects followed. A request that has not finished (body included) after its
- * timeout fails as a retryable `network_error`; an abort of the caller's signal passes through.
+ * `GET`; redirects only with `followRedirects`. A request that has not finished (body included)
+ * after its timeout fails as a retryable `network_error`; an abort of the caller's signal passes
+ * through.
  */
 export const fetchTransport: Transport = async (req) => {
   const timeoutMs = req.timeoutMs ?? REQUEST_TIMEOUT_MS;
   const deadline = AbortSignal.timeout(timeoutMs);
   try {
     const res = await fetch(req.url, {
-      redirect: "follow",
+      redirect: req.followRedirects ? "follow" : "manual",
       headers: { "User-Agent": "fund-origin-tracer", ...req.headers },
       signal: req.signal ? AbortSignal.any([req.signal, deadline]) : deadline,
     });
