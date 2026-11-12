@@ -128,6 +128,16 @@ describe("ofac", () => {
     expect([...r.tron]).toEqual([[TRON_A, [entry]]]);
   });
 
+  test("unclosed entries parse in linear time and keep the complete entry before them", () => {
+    // Every `<sdnEntry>` without a closing tag used to rescan to the end of the text (quadratic).
+    const text = `<sdnList>${XML}${"<sdnEntry>a".repeat(40_000)}</sdnList>`;
+    const started = performance.now();
+    const r = parseSdnXml(text);
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect([...r.evm.keys()]).toEqual([EVM_A]);
+    expect([...r.tron.keys()]).toEqual([TRON_A]);
+  });
+
   test("snapshots round-trip, and version 1 snapshots load without entries", () => {
     const set = { fetchedAt: "2026-10-28T00:00:00.000Z", ...parseSdnXml(SDN_FRAGMENT) };
     const stored = JSON.parse(JSON.stringify(ofacSnapshot(set)));
