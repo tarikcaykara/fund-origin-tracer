@@ -430,8 +430,17 @@ export function createApp({
     if (webRoot === null || c.req.path.startsWith("/api/")) return c.notFound();
     const index = resolve(webRoot, "index.html");
     if (!existsSync(index)) return c.notFound();
-    const asked = resolve(webRoot, `.${decodeURIComponent(c.req.path)}`);
+    let path: string;
+    try {
+      path = decodeURIComponent(c.req.path);
+    } catch {
+      throw badRequest("The path has malformed percent-encoding.");
+    }
+    const asked = resolve(webRoot, `.${path}`);
     if (asked.startsWith(webRoot + sep) && isFile(asked)) return new Response(Bun.file(asked));
+    // A build file that is gone (a page left open across a redeploy asks for its old chunks) is a
+    // 404: index.html would answer a script or stylesheet request with HTML.
+    if (path.startsWith("/assets/")) return c.notFound();
     return new Response(Bun.file(index), { headers: { "Cache-Control": "no-cache" } });
   });
 

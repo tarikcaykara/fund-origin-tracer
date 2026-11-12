@@ -19,10 +19,10 @@ There is no authentication: run the server on a trusted network or behind your o
 
 | Status | `error.code` | Raised by |
 |---|---|---|
-| 400 | `invalid_request` | Validation failed (the message lists each `path: problem`), bad query, unknown chain/kind |
+| 400 | `invalid_request` | Validation failed (the message lists each `path: problem`), bad query, unknown chain/kind, a web path with malformed percent-encoding |
 | 403 | `demo_only` | While `DEMO_ONLY=true`: `POST /api/runs` with live parameters, `PATCH` and `DELETE /api/runs/:id`, `POST /api/runs/:id/pause`, `/resume` and `/cancel` |
 | 403 | `host_not_allowed` | Every route, when the `Host` header is not `localhost`, `127.0.0.1`, `[::1]` or listed in `ALLOWED_HOSTS` |
-| 404 | `not_found` | Unknown run, unknown route; with `DEMO_ONLY=true` also a run that is not a demo |
+| 404 | `not_found` | Unknown run, unknown route, a missing file under `/assets/`; with `DEMO_ONLY=true` also a run that is not a demo |
 | 404 | `demo_not_found` | `POST /api/runs` with an unknown `demo` id |
 | 404 | `edge_not_found` | `POST /api/runs/:id/expand` with an edge that is not in the run |
 | 409 | `chain_not_ready` | No API key for the chain (`ETHERSCAN_API_KEY` / `TRONSCAN_API_KEYS`) |
@@ -56,7 +56,7 @@ There is no authentication: run the server on a trusted network or behind your o
 | GET | `/api/runs/:id/export.csv` | One CSV table as a download |
 | GET | `/api/screen/:chain/:address` | Label and sanctions lookup, no explorer calls |
 
-Any other `GET` outside `/api/` serves the built web app (`apps/web/dist`) with SPA fallback; it returns 404 when the app has not been built.
+Any other `GET` outside `/api/` serves the built web app (`apps/web/dist`): an existing file is served as is, a missing file under `/assets/` is `404 not_found` (a page left open across a redeploy gets a clear error, not HTML for its old scripts), and any other path gets `index.html` so app routes such as `/runs/<id>` load on reload. A path with malformed percent-encoding is `400 invalid_request`. Every such path is `404 not_found` when the app has not been built.
 
 ### `GET /api/health`
 

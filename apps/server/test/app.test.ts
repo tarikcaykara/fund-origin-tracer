@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -1240,6 +1240,37 @@ describe("host check and security headers", () => {
       expect(res.headers.get("x-content-type-options")).toBe("nosniff");
       expect(res.headers.get("referrer-policy")).toBe("no-referrer");
       expect(res.headers.get("strict-transport-security")).toBeNull();
+    }
+  });
+});
+
+describe("web app", () => {
+  test("a malformed path is 400 and a missing build file 404; app routes fall back to index.html", async () => {
+    const env = await createTestEnv();
+    const dir = tempDir();
+    const index = "<!doctype html><title>fot</title>";
+    await Bun.write(join(dir, "index.html"), index);
+    await Bun.write(join(dir, "assets", "index-abc.js"), "console.log(1)");
+    const web = createApp({ runtime: env.runtime, manager: env.manager, webDir: dir });
+    const logged = spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const malformed = await web.request("/runs/%E0%A4%A");
+      expect(malformed.status).toBe(400);
+      expect(await malformed.json()).toMatchObject({ error: { code: "invalid_request" } });
+      expect(logged).not.toHaveBeenCalled();
+    } finally {
+      logged.mockRestore();
+    }
+
+    const missing = await web.request("/assets/index-old.js");
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("content-type")).not.toContain("text/html");
+
+    const asset = await web.request("/assets/index-abc.js");
+    expect([asset.status, await asset.text()]).toEqual([200, "console.log(1)"]);
+    for (const path of ["/", "/runs/0b4e8f1a-6c2d-4e8a-9f3b-2a1c5d7e9f00", "/runs"]) {
+      const page = await web.request(path);
+      expect([page.status, await page.text()]).toEqual([200, index]);
     }
   });
 });
