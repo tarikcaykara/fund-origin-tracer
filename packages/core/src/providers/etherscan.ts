@@ -57,14 +57,17 @@ const NO_RESULTS_RE = /no (transactions|records) found/i;
 
 type Params = Record<string, string | number>;
 
+/** Arbitrary hex bytes; log `data` is `"0x"` when an event has no unindexed fields. */
 const HexString = z.string().regex(/^0x[0-9a-fA-F]*$/);
+/** A JSON-RPC quantity: at least one hex digit, so `BigInt` never sees a bare `"0x"`. */
+const Quantity = z.string().regex(/^0x[0-9a-fA-F]+$/);
 
 const RpcTx = z.object({
   hash: z.string(),
-  blockNumber: HexString.nullable(),
+  blockNumber: Quantity.nullable(),
   from: z.string(),
   to: z.string().nullable(),
-  value: HexString,
+  value: Quantity,
 });
 const RpcLog = z.object({
   address: z.string(),
@@ -73,11 +76,11 @@ const RpcLog = z.object({
   removed: z.boolean().optional(),
 });
 const RpcReceipt = z.object({
-  status: HexString.nullish(),
+  status: Quantity.nullish(),
   contractAddress: z.string().nullish(),
   logs: z.array(RpcLog),
 });
-const RpcBlock = z.object({ timestamp: HexString });
+const RpcBlock = z.object({ timestamp: Quantity });
 
 function parseRpc<T>(schema: z.ZodType<T>, raw: unknown, method: string): T {
   const parsed = schema.safeParse(raw);
@@ -305,7 +308,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       "eth_getTransactionByHash",
       { txhash: txHash },
       signal,
-      () => recent,
+      (r) => (RpcTx.safeParse(r).success ? recent : null),
     );
     const tx = parseRpc(RpcTx, rawTx, "eth_getTransactionByHash");
     if (tx.blockNumber === null) {
@@ -320,7 +323,7 @@ export class EtherscanV2Provider implements ExplorerProvider {
       "eth_getTransactionReceipt",
       { txhash: txHash },
       signal,
-      () => ttl,
+      (r) => (RpcReceipt.safeParse(r).success ? ttl : null),
     );
     const receipt = parseRpc(RpcReceipt, rawReceipt, "eth_getTransactionReceipt");
     if (
@@ -336,7 +339,8 @@ export class EtherscanV2Provider implements ExplorerProvider {
       "txlistinternal",
       { txhash: txHash },
       signal,
-      () => ttl,
+      (r) =>
+        Array.isArray(r) && r.every((row) => InternalRow.safeParse(row).success) ? ttl : null,
     );
     const internal = parseArray(InternalRow, rawInternal, "txlistinternal");
 
@@ -519,8 +523,12 @@ export class EtherscanV2Provider implements ExplorerProvider {
           action,
           { address, page, offset: PAGE_SIZE, sort, ...range },
           signal,
-          // Forward listings can still gain rows unless the page is already full.
-          (r) => (ascending && !(Array.isArray(r) && r.length >= PAGE_SIZE) ? TTL_RECENT_SEC : ttl),
+          // A page `parseArray` rejects is never cached. Forward listings can still gain rows
+          // unless the page is already full.
+          (r) => {
+            if (!Array.isArray(r) || !r.every((row) => schema.safeParse(row).success)) return null;
+            return ascending && r.length < PAGE_SIZE ? TTL_RECENT_SEC : ttl;
+          },
         );
         const batch = parseArray(schema, raw, action);
         rows.push(...numberRepeats(batch.map(toTransfer).filter((t): t is Transfer => t !== null)));
