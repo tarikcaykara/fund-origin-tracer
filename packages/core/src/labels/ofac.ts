@@ -45,7 +45,8 @@ const LegacyOfacSnapshotSchema = z.object({
 
 export const OFAC_KV_KEY = "ofac:sdn";
 
-const ENTRY_RE = /<sdnEntry>([\s\S]*?)<\/sdnEntry>/g;
+const ENTRY_OPEN = "<sdnEntry>";
+const ENTRY_CLOSE = "</sdnEntry>";
 const ADDRESS_RE =
   /<idType>Digital Currency Address - [A-Z0-9]+<\/idType>\s*<idNumber>([^<]+)<\/idNumber>/g;
 const PROGRAM_RE = /<program>([^<]*)<\/program>/g;
@@ -68,14 +69,31 @@ function headerField(header: string, tag: string): string | null {
 }
 
 /**
+ * The text inside each `<sdnEntry>…</sdnEntry>`, in order, up to the first entry that is never
+ * closed. Scans each character once; a lazy regex (`<sdnEntry>([\s\S]*?)</sdnEntry>`) rescans to the
+ * end for every unclosed `<sdnEntry>`, which is quadratic on a hostile or broken body.
+ */
+function* entryBodies(text: string): Generator<string> {
+  let from = 0;
+  for (;;) {
+    const open = text.indexOf(ENTRY_OPEN, from);
+    if (open === -1) return;
+    const start = open + ENTRY_OPEN.length;
+    const close = text.indexOf(ENTRY_CLOSE, start);
+    if (close === -1) return;
+    yield text.slice(start, close);
+    from = close + ENTRY_CLOSE.length;
+  }
+}
+
+/**
  * The SDN entries that list EVM or TRON addresses, by normalized address. The currency tag does
  * not identify the chain, so addresses are classified by format; other currencies are ignored.
  */
 export function parseSdnXml(text: string): Pick<OfacSet, "evm" | "tron"> {
   const evm = new Map<string, SdnEntry[]>();
   const tron = new Map<string, SdnEntry[]>();
-  for (const block of text.matchAll(ENTRY_RE)) {
-    const body = block[1] ?? "";
+  for (const body of entryBodies(text)) {
     const headerEnd = body.search(HEADER_END_RE);
     const header = headerEnd === -1 ? body : body.slice(0, headerEnd);
     const uid = headerField(header, "uid");
