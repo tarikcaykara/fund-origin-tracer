@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { Transport } from "../src/infra/transport.ts";
+import type { Transport, TransportRequest } from "../src/infra/transport.ts";
 import { parseBundledLabelFile, parseLocalLabelFile } from "../src/labels/files.ts";
 import {
   OFAC_KV_KEY,
@@ -181,6 +181,16 @@ describe("ofac", () => {
     now += 25 * HOUR;
     await src.load();
     expect(calls).toBe(2);
+  });
+
+  test("the SDN download follows redirects (the default URL redirects to the file)", async () => {
+    const requests: TransportRequest[] = [];
+    const t: Transport = async (r) => {
+      requests.push(r);
+      return ok(r);
+    };
+    await new OfacSource({ url: "u", transport: t, kv: memKv(), now: () => 0 }).load();
+    expect(requests.map((r) => r.followRedirects)).toEqual([true]);
   });
 
   test("a fresh version 1 snapshot is refreshed at once, and kept if the fetch fails", async () => {

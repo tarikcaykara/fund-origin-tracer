@@ -220,6 +220,8 @@ export class OfacSource {
       const res = await this.#o.transport({
         url: this.#o.url,
         timeoutMs: OFAC_DOWNLOAD_TIMEOUT_MS,
+        // The SDN URL redirects to the file; the request carries no key.
+        followRedirects: true,
       });
       if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
       // A maintenance page, a format change or a cut-off body must not replace the list.
