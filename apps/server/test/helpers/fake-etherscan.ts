@@ -64,6 +64,12 @@ export interface FakeOptions {
 export const FAKE_SDN_XML =
   "<sdnList><sdnEntry><uid>7</uid><lastName>TEST ENTITY</lastName><sdnType>Entity</sdnType><idList><id><idType>Digital Currency Address - ETH</idType><idNumber>0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb</idNumber></id></idList></sdnEntry></sdnList>";
 
+/**
+ * Host of `DEFAULT_OFAC_URL` (`apps/server/src/config.ts`), matched exactly: a substring check would
+ * also accept hosts such as `ofac.treas.gov.example.com`.
+ */
+const OFAC_HOST = "sanctionslistservice.ofac.treas.gov";
+
 /** Minimal Etherscan V2 + OFAC stand-in over a list of canonical-USDT transfers. */
 export function fakeTransport(transfers: FakeTransfer[], options: FakeOptions = {}): Transport {
   const ok = (result: unknown) => ({
@@ -83,7 +89,7 @@ export function fakeTransport(transfers: FakeTransfer[], options: FakeOptions = 
     const url = new URL(req.url);
     options.onRequest?.(url);
     if (options.delayMs) await new Promise((r) => setTimeout(r, options.delayMs));
-    if (url.hostname.includes("ofac.treas.gov")) return { status: 200, body: FAKE_SDN_XML };
+    if (url.hostname === OFAC_HOST) return { status: 200, body: FAKE_SDN_XML };
     if (url.hostname !== "api.etherscan.io") return { status: 404, body: "" };
 
     const q = url.searchParams;
