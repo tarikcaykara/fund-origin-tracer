@@ -21,6 +21,9 @@ jobs:
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
+      # Fails on a moderate or higher advisory in any locked package, dev tools included. Accept a
+      # reviewed advisory with `--ignore=<GHSA id>` and a comment saying why it does not apply.
+      - run: bun audit --audit-level=moderate
       - run: bun run check
       - run: bun run typecheck
       - run: bun test
