@@ -1,7 +1,10 @@
 import { FotError } from "../errors.ts";
 import { abortableSleep } from "../infra/limiter.ts";
 
-export const KEY_EXHAUSTION_RECOVERY_MS = 24 * 3600 * 1000;
+/** First rest of a rate-limited key; it doubles each time the key is rested again without a success. */
+export const KEY_COOLDOWN_BASE_MS = 60_000;
+/** The longest rest, also the cap on a `Retry-After`. */
+export const KEY_COOLDOWN_MAX_MS = 24 * 3600 * 1000;
 
 export interface TronscanKeyPoolOptions {
   keys: readonly string[];
@@ -23,7 +26,8 @@ export interface AcquireOptions {
 
 /**
  * Round-robin Tronscan key rotator, shared by every run. Slots are handed out FIFO so spacing
- * stays exact under concurrency; a key whose quota is spent is skipped for 24 h.
+ * stays exact under concurrency. A rate-limited key rests for `KEY_COOLDOWN_BASE_MS`, doubling while
+ * it keeps failing, up to `KEY_COOLDOWN_MAX_MS`; a successful request resets the backoff.
  */
 export class TronscanKeyPool {
   private readonly keys: string[];
@@ -32,7 +36,10 @@ export class TronscanKeyPool {
   private readonly now: () => number;
   private readonly sleep: (ms: number, signal?: AbortSignal) => Promise<void>;
   private readonly lastUsed: number[];
-  private readonly exhaustedAt: number[];
+  /** Epoch ms until which each key rests. */
+  private readonly restUntil: number[];
+  /** Rests since the key's last successful request. */
+  private readonly strikes: number[];
   private lastGlobal = Number.NEGATIVE_INFINITY;
   private cursor = 0;
   private tail: Promise<unknown> = Promise.resolve();
@@ -45,7 +52,8 @@ export class TronscanKeyPool {
     this.now = opts.now;
     this.sleep = opts.sleep ?? abortableSleep;
     this.lastUsed = this.keys.map(() => Number.NEGATIVE_INFINITY);
-    this.exhaustedAt = this.keys.map(() => Number.NEGATIVE_INFINITY);
+    this.restUntil = this.keys.map(() => Number.NEGATIVE_INFINITY);
+    this.strikes = this.keys.map(() => 0);
   }
 
   get keyCount(): number {
@@ -57,9 +65,28 @@ export class TronscanKeyPool {
     return this.keys.filter((_, i) => this.isActive(i, now)).length;
   }
 
-  markExhausted(key: string): void {
+  /**
+   * Rests `key` after a rate limit. A failure while the key is already resting does not add a strike
+   * (one burst on concurrent requests counts once), but a longer `retryAfterMs` still extends it.
+   */
+  markExhausted(key: string, retryAfterMs?: number): void {
     const i = this.keys.indexOf(key);
-    if (i >= 0) this.exhaustedAt[i] = this.now();
+    if (i < 0) return;
+    const now = this.now();
+    let backoff = 0;
+    if (this.isActive(i, now)) {
+      const strikes = (this.strikes[i] ?? 0) + 1;
+      this.strikes[i] = strikes;
+      backoff = KEY_COOLDOWN_BASE_MS * 2 ** (strikes - 1);
+    }
+    const cooldown = Math.min(KEY_COOLDOWN_MAX_MS, Math.max(backoff, retryAfterMs ?? 0));
+    this.restUntil[i] = Math.max(this.restUntil[i] ?? Number.NEGATIVE_INFINITY, now + cooldown);
+  }
+
+  /** The key served a request: its next rest starts at `KEY_COOLDOWN_BASE_MS` again. */
+  markSucceeded(key: string): void {
+    const i = this.keys.indexOf(key);
+    if (i >= 0) this.strikes[i] = 0;
   }
 
   async acquire(opts: AcquireOptions = {}): Promise<string> {
@@ -93,7 +120,7 @@ export class TronscanKeyPool {
   }
 
   private isActive(idx: number, now: number): boolean {
-    return now - (this.exhaustedAt[idx] ?? Number.NEGATIVE_INFINITY) >= KEY_EXHAUSTION_RECOVERY_MS;
+    return now >= (this.restUntil[idx] ?? Number.NEGATIVE_INFINITY);
   }
 
   /** Index of the key to use next: the preferred one, else the first ready from the cursor, else the soonest ready. */

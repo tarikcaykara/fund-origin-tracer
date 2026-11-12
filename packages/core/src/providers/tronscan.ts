@@ -25,7 +25,13 @@ const TRX_DECIMALS = 6;
 const FORWARD_WINDOW_SEC = 30 * 86400;
 const FORWARD_NARROW_WINDOW_SEC = 86400;
 const TOLERANCE_SEC = 5;
-const EXHAUSTION_RE = /limit|frequency|exceeded|quota|banned|too many/i;
+/**
+ * Error-body wording that means the key's quota is spent. Tronscan reports limits mainly by HTTP
+ * status and its error bodies are not standardised, so a bare "limit" (as in "limit must be less
+ * than 50", a parameter error) is not enough.
+ */
+const QUOTA_BODY_RE =
+  /(?:request|rate|frequency|daily|call)s? limit|(?:limit|rate) (?:exceeded|reached)|quota|too many requests|banned/i;
 
 export interface TronscanProviderOptions {
   keyPool: TronscanKeyPool;
@@ -373,13 +379,14 @@ export class TronscanProvider implements ExplorerProvider {
             const raw = parseJson(res.body, endpoint);
             const err = errorMessage(raw);
             if (err !== null) {
-              if (EXHAUSTION_RE.test(err)) {
+              if (QUOTA_BODY_RE.test(err)) {
                 throw new KeyExhaustedError(apiKey, `Tronscan ${endpoint}: ${err}`, {
                   retryable: false,
                 });
               }
               throw new FotError("provider_error", `Tronscan ${endpoint}: ${err}`);
             }
+            this.keyPool.markSucceeded(apiKey);
             const parsed = parse(raw);
             const ttl = ttlFor ? ttlFor(parsed) : ttlForTimestamp(ttlTs, this.now());
             return { body: res.body, ttlSec: ttl };
@@ -388,7 +395,10 @@ export class TronscanProvider implements ExplorerProvider {
         return parse(parseJson(body, endpoint));
       } catch (e) {
         if (!(e instanceof KeyExhaustedError)) throw e;
-        this.keyPool.markExhausted(e.apiKey);
+        this.keyPool.markExhausted(
+          e.apiKey,
+          e.retryAfterSec === undefined ? undefined : e.retryAfterSec * 1000,
+        );
         if (round >= 1 && this.keyPool.activeKeyCount > 0) {
           throw new FotError("rate_limited", e.message, { retryable: false });
         }

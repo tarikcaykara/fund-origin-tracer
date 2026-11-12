@@ -24,6 +24,7 @@ type Reply = { status: number; body: unknown; retryAfter?: string };
 type Handler = (call: Call, n: number) => Reply;
 
 function setup(keys: string[], handler: Handler, maxPages = 2) {
+  const clock = { t: NOW_MS };
   const calls: Call[] = [];
   const transport: Transport = async (req) => {
     const u = new URL(req.url);
@@ -44,7 +45,7 @@ function setup(keys: string[], handler: Handler, maxPages = 2) {
     keys,
     keyIntervalMs: 0,
     globalIntervalMs: 0,
-    now: () => NOW_MS,
+    now: () => clock.t,
     sleep: async () => {},
   });
   const provider = new TronscanProvider({
@@ -55,7 +56,7 @@ function setup(keys: string[], handler: Handler, maxPages = 2) {
     now: () => NOW_MS,
     retry: noRetrySleep,
   });
-  return { provider, keyPool, calls };
+  return { provider, keyPool, calls, clock };
 }
 
 const signal = new AbortController().signal;
@@ -94,7 +95,9 @@ describe("TronscanKeyPool", () => {
     ]);
   });
 
-  test("skips exhausted keys, recovers after 24h, throws fatal when none left", async () => {
+  const MINUTE = 60_000;
+  const DAY = 24 * 60 * MINUTE;
+  function restingPool() {
     const c = fakeClock();
     const pool = new TronscanKeyPool({
       keys: ["a", "b"],
@@ -103,19 +106,57 @@ describe("TronscanKeyPool", () => {
       now: c.now,
       sleep: c.sleep,
     });
+    return { c, pool };
+  }
+
+  test("a rested key returns after a cooldown that doubles until it succeeds, at most a day", async () => {
+    const { c, pool } = restingPool();
     pool.markExhausted("a");
     expect(await pool.acquire()).toBe("b");
     expect(await pool.acquire()).toBe("b");
+    c.state.t += MINUTE - 1;
     expect(pool.activeKeyCount).toBe(1);
+    c.state.t += 1;
+    expect(pool.activeKeyCount).toBe(2);
+
+    // Rested again without a success in between: twice as long.
+    pool.markExhausted("a");
+    c.state.t += 2 * MINUTE - 1;
+    expect(pool.activeKeyCount).toBe(1);
+    c.state.t += 1;
+    expect(pool.activeKeyCount).toBe(2);
+
+    // A success starts over.
+    pool.markSucceeded("a");
+    pool.markExhausted("a");
+    c.state.t += MINUTE;
+    expect(pool.activeKeyCount).toBe(2);
+
+    for (let i = 0; i < 20; i++) {
+      pool.markExhausted("a");
+      c.state.t += DAY;
+    }
+    expect(pool.activeKeyCount).toBe(2);
+  });
+
+  test("a longer Retry-After sets the cooldown; failures while resting count once; none left is fatal", async () => {
+    const { c, pool } = restingPool();
+    pool.markExhausted("a", 10 * MINUTE);
+    pool.markExhausted("a");
+    c.state.t += 10 * MINUTE - 1;
+    expect(pool.activeKeyCount).toBe(1);
+    c.state.t += 1;
+    expect(pool.activeKeyCount).toBe(2);
+    // The second failure above did not count: this is the second strike, not the third.
+    pool.markExhausted("a");
+    c.state.t += 2 * MINUTE;
+    expect(pool.activeKeyCount).toBe(2);
+
+    pool.markExhausted("a");
     pool.markExhausted("b");
     const err = await pool.acquire().catch((e: unknown) => e);
     expect(err).toBeInstanceOf(FotError);
-    expect((err as FotError).code).toBe("rate_limited");
-    expect((err as FotError).fatal).toBe(true);
-    expect((err as FotError).message).toBe("All Tronscan API keys exhausted");
-    c.state.t += 24 * 3600 * 1000;
-    expect(pool.activeKeyCount).toBe(2);
-    expect(await pool.acquire()).toBe("a");
+    expect(err).toMatchObject({ code: "rate_limited", fatal: true });
   });
 
   test("preferKey sticks to the key while active; abort leaves the queue", async () => {
@@ -248,6 +289,31 @@ describe("TronscanProvider key rotation", () => {
     const { provider, keyPool } = setup(["k1"], () => ok({ error: "invalid address format" }));
     const err = await provider.getTransaction(txInfoTrx.hash, signal).catch((e: unknown) => e);
     expect((err as FotError).code).toBe("provider_error");
+    expect(keyPool.activeKeyCount).toBe(1);
+  });
+
+  test("an error body that mentions a limit without a quota is a provider_error and keeps the key", async () => {
+    const { provider, keyPool } = setup(["k1"], () =>
+      ok({ Error: "limit must be less than or equal to 50" }),
+    );
+    const err = await provider.getTransaction(txInfoTrx.hash, signal).catch((e: unknown) => e);
+    expect(err).toMatchObject({ code: "provider_error", fatal: false });
+    expect(keyPool.activeKeyCount).toBe(1);
+  });
+
+  test("a key that served a request rests one minute after its next 403, not two", async () => {
+    let forbidden = true;
+    const { provider, keyPool, clock } = setup(["k1"], () =>
+      forbidden ? { status: 403, body: {} } : ok(txInfoTrx),
+    );
+    const fails = (hash: string) => provider.getTransaction(hash, signal).catch((e: unknown) => e);
+    expect(await fails(txInfoTrx.hash)).toMatchObject({ code: "rate_limited", fatal: true });
+    clock.t += 60_000;
+    forbidden = false;
+    await provider.getTransaction(txInfoTrx.hash, signal);
+    forbidden = true;
+    expect(await fails("a".repeat(64))).toMatchObject({ code: "rate_limited", fatal: true });
+    clock.t += 60_000;
     expect(keyPool.activeKeyCount).toBe(1);
   });
 
