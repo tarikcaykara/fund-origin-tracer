@@ -732,6 +732,141 @@ describe("getTransaction", () => {
   });
 });
 
+describe("malformed quantities", () => {
+  const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+  const USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
+  const A = "0x00000000000000000000000000000000000000aa";
+  const B = "0x00000000000000000000000000000000000000bb";
+  const BAD_TX = `0x${"b".repeat(64)}`;
+  const pad = (a: string) => `0x${a.replace("0x", "").padStart(64, "0")}`;
+  const goodTx = { blockNumber: "0x10", from: A, to: USDT, value: "0x0" };
+  const goodReceipt = {
+    status: "0x1",
+    contractAddress: null,
+    logs: [{ address: USDT, topics: [TRANSFER, pad(A), pad(B)], data: pad("0x989680") }],
+  };
+  const tokenRow = {
+    hash: SWAP_TX,
+    from: A,
+    to: addr,
+    value: "1000000",
+    contractAddress: USDT,
+    tokenSymbol: "USDT",
+    tokenName: "Tether USD",
+    tokenDecimal: "6",
+    blockNumber: "16",
+    timeStamp: "4096",
+  };
+
+  /** A one-transfer USDT transaction; `override` replaces any answer it returns. */
+  function explorer(override: (p: URLSearchParams) => TransportResponse | undefined = () => {}) {
+    return scripted((p) => {
+      const custom = override(p);
+      if (custom) return custom;
+      switch (p.get("action")) {
+        case "eth_getTransactionByHash":
+          return json({ result: { ...goodTx, hash: p.get("txhash") } });
+        case "eth_getBlockByNumber":
+          return json({ result: { timestamp: "0x1000" } });
+        case "eth_getTransactionReceipt":
+          return json({ result: goodReceipt });
+        case "getblocknobytime":
+          return json({ status: "1", message: "OK", result: "16" });
+        default:
+          return json(emptyEnvelope);
+      }
+    });
+  }
+
+  test.each([
+    [
+      "the value",
+      "eth_getTransactionByHash",
+      { result: { ...goodTx, hash: SWAP_TX, value: "0x" } },
+    ],
+    [
+      "the block number",
+      "eth_getTransactionByHash",
+      { result: { ...goodTx, hash: SWAP_TX, blockNumber: "0x" } },
+    ],
+    [
+      "the receipt status",
+      "eth_getTransactionReceipt",
+      { result: { ...goodReceipt, status: "0x" } },
+    ],
+    ["the block timestamp", "eth_getBlockByNumber", { result: { timestamp: "0x" } }],
+  ])('"0x" as %s is a non-fatal provider_error', async (_, action, body) => {
+    const t = explorer((p) => (p.get("action") === action ? json(body) : undefined));
+    const e = await failure(make(t.transport).getTransaction(SWAP_TX, signal));
+    expect(e.code).toBe("provider_error");
+    expect(e.fatal).toBe(false);
+  });
+
+  test("a malformed receipt is not cached; the next valid answer is used", async () => {
+    let receipts = 0;
+    const t = explorer((p) => {
+      if (p.get("action") !== "eth_getTransactionReceipt") return undefined;
+      receipts++;
+      return receipts === 1 ? json({ result: { ...goodReceipt, status: "0x" } }) : undefined;
+    });
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    expect((await failure(make(t.transport, { cache }).getTransaction(SWAP_TX, signal))).code).toBe(
+      "provider_error",
+    );
+    const tx = await make(t.transport, { cache }).getTransaction(SWAP_TX, signal);
+    expect(tx.transfers).toHaveLength(1);
+    expect(receipts).toBe(2);
+  });
+
+  test("a malformed listing page is not cached; the next valid answer is used", async () => {
+    let pages = 0;
+    const t = explorer((p) => {
+      if (p.get("action") !== "tokentx") return undefined;
+      pages++;
+      const row = pages === 1 ? { ...tokenRow, value: "0x" } : tokenRow;
+      return json({ status: "1", message: "OK", result: [row] });
+    });
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    expect((await failure(list(make(t.transport, { cache })))).code).toBe("provider_error");
+    const res = await list(make(t.transport, { cache }));
+    expect(res.rows.map((r) => r.amountRaw)).toEqual(["1000000"]);
+    expect(pages).toBe(2);
+  });
+
+  test("a run with one malformed seed completes on the other and reports seed_failed", async () => {
+    const t = explorer((p) =>
+      p.get("action") === "eth_getTransactionByHash" && p.get("txhash") === BAD_TX
+        ? json({ result: { ...goodTx, hash: BAD_TX, value: "0x" } })
+        : undefined,
+    );
+    const out = await runTrace(
+      RunParamsSchema.parse({
+        chain: "ethereum",
+        direction: "backward",
+        seeds: [
+          { id: "s1", kind: "tx", value: BAD_TX },
+          { id: "s2", kind: "tx", value: SWAP_TX },
+        ],
+        maxDepth: 1,
+      }),
+      {
+        provider: make(t.transport),
+        prices: new FakePrices(),
+        labels: new LabelRegistry([], null, null),
+        now: () => NOW_MS,
+        concurrency: 1,
+      },
+      new RunController(),
+      () => {},
+    );
+    expect(out.status).toBe("completed");
+    const failed = out.warnings.filter((w) => w.code.startsWith("seed_failed"));
+    expect(failed.map((w) => w.code)).toEqual(["seed_failed:s1"]);
+    expect(failed[0]?.message).toContain("provider_error");
+    expect(out.edges.some((e) => e.seedId === "s2")).toBe(true);
+  });
+});
+
 describe("review fixes", () => {
   const A = "0x00000000000000000000000000000000000000aa";
   const B = "0x00000000000000000000000000000000000000bb";
