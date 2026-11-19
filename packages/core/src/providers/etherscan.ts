@@ -166,9 +166,9 @@ function classifyEnvelope(body: string): unknown {
     if (INVALID_KEY_RE.test(hay)) {
       throw new FotError("invalid_api_key", text || message, { fatal: true });
     }
-    if ((Array.isArray(rec.result) && rec.result.length === 0) || NO_RESULTS_RE.test(message)) {
-      return [];
-    }
+    // Only a message that says so makes an empty result: an error with `result: []` must not be
+    // cached as "no transfers".
+    if (NO_RESULTS_RE.test(message)) return [];
     throw providerError(`Etherscan error: ${[message, text].filter(Boolean).join(": ")}`);
   }
 

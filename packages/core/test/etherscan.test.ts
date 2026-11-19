@@ -209,6 +209,28 @@ describe("envelope classification", () => {
     expect((await list(make(e.transport, { cache: sink }))).rows).toEqual([]);
   });
 
+  test("'No records found' with an empty result is also an empty, cacheable result", async () => {
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    const t = scripted(() => json({ status: "0", message: "No records found", result: [] }));
+    expect((await list(make(t.transport, { cache }))).rows).toEqual([]);
+    const b = make(t.transport, { cache });
+    expect((await list(b)).rows).toEqual([]);
+    expect(b.stats()).toEqual({ apiCalls: 0, cacheHits: 3 });
+  });
+
+  test("a status 0 error with an empty result is a provider_error and is not cached", async () => {
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    const broken = scripted(() => json({ status: "0", message: "NOTOK", result: [] }));
+    const e = await failure(list(make(broken.transport, { cache })));
+    expect(e.code).toBe("provider_error");
+    expect(e.retryable).toBe(false);
+    expect(e.message).toContain("NOTOK");
+
+    const b = make(scripted(() => json(emptyEnvelope)).transport, { cache });
+    expect((await list(b)).rows).toEqual([]);
+    expect(b.stats()).toEqual({ apiCalls: 3, cacheHits: 0 });
+  });
+
   test("proxy {error} is provider_error and result:null is not_found", async () => {
     const rpcError = scripted(() =>
       json({ jsonrpc: "2.0", id: 1, error: { code: -32602, message: "invalid argument 0" } }),
