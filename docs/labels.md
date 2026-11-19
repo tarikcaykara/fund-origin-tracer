@@ -43,7 +43,7 @@ Rules:
 - `address`: EVM addresses are lowercase; TRON addresses keep their base58 case. No duplicates per file.
 - `category`: `exchange`, `dex`, `bridge`, `mixer`, `sanctioned`, `scam`, `defi`, `token` or `other`.
 - `entity` (optional): the company or protocol behind the address (`Binance`, `Uniswap`, `Tornado Cash`).
-- `source`: the exact URL that shows the address with that name.
+- `source`: the exact URL that shows the address with that name; an `http:` or `https:` URL (`fot labels validate` rejects `javascript:`, `data:` and every other scheme).
 - `verifiedAt`: see above.
 
 Validate a file with `fot labels validate <file>`.

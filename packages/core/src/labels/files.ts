@@ -15,7 +15,8 @@ export const BundledLabelEntrySchema = z.object({
   name: z.string().min(1),
   category: LabelCategorySchema,
   entity: z.string().min(1).optional(),
-  source: z.url(),
+  // A source is a public page that shows the address; no `javascript:`, `data:` or other schemes.
+  source: z.url({ protocol: /^https?$/, error: "expected an http(s) URL" }),
   verifiedAt: z.string().regex(DATE_RE, "expected YYYY-MM-DD"),
 });
 export type BundledLabelEntry = z.infer<typeof BundledLabelEntrySchema>;

@@ -416,6 +416,21 @@ describe("file validation", () => {
       parseBundledLabelFile({ chain: "ethereum", entries: [{ ...entry, verifiedAt: "1/2/26" }] }),
     ).toThrow(/verifiedAt/);
   });
+  test.each(["javascript:alert(1)", "data:text/html,hi", "ftp://example.com/list"])(
+    "rejects a %s source: a source is an http(s) page",
+    (source) => {
+      expect(() =>
+        parseBundledLabelFile({ chain: "ethereum", entries: [{ ...entry, source }] }),
+      ).toThrow(/entries\.0\.source: expected an http\(s\) URL/);
+    },
+  );
+  test.each(["https://etherscan.io/address/0x1", "http://example.com/wallets"])(
+    "accepts the source %s",
+    (source) => {
+      const file = parseBundledLabelFile({ chain: "ethereum", entries: [{ ...entry, source }] });
+      expect(file.entries[0]?.source).toBe(source);
+    },
+  );
   test("local file rejects wrong-format address", () => {
     expect(() =>
       parseLocalLabelFile({
