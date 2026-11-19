@@ -1,5 +1,5 @@
 import type { AnalysisResult } from "@fot/core/schema";
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Locator, type Page } from "@playwright/test";
 
 interface Demo {
   id: string;
@@ -60,6 +60,15 @@ async function runDemo(page: Page, title: string): Promise<string> {
   return runId;
 }
 
+/** Text of every element whose content is wider than its box, i.e. runs into its neighbour. */
+function overflowing(cells: Locator): Promise<string[]> {
+  return cells.evaluateAll((elements) =>
+    elements
+      .filter((element) => element.scrollWidth > element.clientWidth + 1)
+      .map((element) => element.textContent ?? ""),
+  );
+}
+
 for (const demo of DEMOS) {
   test(`${demo.id}: graph, tabs and report`, async ({ page }) => {
     const runId = await runDemo(page, demo.title);
@@ -80,6 +89,10 @@ for (const demo of DEMOS) {
     await expect(
       page.getByRole("heading", { level: 2, name: demo.touchpoints, exact: true }),
     ).toBeVisible();
+    const touchpointCells = page.getByRole("tabpanel").locator("section section > div, li > div");
+    expect(await overflowing(touchpointCells), "touchpoint cells wider than their column").toEqual(
+      [],
+    );
 
     await page.getByRole("tab", { name: /^Flags/ }).click();
     await expect(page.getByRole("heading", { level: 2, name: /^\d+ flags?$/ })).toBeVisible();
@@ -92,6 +105,14 @@ for (const demo of DEMOS) {
     ).toBeVisible();
     await expect(report.getByText(/^EVIDENCE REPORT · /)).toBeVisible();
     await expect(report.getByRole("heading", { level: 2, name: "9. Limitations" })).toBeVisible();
+    await page.setViewportSize({ width: 768, height: 900 });
+    const touchpointTable = report
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { level: 2, name: "5. Exchange touchpoints" }) })
+      .locator("th, td");
+    expect(await overflowing(touchpointTable), "report §5 cells wider than their column").toEqual(
+      [],
+    );
   });
 }
 

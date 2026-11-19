@@ -16,6 +16,13 @@ import { copyText } from "@/lib/clipboard.ts";
 import { withUniqueKeys } from "@/lib/utils.ts";
 import { CATEGORY_META } from "@/meta.ts";
 
+/**
+ * Desktop columns, shared by the header and the rows: exchange, counterparty, amount, USD, hop,
+ * time, tx. USD and hop keep the design's 110 px and 60 px (`tpCols`); 110 px holds "$999,999,999.99".
+ */
+const XL_COLUMNS =
+  "xl:grid-cols-[minmax(110px,1.1fr)_minmax(110px,1.1fr)_minmax(100px,1fr)_110px_60px_minmax(105px,.9fr)_minmax(80px,.8fr)]";
+
 /** Plain-text block per touchpoint, ready to paste into a freeze or information request. */
 export function freezeRequestText(result: DerivedAnalysis): string {
   const { chain } = result;
@@ -95,12 +102,14 @@ export function TouchpointsTab({ result }: { result: DerivedAnalysis }) {
             </span>
             <span className="ml-auto type-mono-sm">{formatUsd(usd)}</span>
           </header>
-          <div className="hidden grid-cols-[minmax(110px,1.1fr)_minmax(110px,1.1fr)_minmax(100px,1fr)_76px_52px_minmax(105px,.9fr)_minmax(80px,.8fr)] gap-2 border-b border-border px-3 py-1.5 type-overline text-muted-foreground xl:grid">
+          <div
+            className={`hidden gap-2 border-b border-border px-3 py-1.5 type-overline text-muted-foreground xl:grid ${XL_COLUMNS}`}
+          >
             <span>EXCHANGE</span>
             <span>{counterpartyLabel}</span>
             <span>AMOUNT</span>
             <span className="text-right">USD</span>
-            <span>HOP</span>
+            <span className="text-center">HOP</span>
             <span>TIME UTC</span>
             <span>TX</span>
           </div>
@@ -112,7 +121,7 @@ export function TouchpointsTab({ result }: { result: DerivedAnalysis }) {
             ).map(({ key, item: touchpoint }) => (
               <li
                 key={key}
-                className="grid min-w-0 grid-cols-1 gap-2 px-3 py-3 type-body-sm md:grid-cols-3 xl:grid-cols-[minmax(110px,1.1fr)_minmax(110px,1.1fr)_minmax(100px,1fr)_76px_52px_minmax(105px,.9fr)_minmax(80px,.8fr)] xl:items-center max-md:[&_button]:min-h-11"
+                className={`grid min-w-0 grid-cols-1 gap-2 px-3 py-3 type-body-sm md:grid-cols-3 xl:items-center max-md:[&_button]:min-h-11 ${XL_COLUMNS}`}
               >
                 <div className="min-w-0">
                   <span className="block type-overline text-muted-foreground xl:hidden">
@@ -144,11 +153,11 @@ export function TouchpointsTab({ result }: { result: DerivedAnalysis }) {
                   </span>
                   {formatAmount(touchpoint.amount)} {touchpoint.symbol}
                 </div>
-                <div className="type-mono-sm xl:text-right">
+                <div className="type-mono-sm wrap-anywhere xl:text-right">
                   <span className="block type-overline text-muted-foreground xl:hidden">USD</span>
                   {formatUsd(touchpoint.usd)}
                 </div>
-                <div className="type-mono-node">
+                <div className="type-mono-node xl:text-center">
                   <span className="mr-1 type-overline text-muted-foreground xl:hidden">HOP</span>
                   {touchpoint.depth}
                 </div>

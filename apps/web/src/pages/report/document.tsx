@@ -221,16 +221,18 @@ function TouchpointTable({ result }: { result: AnalysisResult }) {
       <div className="hidden md:block print:block">
         <Table
           density="dense"
-          className="table-fixed text-xs [&_th]:px-1 [&_td]:px-1 [&_td]:py-1 [&_td]:whitespace-normal print:text-[8pt]"
+          className="table-fixed text-xs [&_th]:px-1 [&_th]:whitespace-normal [&_td]:px-1 [&_td]:py-1 [&_td]:whitespace-normal [&_td]:wrap-anywhere print:text-[8pt]"
         >
           <TableHeader>
             <TableRow>
-              <TableHead>ENTITY</TableHead>
-              <TableHead>EXCHANGE WALLET</TableHead>
-              <TableHead>COUNTERPARTY</TableHead>
-              <TableHead className="text-right">AMOUNT</TableHead>
-              <TableHead className="text-right">USD</TableHead>
-              <TableHead className="text-right">HOP</TableHead>
+              {/* Screen: the design's proportions (`tpCols`: .9fr 1fr 1fr 1.3fr 1fr .5fr). Print widens
+                  the address columns, which show the full address and its link there. */}
+              <TableHead className="w-[16%] print:w-[10%]">ENTITY</TableHead>
+              <TableHead className="w-[17.5%] print:w-[29%]">EXCHANGE WALLET</TableHead>
+              <TableHead className="w-[17.5%] print:w-[29%]">COUNTERPARTY</TableHead>
+              <TableHead className="w-[23%] text-right print:w-[14%]">AMOUNT</TableHead>
+              <TableHead className="w-[17.5%] text-right print:w-[13%]">USD</TableHead>
+              <TableHead className="w-[8.5%] text-right print:w-[5%]">HOP</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
