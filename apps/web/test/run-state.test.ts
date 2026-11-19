@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { AnalysisResult, DerivedAnalysis, RunEvent, TraceEdge } from "@fot/core/schema";
-import { initialRunState, type RunState, reduceRunEvent, sortedEdges } from "../src/run-state.ts";
+import {
+  initialRunState,
+  type RunState,
+  reduceRunEvent,
+  reduceRunEvents,
+  sortedEdges,
+} from "../src/run-state.ts";
 
 function edge(id: string, overrides: Partial<TraceEdge> = {}): TraceEdge {
   return {
@@ -194,6 +200,70 @@ describe("reduceRunEvent", () => {
     expect(finished.provisional).toBeNull();
     expect(finished.expansion).toBeNull();
     expect(finished.result).toBe(result);
+  });
+});
+
+describe("reduceRunEvents", () => {
+  const result = {
+    status: "completed",
+    graph: {
+      addresses: [],
+      edges: [edge("a", { status: "expanded", children: ["b"] }), edge("b", { depth: 1 })],
+    },
+    stats: {
+      expandedEdges: 1,
+      apiCalls: 3,
+      cacheHits: 0,
+      droppedCandidates: 0,
+      maxDepthReached: 1,
+    },
+  } as unknown as AnalysisResult;
+  const events: RunEvent[] = [
+    { type: "edge_added", edge: edge("stale") },
+    { type: "snapshot", status: "running", edges: [edge("a")], stats: {} },
+    { type: "edge_added", edge: edge("b", { depth: 1 }) },
+    { type: "edge_linked", edgeId: "b", parentId: "a" },
+    { type: "edge_linked", edgeId: "b", parentId: "a" },
+    { type: "edge_linked", edgeId: "missing", parentId: "a" },
+    { type: "progress", expandedEdges: 1, queued: 1, apiCalls: 2, cacheHits: 0, elapsedMs: 10 },
+    { type: "edge_expanded", edgeId: "a", selected: ["b"], droppedTotal: 2 },
+    { type: "edge_added", edge: edge("c", { depth: 1 }) },
+    { type: "edge_stopped", edgeId: "c", reason: "max_depth", detail: null },
+    { type: "warning", code: "prices_unavailable", message: "no prices" },
+    { type: "result", result },
+    { type: "edge_added", edge: edge("after-result") },
+    { type: "done", status: "completed" },
+  ];
+
+  test("a batch folds to the same state as its events one by one", () => {
+    const expected = fold(events);
+    for (let cut = 0; cut <= events.length; cut++) {
+      const first = reduceRunEvents(initialRunState, events.slice(0, cut));
+      expect(reduceRunEvents(first, events.slice(cut)), `batches cut at ${cut}`).toEqual(expected);
+    }
+  });
+
+  test("a batch never mutates the state it starts from and keeps untouched edges", () => {
+    const base = fold(events.slice(0, 3));
+    const before = structuredClone(base);
+    const next = reduceRunEvents(base, [
+      { type: "edge_linked", edgeId: "b", parentId: "a" },
+      { type: "edge_added", edge: edge("d") },
+    ]);
+    expect(base).toEqual(before);
+    expect(next.edges.a).toBe(base.edges.a);
+    expect(next.edges.b?.parents).toEqual(["a"]);
+  });
+
+  test("a batch that changes nothing returns the same state", () => {
+    const base = fold(events.slice(0, 4));
+    const repeated: RunEvent[] = [
+      { type: "edge_linked", edgeId: "b", parentId: "a" },
+      { type: "edge_linked", edgeId: "missing", parentId: "a" },
+      { type: "edge_stopped", edgeId: "missing", reason: "cycle", detail: null },
+    ];
+    expect(reduceRunEvents(base, repeated)).toBe(base);
+    expect(reduceRunEvents(base, [])).toBe(base);
   });
 });
 

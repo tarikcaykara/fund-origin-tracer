@@ -1,6 +1,6 @@
 import type { RunEvent } from "@fot/core/schema";
 import { useCallback, useEffect, useState } from "react";
-import { initialRunState, type RunState, reduceRunEvent } from "./run-state.ts";
+import { initialRunState, type RunState, reduceRunEvents } from "./run-state.ts";
 import { connectRunStream } from "./run-stream.ts";
 
 interface StreamValue {
@@ -10,9 +10,34 @@ interface StreamValue {
   firstSeen: Record<string, number>;
 }
 
+/** Arrival times of new edges: 0 for the edges a snapshot or result brings, `now` for streamed ones. */
+function foldFirstSeen(
+  firstSeen: Record<string, number>,
+  events: readonly RunEvent[],
+  now: number,
+): Record<string, number> {
+  let next = firstSeen;
+  let owned = false;
+  for (const event of events) {
+    if (event.type === "snapshot" || event.type === "result") {
+      const edges = event.type === "snapshot" ? event.edges : event.result.graph.edges;
+      next = Object.fromEntries(edges.map((edge) => [edge.id, 0]));
+      owned = true;
+    } else if (event.type === "edge_added" && next[event.edge.id] === undefined) {
+      if (!owned) {
+        next = { ...next };
+        owned = true;
+      }
+      next[event.edge.id] = now;
+    }
+  }
+  return next;
+}
+
 /**
  * Streams `/api/runs/:id/events` into run state through `connectRunStream`, and closes it on
- * unmount. `restart` reopens a finished stream, e.g. after an expand.
+ * unmount. Events are folded once per animation frame, so a burst costs one copy of the edge index
+ * and one render. `restart` reopens a finished stream, e.g. after an expand.
  */
 export function useRunStream(runId: string): {
   state: RunState;
@@ -26,30 +51,34 @@ export function useRunStream(runId: string): {
   }));
   const [generation, setGeneration] = useState(0);
 
-  const onRunEvent = useCallback(
-    (event: RunEvent) => {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `generation` forces a reconnect.
+  useEffect(() => {
+    let queue: RunEvent[] = [];
+    let frame: number | null = null;
+    const flush = () => {
+      frame = null;
+      const batch = queue;
+      queue = [];
+      const now = Date.now();
       setStream((current) => {
         const value =
           current.runId === runId ? current : { runId, state: initialRunState, firstSeen: {} };
-        let firstSeen = value.firstSeen;
-        if (event.type === "snapshot" || event.type === "result") {
-          const edges = event.type === "snapshot" ? event.edges : event.result.graph.edges;
-          firstSeen = Object.fromEntries(edges.map((edge) => [edge.id, 0]));
-        } else if (event.type === "edge_added" && firstSeen[event.edge.id] === undefined) {
-          firstSeen = { ...firstSeen, [event.edge.id]: Date.now() };
-        }
-        return {
-          runId,
-          state: reduceRunEvent(value.state, event),
-          firstSeen,
-        };
+        const state = reduceRunEvents(value.state, batch);
+        const firstSeen = foldFirstSeen(value.firstSeen, batch, now);
+        if (value === current && state === current.state && firstSeen === current.firstSeen)
+          return current;
+        return { runId, state, firstSeen };
       });
-    },
-    [runId],
-  );
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `generation` forces a reconnect.
-  useEffect(() => connectRunStream(runId, onRunEvent), [runId, generation, onRunEvent]);
+    };
+    const close = connectRunStream(runId, (event) => {
+      queue.push(event);
+      frame ??= requestAnimationFrame(flush);
+    });
+    return () => {
+      close();
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, [runId, generation]);
 
   const restart = useCallback(() => setGeneration((generation) => generation + 1), []);
   return {

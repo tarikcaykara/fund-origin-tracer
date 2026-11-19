@@ -55,18 +55,69 @@ function indexEdges(edges: readonly TraceEdge[]): Record<string, TraceEdge> {
   return out;
 }
 
-function patchEdge(
-  state: RunState,
-  edgeId: string,
-  patch: (edge: TraceEdge) => TraceEdge,
-): RunState {
-  const edge = state.edges[edgeId];
-  if (!edge) return state;
-  return { ...state, edges: { ...state.edges, [edgeId]: patch(edge) } };
+type EdgeEvent = Extract<
+  RunEvent,
+  { type: "edge_added" | "edge_linked" | "edge_expanded" | "edge_stopped" }
+>;
+
+/** The edge an edge event produces, or null when the event changes nothing. */
+function nextEdge(edges: Readonly<Record<string, TraceEdge>>, event: EdgeEvent): TraceEdge | null {
+  if (event.type === "edge_added") return event.edge;
+  const edge = edges[event.edgeId];
+  if (!edge) return null;
+  switch (event.type) {
+    case "edge_linked":
+      return edge.parents.includes(event.parentId)
+        ? null
+        : { ...edge, parents: [...edge.parents, event.parentId] };
+    case "edge_expanded":
+      return {
+        ...edge,
+        status: "expanded",
+        children: event.selected,
+        droppedTotal: event.droppedTotal,
+      };
+    case "edge_stopped":
+      return { ...edge, status: "stopped", stopReason: event.reason, stopDetail: event.detail };
+  }
 }
 
 /** Pure reducer: folds one streamed `RunEvent` into the run state. */
 export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
+  return reduceRunEvents(state, [event]);
+}
+
+/**
+ * Folds a batch of streamed events into the run state, as `reduceRunEvent` one by one would. The
+ * edge events of a batch write into one copy of the edge index, made on the first real change, so
+ * a burst of n edge events costs one copy instead of n. A batch that changes nothing returns `state`.
+ */
+export function reduceRunEvents(state: RunState, events: readonly RunEvent[]): RunState {
+  let next = state;
+  // The copy of `next.edges` this batch owns; written in place until an event replaces the index.
+  let owned: Record<string, TraceEdge> | null = null;
+  for (const event of events) {
+    if (
+      event.type === "edge_added" ||
+      event.type === "edge_linked" ||
+      event.type === "edge_expanded" ||
+      event.type === "edge_stopped"
+    ) {
+      const edge = nextEdge(next.edges, event);
+      if (edge === null) continue;
+      if (owned === null || owned !== next.edges) {
+        owned = { ...next.edges };
+        next = { ...next, edges: owned };
+      }
+      owned[edge.id] = edge;
+      continue;
+    }
+    next = reduceOtherEvent(next, event);
+  }
+  return next;
+}
+
+function reduceOtherEvent(state: RunState, event: Exclude<RunEvent, EdgeEvent>): RunState {
   switch (event.type) {
     case "snapshot":
       return {
@@ -78,26 +129,6 @@ export function reduceRunEvent(state: RunState, event: RunEvent): RunState {
       };
     case "status":
       return { ...state, phase: event.status };
-    case "edge_added":
-      return { ...state, edges: { ...state.edges, [event.edge.id]: event.edge } };
-    case "edge_linked":
-      return patchEdge(state, event.edgeId, (e) =>
-        e.parents.includes(event.parentId) ? e : { ...e, parents: [...e.parents, event.parentId] },
-      );
-    case "edge_expanded":
-      return patchEdge(state, event.edgeId, (e) => ({
-        ...e,
-        status: "expanded",
-        children: event.selected,
-        droppedTotal: event.droppedTotal,
-      }));
-    case "edge_stopped":
-      return patchEdge(state, event.edgeId, (e) => ({
-        ...e,
-        status: "stopped",
-        stopReason: event.reason,
-        stopDetail: event.detail,
-      }));
     case "progress": {
       const { type: _type, ...progress } = event;
       return { ...state, progress };
