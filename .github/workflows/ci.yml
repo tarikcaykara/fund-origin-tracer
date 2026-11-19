@@ -4,7 +4,9 @@ on:
     branches: [master]
   pull_request:
 concurrency:
-  group: ci-${{ github.ref }}
+  # A pull request's new push cancels its superseded run. Every master push gets its own group,
+  # so no master run is cancelled, or replaced while pending, by the next merge.
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -17,7 +19,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
@@ -28,7 +30,7 @@ jobs:
       - run: bun run typecheck
       - run: bun test
       - run: bun run build
-      - uses: gitleaks/gitleaks-action@v3
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   smoke:
@@ -36,7 +38,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.3
       # Playwright Test runs under Node; bun runs the server and the build.
