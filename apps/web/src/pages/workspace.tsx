@@ -10,13 +10,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import type { LiveRunRequest } from "@/api.ts";
 import { ApiError, api, type RunDetail } from "@/api.ts";
 import { EmptyState } from "@/components/empty-state.tsx";
 import { indexAddresses } from "@/components/links.tsx";
 import { ModalLayer } from "@/components/modal-layer.tsx";
+import { RunLoadError } from "@/components/page-state.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
@@ -103,6 +104,7 @@ function WaitingForResult() {
   return (
     <div className="p-3 md:p-5">
       <EmptyState
+        headingLevel={2}
         icon={Clock3}
         title="Waiting for the first transfers"
         body="Provisional analysis appears once the trace has found transfers; the final analysis replaces it when the run finishes."
@@ -116,6 +118,7 @@ function NoResult({ error }: { error: string | null }) {
   return (
     <div className="p-3 md:p-5">
       <EmptyState
+        headingLevel={2}
         icon={CircleSlash}
         title="No result was produced for this run"
         body={error ?? "The run ended before an analysis could be produced."}
@@ -331,16 +334,7 @@ export function WorkspacePage() {
   useRegisterPaletteSource(paletteSource);
 
   if (!run && detail.loading) return <Skeleton className="m-4 h-40 w-[calc(100%-2rem)]" />;
-  if (detail.error && !run) {
-    return (
-      <div className="space-y-3 p-4">
-        <p className="text-destructive">{detail.error.message}</p>
-        <Link to="/runs" className="underline">
-          Back to history
-        </Link>
-      </div>
-    );
-  }
+  if (detail.error && !run) return <RunLoadError error={detail.error} />;
   if (!run) return <Skeleton className="m-4 h-40 w-[calc(100%-2rem)]" />;
 
   const pathGraph = (

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { Layout } from "@/components/layout.tsx";
+import { NotFoundPage } from "@/components/page-state.tsx";
 import { HistoryPage } from "@/pages/history.tsx";
 import { HomePage } from "@/pages/home.tsx";
 import { ReportPage } from "@/pages/report.tsx";
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
       { path: "/runs", element: <HistoryPage /> },
       { path: "/runs/:id", element: <WorkspacePage /> },
       { path: "/runs/:id/report", element: <ReportPage /> },
-      { path: "*", element: <p className="text-muted-foreground">Page not found.</p> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, exportJsonUrl } from "@/api.ts";
 import { EmptyState } from "@/components/empty-state.tsx";
+import { RunLoadError } from "@/components/page-state.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
@@ -88,12 +89,7 @@ export function ReportPage() {
   const breakpoint = useBreakpoint();
   const transferLimit = breakpoint === "phone" ? 10 : 20;
 
-  if (detail.error)
-    return (
-      <p role="alert" className="px-4 py-6 type-body-sm text-destructive">
-        {detail.error.message}
-      </p>
-    );
+  if (detail.error) return <RunLoadError error={detail.error} />;
   if (!run)
     return (
       <div className="px-4 py-6">
@@ -132,6 +128,7 @@ export function ReportPage() {
       ) : (
         <div className="px-4 py-8">
           <EmptyState
+            headingLevel={1}
             glyph={
               <span aria-hidden="true" className="font-mono text-muted-foreground">
                 ▤

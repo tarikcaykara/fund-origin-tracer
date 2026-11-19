@@ -842,6 +842,7 @@ export function HomePage() {
 
   return (
     <div className="flex min-w-0 flex-col">
+      <h1 className="sr-only">Start an investigation</h1>
       {healthData && (!anyReady || demoOnly) ? (
         <Banner
           tone="warning"

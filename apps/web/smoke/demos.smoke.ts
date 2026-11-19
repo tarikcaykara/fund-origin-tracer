@@ -69,6 +69,26 @@ function overflowing(cells: Locator): Promise<string[]> {
   );
 }
 
+/** Exactly one `h1`, and no heading more than one level below the heading before it. */
+async function expectHeadingOutline(page: Page, where: string): Promise<void> {
+  const levels = await page
+    .locator("h1, h2, h3, h4, h5, h6")
+    .evaluateAll((headings) =>
+      headings
+        .filter((heading) => heading.getClientRects().length > 0)
+        .map((heading) => Number(heading.tagName.slice(1))),
+    );
+  expect(
+    levels.filter((level) => level === 1),
+    `${where}: h1 elements`,
+  ).toHaveLength(1);
+  const skips = levels.flatMap((level, i) => {
+    const previous = levels[i - 1];
+    return previous !== undefined && level > previous + 1 ? [`h${previous} → h${level}`] : [];
+  });
+  expect(skips, `${where}: skipped heading levels`).toEqual([]);
+}
+
 for (const demo of DEMOS) {
   test(`${demo.id}: graph, tabs and report`, async ({ page }) => {
     const runId = await runDemo(page, demo.title);
@@ -138,10 +158,61 @@ test("⌘K finds an address of the open run; Esc returns focus to the opener", a
   await expect(palette.getByRole("option").filter({ hasText: short }).first()).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(palette).toBeHidden();
-  const panel = page
-    .locator("aside")
-    .filter({ has: page.getByRole("button", { name: "Close detail panel" }) });
+  const panel = page.getByRole("complementary", { name: "Selection details" });
   await expect(panel.getByText(address, { exact: true })).toBeVisible();
+});
+
+test("pages have one h1 and ordered headings; Esc closes the detail panel", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
+  await expectHeadingOutline(page, "Home");
+
+  const runId = await runDemo(page, FAST_DEMO);
+  await page.getByRole("tab", { name: /^Transfers/ }).click();
+  const row = page.getByRole("tabpanel").locator('tr[tabindex="0"]').first();
+  await row.focus();
+  await page.keyboard.press("Enter");
+  const panel = page.getByRole("complementary", { name: "Selection details" });
+  await expect(panel).toBeVisible();
+  await expect(panel.locator("aside")).toHaveCount(0);
+  await expectHeadingOutline(page, "workspace with the detail panel");
+  // From the opener: the panel closes and focus stays.
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(row).toBeFocused();
+  // From inside the panel: focus returns to the opener.
+  await page.keyboard.press("Enter");
+  await panel.getByRole("button", { name: "Close detail panel" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(row).toBeFocused();
+
+  await page.goto(`/runs/${runId}/report`);
+  await expect(page.getByRole("heading", { level: 1, name: FAST_DEMO })).toBeVisible();
+  await expectHeadingOutline(page, "report");
+  await page.goto("/runs");
+  await expect(page.getByRole("heading", { level: 1, name: "History" })).toBeVisible();
+  await expectHeadingOutline(page, "History");
+});
+
+test("unknown pages and runs have an h1 and a link back", async ({ page, consoleErrors }) => {
+  await page.goto("/no-such-page");
+  await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
+  await expectHeadingOutline(page, "404");
+  await page.getByRole("main").getByRole("link", { name: "Back to Home" }).click();
+  await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
+
+  for (const path of ["/runs/does-not-exist", "/runs/does-not-exist/report"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1, name: "Unknown run" })).toBeVisible();
+    await expect(
+      page.getByRole("main").getByRole("link", { name: "Back to history" }),
+    ).toBeVisible();
+    await expectHeadingOutline(page, path);
+  }
+  // The API answers 404 for the unknown run, and the browser logs each of those requests.
+  expect(consoleErrors.every((error) => error.includes("404"))).toBe(true);
+  consoleErrors.length = 0;
 });
 
 test("a demo-only instance offers no rename, notes or delete", async ({ page }) => {

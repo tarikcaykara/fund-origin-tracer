@@ -542,6 +542,7 @@ export function HistoryPage() {
           </>
         ) : filtered ? (
           <EmptyState
+            headingLevel={2}
             glyph={<span className="font-mono text-muted-foreground">⌕</span>}
             title="No investigations match these filters"
             body="Try a different search or clear the filters to see all investigations."
@@ -559,6 +560,7 @@ export function HistoryPage() {
           />
         ) : (
           <EmptyState
+            headingLevel={2}
             glyph={<span className="font-mono text-muted-foreground">0</span>}
             title="No investigations yet"
             body="Traces you start appear here with their parameters, status and risk level. Run a recorded demo to see a finished one."

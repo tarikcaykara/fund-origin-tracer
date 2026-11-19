@@ -21,7 +21,7 @@ export function Banner({
   className?: string;
 }) {
   return (
-    <aside
+    <div
       role={tone === "destructive" ? "alert" : "status"}
       className={cn(
         "flex flex-wrap items-center justify-between gap-3 border px-4 py-2.5 type-body",
@@ -34,6 +34,6 @@ export function Banner({
         {children}
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
-    </aside>
+    </div>
   );
 }

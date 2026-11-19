@@ -150,10 +150,7 @@ export function DetailPanel({
           : "";
 
   return (
-    <aside
-      className="flex h-full min-h-0 min-w-0 flex-col bg-card text-foreground"
-      data-mode={mode}
-    >
+    <div className="flex h-full min-h-0 min-w-0 flex-col bg-card text-foreground" data-mode={mode}>
       {mode === "full" ? (
         <div className="flex justify-center py-2">
           <span className="h-1 w-9 rounded-full bg-border-strong" />
@@ -161,7 +158,7 @@ export function DetailPanel({
       ) : null}
       <header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-2.5 md:px-4">
         <div className="min-w-0 flex-1">
-          <div className="type-overline">{title}</div>
+          <h2 className="type-overline">{title}</h2>
           {subtitle ? (
             <div className="truncate type-mono-sm text-muted-foreground">{subtitle}</div>
           ) : null}
@@ -243,7 +240,7 @@ export function DetailPanel({
           <SetPanel chain={chain} selection={selection} onSelect={onSelect} />
         ) : null}
       </div>
-    </aside>
+    </div>
   );
 }
 

@@ -61,6 +61,7 @@ export function LinkedWalletsTab({
     return (
       <div className="p-3 md:p-5">
         <EmptyState
+          headingLevel={2}
           glyph="⧉"
           title="No linked wallets found"
           body={
@@ -75,6 +76,7 @@ export function LinkedWalletsTab({
 
   return (
     <section className="min-w-0 p-3 md:p-5">
+      <h2 className="sr-only">Linked wallets</h2>
       <div className="flex flex-col gap-2 border-b border-border pb-3 md:flex-row md:items-center">
         <div className="flex flex-wrap gap-2">
           {(["across", "within"] as const).map((value) => {
