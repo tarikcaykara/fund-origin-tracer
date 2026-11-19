@@ -110,6 +110,17 @@ function smallTargets(page: Page): Promise<string[]> {
   });
 }
 
+/** Column headers with no text content; an `aria-label` alone does not count (axe `empty-table-header`). */
+function emptyColumnHeaders(page: Page): Promise<string[]> {
+  return page
+    .locator("th")
+    .evaluateAll((headers) =>
+      headers
+        .filter((header) => !header.textContent?.trim())
+        .map((header) => header.outerHTML.slice(0, 80)),
+    );
+}
+
 for (const demo of DEMOS) {
   test(`${demo.id}: graph, tabs and report`, async ({ page }) => {
     const runId = await runDemo(page, demo.title);
@@ -183,7 +194,9 @@ test("⌘K finds an address of the open run; Esc returns focus to the opener", a
   await expect(panel.getByText(address, { exact: true })).toBeVisible();
 });
 
-test("pages have one h1 and ordered headings; Esc closes the detail panel", async ({ page }) => {
+test("pages have one h1 and ordered headings, History headers have text; Esc closes the detail panel", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
   await expectHeadingOutline(page, "Home");
@@ -214,6 +227,8 @@ test("pages have one h1 and ordered headings; Esc closes the detail panel", asyn
   await page.goto("/runs");
   await expect(page.getByRole("heading", { level: 1, name: "History" })).toBeVisible();
   await expectHeadingOutline(page, "History");
+  await expect(page.getByRole("columnheader", { name: "Actions" })).toBeVisible();
+  expect(await emptyColumnHeaders(page), "History: column headers without text").toEqual([]);
 });
 
 test("unknown pages and runs have an h1 and a link back", async ({ page, consoleErrors }) => {

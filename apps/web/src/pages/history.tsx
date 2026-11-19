@@ -412,7 +412,9 @@ export function HistoryPage() {
                     <TableHead sort="descending" className="type-mono-sm text-foreground">
                       CREATED
                     </TableHead>
-                    <TableHead aria-label="Actions" />
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
