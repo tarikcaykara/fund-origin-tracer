@@ -174,6 +174,32 @@ describe("PriceService", () => {
     expect(again).toEqual({ "coingecko:ethereum": [b1 + 3600, b1 + 14_400] });
   });
 
+  test("a point below 0.5 confidence does not price its bucket", async () => {
+    const b1 = 1_699_999_200;
+    const buckets = [b1, b1 + 3600, b1 + 7200, b1 + 10_800];
+    const { transport } = recorder(() => ({
+      status: 200,
+      body: JSON.stringify({
+        coins: {
+          "coingecko:ethereum": {
+            prices: [
+              { timestamp: b1, price: 1, confidence: 0.3 },
+              { timestamp: b1 + 3600, price: 2, confidence: 0.5 },
+              { timestamp: b1 + 7200, price: 3 },
+              // The nearest point is too weak; a valid one within 600 s still prices the bucket.
+              { timestamp: b1 + 10_800 + 100, price: 4, confidence: 0.2 },
+              { timestamp: b1 + 10_800 + 500, price: 5, confidence: 0.99 },
+            ],
+          },
+        },
+      }),
+    }));
+    const items = buckets.map((timestamp) => ({ asset: ETH, timestamp }));
+    const res = await make(transport).priceMany(items, signal);
+    expect(buckets.map((b) => res.prices.get(priceKey(ETH, b)))).toEqual([null, 2, 3, 5]);
+    expect(res.warning).toBeNull();
+  });
+
   test("a coin absent from the response is null without a warning", async () => {
     const { transport } = recorder(() => ({ status: 200, body: '{"coins":{}}' }));
     const res = await make(transport).priceMany([{ asset: ETH, timestamp: OLD_TS }], signal);

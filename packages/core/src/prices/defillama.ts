@@ -19,12 +19,16 @@ const BASE_URL = "https://coins.llama.fi/batchHistorical";
 const SEARCH_WIDTH = 600;
 const MAX_COINS_PER_REQUEST = 100;
 const BUCKET_SEC = 3600;
+/** DefiLlama's own TVL code skips prices below this; it rates pool-derived prices by liquidity depth. */
+const MIN_PRICE_CONFIDENCE = 0.5;
 
 const responseSchema = z.object({
   coins: z.record(
     z.string(),
     z.object({
-      prices: z.array(z.object({ timestamp: z.number(), price: z.number() })),
+      prices: z.array(
+        z.object({ timestamp: z.number(), price: z.number(), confidence: z.number().optional() }),
+      ),
     }),
   ),
 });
@@ -111,7 +115,12 @@ export class PriceService implements PriceSource {
   }
 
   private bucketCacheKey(w: Wanted): Promise<string> {
-    return cacheKey("defillama", w.chain, "price", { coin: w.coin, bucket: w.bucket });
+    // The floor is part of the key, so a price cached under another floor is fetched again.
+    return cacheKey("defillama", w.chain, "price", {
+      coin: w.coin,
+      bucket: w.bucket,
+      minConfidence: MIN_PRICE_CONFIDENCE,
+    });
   }
 
   private async fetchChunk(
@@ -164,10 +173,11 @@ export class PriceService implements PriceSource {
     for (const w of chunk) {
       const series = parsed.coins[w.coin]?.prices ?? [];
       // The series holds points for every bucket asked for this coin: only one within
-      // SEARCH_WIDTH of this bucket prices it.
+      // SEARCH_WIDTH of this bucket prices it, and never one DefiLlama rates below the floor.
       let best: number | null = null;
       let bestDist = Number.POSITIVE_INFINITY;
       for (const p of series) {
+        if (p.confidence !== undefined && p.confidence < MIN_PRICE_CONFIDENCE) continue;
         const dist = Math.abs(p.timestamp - w.bucket);
         if (dist <= SEARCH_WIDTH && dist < bestDist) {
           bestDist = dist;
