@@ -683,7 +683,8 @@ function GraphCanvasInner({
           style={{ background: "var(--graph-canvas)" }}
         >
           <Background color="var(--graph-grid)" gap={16} size={1} />
-          {density === "dots" ? (
+          {/* A phone canvas has no room for an overview; Fit all and pinch zoom cover it. */}
+          {density === "dots" && breakpoint !== "phone" ? (
             <MiniMap
               pannable
               zoomable
@@ -693,7 +694,7 @@ function GraphCanvasInner({
                   ? `var(${CATEGORY_META[data.label.category].token})`
                   : "var(--border-strong)";
               }}
-              maskColor="var(--overlay)"
+              maskColor="var(--graph-minimap-mask)"
               style={{ background: "var(--card)" }}
             />
           ) : null}

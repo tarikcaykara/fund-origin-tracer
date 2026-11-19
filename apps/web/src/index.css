@@ -81,6 +81,8 @@
   --graph-path: #1f4fd1;
   --graph-selected: #1f4fd1;
   --graph-selected-muted: #e6ecfb;
+  /* Minimap area outside the viewport: a light tint, unlike the modal --overlay. */
+  --graph-minimap-mask: rgba(28, 27, 24, 0.07);
   --overlay: rgba(28, 27, 24, 0.32);
   --elev-popover: 0 8px 28px rgba(28, 27, 24, 0.14);
   --elev-sheet: -8px 0 24px rgba(28, 27, 24, 0.12);
@@ -157,6 +159,7 @@
   --graph-path: #86a8ff;
   --graph-selected: #86a8ff;
   --graph-selected-muted: #1b2338;
+  --graph-minimap-mask: rgba(0, 0, 0, 0.35);
   --overlay: rgba(0, 0, 0, 0.55);
   --elev-popover: 0 8px 28px rgba(0, 0, 0, 0.5);
   --elev-sheet: -8px 0 24px rgba(0, 0, 0, 0.45);

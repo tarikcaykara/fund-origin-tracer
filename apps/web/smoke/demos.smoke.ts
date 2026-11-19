@@ -330,6 +330,10 @@ test.describe("phone (390 px)", () => {
     await page.getByRole("button", { name: "Full graph" }).click();
     const fullGraph = page.getByRole("dialog", { name: "Full graph" });
     await expect(fullGraph.getByRole("region", { name: "Transfer graph" })).toBeVisible();
+    // The dots density shows a minimap on larger screens; a phone canvas has no room for one.
+    await fullGraph.getByRole("radio", { name: "Show graph dots" }).click();
+    await expect(fullGraph.getByRole("radio", { name: "Show graph dots" })).toBeChecked();
+    await expect(fullGraph.locator(".react-flow__minimap")).toHaveCount(0);
     await fullGraph.getByRole("button", { name: "× Close", exact: true }).click();
     await expect(fullGraph).toBeHidden();
 
