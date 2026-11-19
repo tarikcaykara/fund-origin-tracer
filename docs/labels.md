@@ -98,11 +98,11 @@ Open a pull request that edits the relevant `packages/core/labels/<chain>.json` 
 
 ## Coverage
 
-Counts as of 2026-11-05 (entries per category):
+Counts as of 2026-11-19 (entries per category):
 
 | Chain | exchange | dex | bridge | mixer | token | Total |
 |---|---:|---:|---:|---:|---:|---:|
-| Ethereum | 61 | 15 | 14 | 26 | 5 | 121 |
+| Ethereum | 61 | 15 | 15 | 26 | 5 | 122 |
 | Polygon | 7 | 10 | 8 | 4 | 6 | 35 |
 | Arbitrum | 0 | 8 | 6 | 4 | 5 | 23 |
 | TRON | 53 | 8 | 0 | 0 | 4 | 65 |
@@ -114,7 +114,7 @@ Known gaps (these are gaps in verified coverage, not statements that the entitie
 - **Coinbase and Crypto.com**: Ethereum only (Coinbase has no verified Polygon/TRON entries).
 - **Gate on Ethereum** is listed through the explorer's `Gate Deposit` tags only (deposit-side addresses), not hot wallets.
 - **Mixers**: Tornado Cash pools only on Ethereum, Polygon and Arbitrum; Tornado Cash is the only mixer covered.
-- **Bridges** cover Stargate, Across, Hop, Celer cBridge, deBridge, the Polygon PoS bridge (Ethereum side) and the Arbitrum gateways/inbox where a source was found. Other bridges are not covered.
+- **Bridges** cover Stargate, Across, Hop, Celer cBridge, deBridge, the Polygon PoS bridge (Ethereum side), the THORChain router (Ethereum) and the Arbitrum gateways/inbox where a source was found. Other bridges are not covered.
 - **DEX coverage** is routers only (Uniswap, 1inch, 0x, Velora/ParaSwap, SushiSwap, Curve, QuickSwap, PancakeSwap, CoW, OKX DEX, SunSwap); pools and aggregators not listed are unlabeled.
 - **Tokens**: canonical stablecoins and wrapped natives only. On Polygon and Arbitrum the Tether token is now the USDT0 deployment (symbol `USDT0` / `USD₮0`), and the TRON USDC contract is the deprecated "USD Coin Old".
 - The OFAC SDN list is a separate source (`origin: "ofac"`), loaded at runtime rather than bundled; see [OFAC SDN](#ofac-sdn).

@@ -961,6 +961,14 @@
       "verifiedAt": "2026-10-20"
     },
     {
+      "address": "0xd37bbe5744d730a1d98d8dc97c42f0ca46ad7146",
+      "name": "THORChain: THORChain Router v4.1.1",
+      "category": "bridge",
+      "entity": "THORChain",
+      "source": "https://etherscan.io/address/0xd37bbe5744d730a1d98d8dc97c42f0ca46ad7146",
+      "verifiedAt": "2026-11-19"
+    },
+    {
       "address": "0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d",
       "name": "Tornado.Cash: 1,00 USDC",
       "category": "mixer",
