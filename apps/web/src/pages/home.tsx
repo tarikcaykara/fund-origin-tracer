@@ -699,7 +699,10 @@ function RecentCard({ runs }: { runs: RunSummary[] }) {
     <Card className="min-w-0">
       <CardHeader className="flex items-center justify-between border-b border-border px-4 py-3">
         <CardTitle className="text-lg">Recent</CardTitle>
-        <Link to="/runs" className="text-[13px] font-medium text-link hover:underline">
+        <Link
+          to="/runs"
+          className="inline-flex items-center text-[13px] font-medium text-link hover:underline max-md:min-h-11"
+        >
           History →
         </Link>
       </CardHeader>

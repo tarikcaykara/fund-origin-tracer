@@ -168,6 +168,7 @@ export function DetailPanel({
             type="button"
             variant="ghost"
             size="icon-sm"
+            className="max-md:size-11"
             aria-label="Previous selection"
             onClick={onPrev}
           >
@@ -179,6 +180,7 @@ export function DetailPanel({
             type="button"
             variant="ghost"
             size="icon-sm"
+            className="max-md:size-11"
             aria-label="Next selection"
             onClick={onNext}
           >
@@ -189,6 +191,7 @@ export function DetailPanel({
           type="button"
           variant="ghost"
           size="icon"
+          className="max-md:size-11"
           aria-label="Close detail panel"
           onClick={onClose}
         >

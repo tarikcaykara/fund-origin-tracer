@@ -89,6 +89,27 @@ async function expectHeadingOutline(page: Page, where: string): Promise<void> {
   expect(skips, `${where}: skipped heading levels`).toEqual([]);
 }
 
+/** Visible controls under 44 × 44 px, except links inside running text (WCAG 2.5.8 inline). */
+function smallTargets(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const controls = document.querySelectorAll(
+      'a[href], button, input, select, textarea, [role="button"], [role="tab"], [tabindex="0"]',
+    );
+    return [...controls].flatMap((control) => {
+      if (control.closest("[inert]") || getComputedStyle(control).visibility === "hidden")
+        return [];
+      const box = control.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0 || (box.width >= 44 && box.height >= 44)) return [];
+      const text = control.textContent?.trim() ?? "";
+      const parent = control.parentElement;
+      if (control.tagName === "A" && parent?.tagName === "P" && parent.textContent?.trim() !== text)
+        return [];
+      const name = control.getAttribute("aria-label") ?? (text || control.tagName);
+      return [`${name.slice(0, 48)} (${Math.round(box.width)}×${Math.round(box.height)})`];
+    });
+  });
+}
+
 for (const demo of DEMOS) {
   test(`${demo.id}: graph, tabs and report`, async ({ page }) => {
     const runId = await runDemo(page, demo.title);
@@ -309,5 +330,41 @@ test.describe("phone (390 px)", () => {
     await expect(palette).toBeHidden();
     // The menu item is gone with the menu, so focus returns to ☰.
     await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
+  });
+
+  test("every control is at least 44 × 44 px", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
+    expect(await smallTargets(page), "Home").toEqual([]);
+    await runDemo(page, FAST_DEMO);
+    expect(await smallTargets(page), "Path").toEqual([]);
+    for (const name of [/^Touchpoints/, /^Flags/, /^Transfers/]) {
+      const tab = page.getByRole("tab", { name });
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+      expect(await smallTargets(page), `${name} tab`).toEqual([]);
+    }
+    await page.getByRole("tab", { name: /^Path/ }).click();
+    await page
+      .getByRole("region", { name: "Highest-value path" })
+      .getByRole("button")
+      .first()
+      .click();
+    const sheet = page.getByRole("dialog", { name: "Selection details" });
+    await expect(sheet).toBeVisible();
+    expect(await smallTargets(page), "detail sheet").toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.locator("#mobile-navigation")).toBeVisible();
+    expect(await smallTargets(page), "☰ menu").toEqual([]);
+    await page.goto("/runs");
+    await expect(
+      page
+        .getByRole("link", { name: `Open investigation ${FAST_DEMO}`, exact: true })
+        .filter({ visible: true })
+        .first(),
+    ).toBeVisible();
+    expect(await smallTargets(page), "History").toEqual([]);
   });
 });

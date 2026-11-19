@@ -315,7 +315,7 @@ export function HistoryPage() {
               value={qDraft}
               onChange={(event) => setQDraft(event.target.value)}
               placeholder="Search title, seed or address"
-              className={`h-[34px] rounded-sm border-border-strong pl-8 pr-9 type-body-sm ${q ? "border-foreground shadow-[0_0_0_3px_var(--selection-muted)]" : ""}`}
+              className={`h-[34px] rounded-sm border-border-strong pl-8 pr-9 type-body-sm max-md:h-11 max-md:pr-11 ${q ? "border-foreground shadow-[0_0_0_3px_var(--selection-muted)]" : ""}`}
               aria-label="Search title, seed or address"
             />
             {qDraft ? (
@@ -326,7 +326,7 @@ export function HistoryPage() {
                   setQDraft("");
                   update({ q: null }, true);
                 }}
-                className="absolute top-1/2 right-2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute top-1/2 right-2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-md:right-0 max-md:size-11"
               >
                 ×
               </button>

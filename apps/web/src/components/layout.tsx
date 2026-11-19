@@ -73,9 +73,15 @@ function MobileThemeControl() {
         if (value === "light" || value === "dark" || value === "system") setTheme(value);
       }}
     >
-      <ToggleGroupItem value="light">Light</ToggleGroupItem>
-      <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-      <ToggleGroupItem value="system">System</ToggleGroupItem>
+      <ToggleGroupItem value="light" className="min-h-11">
+        Light
+      </ToggleGroupItem>
+      <ToggleGroupItem value="dark" className="min-h-11">
+        Dark
+      </ToggleGroupItem>
+      <ToggleGroupItem value="system" className="min-h-11">
+        System
+      </ToggleGroupItem>
     </ToggleGroup>
   );
 }
@@ -181,7 +187,7 @@ export function Layout() {
               <NavLink
                 to="/"
                 end
-                className="shrink-0 font-mono text-[13px] font-semibold tracking-[-.01em] text-foreground md:text-sm"
+                className="shrink-0 font-mono text-[13px] font-semibold tracking-[-.01em] text-foreground max-md:inline-flex max-md:min-h-11 max-md:items-center md:text-sm"
               >
                 fund-origin-tracer
               </NavLink>

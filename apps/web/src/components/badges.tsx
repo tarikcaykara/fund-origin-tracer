@@ -126,10 +126,13 @@ export function StopTag({ reason }: { reason: StopReason | null }) {
       <TooltipTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center rounded-sm border border-border-strong bg-muted px-1.5 py-0.5 font-mono text-3xs font-semibold"
+          // The badge keeps its size; the button around it is a 44 px target on phones.
+          className="inline-flex items-center justify-center max-md:min-h-11 max-md:min-w-11"
           aria-label={`${tag.code}, ${tag.text}`}
         >
-          {tag.code}
+          <span className="rounded-sm border border-border-strong bg-muted px-1.5 py-0.5 font-mono text-3xs font-semibold">
+            {tag.code}
+          </span>
         </button>
       </TooltipTrigger>
       <TooltipContent>{tag.text}</TooltipContent>

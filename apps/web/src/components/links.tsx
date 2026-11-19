@@ -17,7 +17,7 @@ export function ExternalLink({ href, children }: { href: string; children: React
       href={href}
       target="_blank"
       rel="noreferrer noopener"
-      className="text-link underline underline-offset-2"
+      className="text-link underline underline-offset-2 max-md:inline-flex max-md:min-h-11 max-md:items-center"
     >
       {children}
     </a>
@@ -54,7 +54,7 @@ export function AddressChip({
               })
             }
             className={cn(
-              "address rounded-sm px-0.5 text-foreground hover:bg-muted",
+              "address rounded-sm px-0.5 text-foreground hover:bg-muted max-md:min-h-11",
               copied && "bg-success-muted px-1 text-success [text-decoration:none]",
               full && "whitespace-normal break-all",
             )}
@@ -77,18 +77,20 @@ export function AddressChip({
 
 /**
  * Explorer link. With text `children` the visible text is the accessible name; without them the
- * link renders an arrow glyph and carries an `aria-label` instead.
+ * link renders an arrow glyph and carries an `aria-label` instead, and is a 44 px target on phones.
  */
 export function ExplorerLink({
   chain,
   kind,
   value,
   children,
+  className,
 }: {
   chain: ChainId;
   kind: "address" | "tx";
   value: string;
   children?: ReactNode;
+  className?: string;
 }) {
   const href = kind === "address" ? addressUrl(chain, value) : txUrl(chain, value);
   const noun = kind === "tx" ? "transaction" : "address";
@@ -99,7 +101,11 @@ export function ExplorerLink({
       rel="noreferrer noopener"
       title={value}
       {...(children === undefined ? { "aria-label": `Open ${noun} ${value} in explorer` } : {})}
-      className="inline-flex items-center gap-1 text-link underline-offset-2 hover:underline"
+      className={cn(
+        "inline-flex items-center gap-1 text-link underline-offset-2 hover:underline",
+        children === undefined && "justify-center max-md:min-h-11 max-md:min-w-11",
+        className,
+      )}
     >
       {children ?? <span aria-hidden="true">↗</span>}
     </a>
@@ -108,7 +114,7 @@ export function ExplorerLink({
 
 export function TxLink({ chain, hash }: { chain: ChainId; hash: string }) {
   return (
-    <ExplorerLink chain={chain} kind="tx" value={hash}>
+    <ExplorerLink chain={chain} kind="tx" value={hash} className="max-md:min-h-11">
       <span className="font-mono text-xs">{shortHash(hash)}</span>
       <span aria-hidden="true">↗</span>
     </ExplorerLink>

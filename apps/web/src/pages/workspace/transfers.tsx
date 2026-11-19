@@ -182,7 +182,7 @@ export function TransfersTab({
           onChange={(event) => setSearch(event.target.value)}
           placeholder="⌕ Filter by address, tx or asset"
           aria-label="Filter transfers by address, transaction or asset"
-          className="h-8 w-full md:max-w-[300px]"
+          className="h-8 w-full max-md:h-11 md:max-w-[300px]"
         />
         {controls}
         <span className="type-mono-node text-muted-foreground md:ml-auto">
