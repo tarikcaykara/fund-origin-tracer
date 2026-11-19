@@ -87,6 +87,15 @@ The sanctions list is not bundled. The server downloads OFAC's SDN XML (`OFAC_SD
 - **Failed downloads.** A response counts as a download only if it is a complete SDN document (with both `<sdnList` and `</sdnList>`) and holds at least one EVM or TRON address. An HTTP error, a maintenance page, a format change or a cut-off body keeps the previous snapshot in use and in SQLite, and the server logs `OFAC SDN list unavailable (<reason>); using stale snapshot` (at boot as warning `ofac_unavailable`, then at each failed retry). Without a previous snapshot the list is empty and sanctions screening is off (`… sanctions screening disabled`, `ofacFetchedAt: null` in `GET /api/health`; `GET /api/screen` answers `ofac.available: false` and `fot screen` exits 4).
 - **Retries.** While no snapshot younger than `OFAC_REFRESH_HOURS` is loaded (a failed boot load, or only a stale snapshot), `fot serve` retries after 1, 2 and 5 minutes, then every 15 minutes, and returns to the regular refresh after the first good download.
 
+## OKX proof of reserves
+
+OKX and Okcoin addresses on Arbitrum and Polygon come from OKX's monthly reserves snapshot, a "Reserves" file on [okx.com/proof-of-reserves/download](https://www.okx.com/proof-of-reserves/download) (source kind 1).
+
+- **Import.** `bun scripts/okx-por.ts <snapshot zip URL>` (needs `unzip`) reads the snapshot's `ARBITRUM` and `POLYGON` rows and rewrites `arbitrum.json` and `polygon.json`; commit the result. Each address becomes one `exchange` entry named after its entity: `OKX`, or `Okcoin` for rows that say "I am an Okcoin address". The snapshot URL is its `source` and the import date its `verifiedAt`.
+- **Signatures.** Every row is verified before it becomes a label, as OKX's own [VerifyAddress tool](https://github.com/okx/proof-of-reserves) does: the signer of `keccak256("\x19Ethereum Signed Message:\n32" ‖ keccak256(message))` must be the address or, for a contract wallet, each owner listed in `EOA1` and `EOA2`. A row that does not verify, an unknown message or an address listed for both entities stops the import before any file is written.
+- **Later snapshots** update the `source` and `verifiedAt` of the addresses they list and add new addresses after the file's exchange entries. An address a later snapshot no longer lists keeps its earlier snapshot as its source: OKX controlled it then, which is what a trace through older transfers needs. An address already labeled from another source stays as it is when it names the same entity, and stops the import when it names another.
+- **Ethereum and TRON are not imported.** Their lists hold 23,944 and 474,530 addresses (2026-11-01 snapshot), deposit addresses included: too many to bundle.
+
 ## Contributing a label
 
 Open a pull request that edits the relevant `packages/core/labels/<chain>.json` file:
@@ -103,13 +112,13 @@ Counts as of 2026-11-19 (entries per category):
 | Chain | exchange | dex | bridge | mixer | token | Total |
 |---|---:|---:|---:|---:|---:|---:|
 | Ethereum | 61 | 15 | 15 | 26 | 5 | 122 |
-| Polygon | 7 | 10 | 8 | 4 | 6 | 35 |
-| Arbitrum | 0 | 8 | 6 | 4 | 5 | 23 |
+| Polygon | 102 | 10 | 8 | 4 | 6 | 130 |
+| Arbitrum | 119 | 8 | 6 | 4 | 5 | 142 |
 | TRON | 53 | 8 | 0 | 0 | 4 | 65 |
 
 Known gaps (these are gaps in verified coverage, not statements that the entities are absent):
 
-- **Arbitrum exchanges: none.** Arbiscan blocks automated access, so address tags there could not be opened, and no exchange discloses Arbitrum hot wallets in a source we could check. Arbitrum entries come from official docs and deployment files only.
+- **Arbitrum exchanges: OKX and Okcoin only**, from OKX's signed reserves list (see [OKX proof of reserves](#okx-proof-of-reserves)). Arbiscan blocks automated access, so address tags there could not be opened, and no other exchange discloses Arbitrum addresses in a source we could check.
 - **TRON bridges and mixers: none**, and TRON exchange coverage is Binance, OKX (1), Bybit, Kraken, KuCoin, Gate (1), HTX, Bitget and MEXC (1, tagged `MXC`, the exchange's name before its 2021 rebrand to MEXC). Crypto.com has no tagged TRON addresses that could be verified.
 - **Coinbase and Crypto.com**: Ethereum only (Coinbase has no verified Polygon/TRON entries).
 - **Gate on Ethereum** is listed through the explorer's `Gate Deposit` tags only (deposit-side addresses), not hot wallets.

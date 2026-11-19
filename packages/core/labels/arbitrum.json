@@ -2,6 +2,958 @@
   "chain": "arbitrum",
   "entries": [
     {
+      "address": "0x03426aacbcf9030a380b3ba4a1f16b968649ef3d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x04e9d79a17f4894c76c65c52516f790531ef6bee",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x085673a0fe2d1440112225d2ce433434216b80c3",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x0938c63109801ee4243a487ab84dffa2bba4589e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x11efcc0b689d6cbd217899479305c0d7f8a3655c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x126d0c3f792b99ec831990c5ef23badda9c95f5e",
+      "name": "Okcoin",
+      "category": "exchange",
+      "entity": "Okcoin",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x13be4b56a8f3d5f000eb2be700de7e385cf52587",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x172883abff9ba6a49d7355b0984a0e7bf82cd147",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x17de8c47489a8cf34a0cc6676565fa5f443528c5",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1b151dd63b464add0fba6e1df1d9a057d7032149",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1cb2fbeb90da13f19df98cd197e8d5f7018a04e0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1cdf5ba7297f276bf0320c88ca948d4311c913ce",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1d22bd71ac3ef6f35e34715a1414f71e3252d319",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1d397b0afa588d1b5adcdca54ebeb28b82f00a31",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x1d6ca1b7825c2895990fee5bf7a43a9173b10b2e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x229b1c70124141ec96945aec2323a22b68bb093c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x27b6ebda5e3158ff89ab0e55463c7b43cca3b039",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x299ab41d456e587fae98d4dbdd3b47c26ce890ab",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x2dc529b1111bdef630a188afd43139f41c25fac0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x31768ac0c067b8b837a742b87d3fe8f775ea2100",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x34bba0d0a1d0cab16ef6be267465efe5c4df201a",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x35a0083ae4e52f1d2509f1898cb2fbc3a4fd052d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x35dfb44511bda4c5625a9543bf4988a4fff80719",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x3e8c0d3cf96b69c245b14923758dc8a2db8621ec",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x3ee8863d3345f96ddda022eda4fdb58c32d519e8",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x4568253bcf6e71bb4e2dd33c6d21652071a0820c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x470b6ae22f17e5feb6b6d6fbab9229730bcc2cf1",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x4a1ca3e90e9e3a00eb27e9f409b4db310aa7405f",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x4c51b920f03b8692520d9c0bb1645fb8f0ccf12d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x52e232da865d81dd7417fc372f96778bf9373d34",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x53f5ce98eb7555ad5326005334c74140f1bcfed0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x5530942407be0c15ac3dad71b5326984c4631144",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x582988097ef9f2cf50cfac3f5f3b1ed54bc52a88",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x595a657c7a8b6ad1ada09b0095e71307a3e6e26c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x5ad6d46d925e238fcd2f9d466e0f1f6ac59ced7b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x5ca1063894e5bbd688830d83fefa5ce3d339744d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x5e973b6ed38a2d2c3e14f1329837233ba47a9198",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x62f062a9cc39f23d91177334ec6ec0a2721ea7fb",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x65a1f26453d752fc423afdf4bf78f1fc21d81dab",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x70b6443b25127af586e7757fa95a5fe65a235ca8",
+      "name": "Okcoin",
+      "category": "exchange",
+      "entity": "Okcoin",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7232ce85622b290bd0a0f09218b61c220b4a92e4",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7265748a7eae8763dcf3411a0b629ce291348a8e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x77a9b3fa8387652128ca5a9e4756e9e88dac3634",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7af418e5651a1f4258c7eb8abb73c02bd05fda5d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7cfb1543e6dec0dadd2435f23b97e08d682b6241",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7cfc90f86e6695c191a0edc3505f59c20fe1f3c1",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x7fa19087a1290a1e36c1f8a4a80778ea25dee63d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x80e99e5b3e5438ce36217f0cdba1546f5b1a2ef3",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x84714ac1a08d11fc9383ef8d4d406d43ffe80363",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x8749596ce1288d518589bf1aef43150386a6769c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x88288100c2005c5ce9b06956bed357f3ccc95b9e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x8a895fe30b73907c8c6d1efc89a27b7b34131f9b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x8c1cf2d3480c5cbde6194413e8bdb411ca0d7407",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x8e1cfb5b23554a515fbd925181cae19bc08539e4",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x908ea000c00425aae42ffa6cf08dbab80f0ee0fe",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x946c1043f86ebc7eee771fbe9600e31ffd2632e0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x94a8a0fc880caa891e4c635b2a8fda0a78e97f7a",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x95b855be94ba78ea9e7ba568e1b564f49c70d1b8",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x9b65692dc3fde3bf331156afda771f147ff0d460",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0x9d587dd67f8f8746ccac1eacb34eff9975231fb2",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xa0c9b4ce1785953abdceae569789aa158a01da4c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xa1ffea07ba9f2997ccde687fdf6ac1924a466a2c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xa92a1f0684911316fc8e8b0e64dea76beaf7130d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xaaba3b3be26430760c5a284bc0d101097217ae8c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xab56ce2fd4939339fe0d2c3e46ad2f8712cc496a",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xace6249b58029e55bf3c5b8dd32095f448f22af3",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xafee421482faea92292ed3ffe29371742542ad72",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb0473ca01e91981623b65daf84ab7bc94a7e4000",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb0f3b242b5273b4705a31576e2ffcd7bdec8aaff",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb24472398170408edcb3b5cd30dc0b17c7eb4816",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb2746ef5c9021def18a7568a56380eef6041eca6",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb37172818580416a8d4db0ae793a144cfe43b9c0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb4086efea4058a144a4231af112a6311f4f6d25b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xb8b70cf4edd49aa6c7212286917bcefb42da01c3",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xbb3c6d28def21b6297016622a57a0b05015e3ad2",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xbe9ac2d59743d69c4054bab09fa9821929d0f31b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xbedfc76292386f2751bbc335087cf3bf571ff989",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xbf94f0ac752c739f623c463b5210a7fb2cbb420b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc0e400824044f8b660596f073abc8b31bdaba047",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc14bd267f715bfa41cc33c16b0836e38c1ec0442",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc31907f59603a8512748a80415bf62c1978ebdb7",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc3520b4a68f7fd5e0832e90187a8fad3d7d3c880",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc496e5e40f18035d6f8e805f1e5595657d7dca9f",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc706f61c9b7eba61fd7170f191fce16e79c7f314",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xc83d31b0eaa032da12056f90da27635ede10b2ba",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xca4815761f16f826211213c429c393e179354e3b",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xcd276ebdf62d8867b7c9a31e81af11a159bb4a3d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xcd75adb65431c5a697bd17b02a5969f27e8d5575",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xcf67640fd0716eb9c0d18c32214a36b8d8a2abaf",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xd353943193d87dc97c099ca456afd6a1e73b9411",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xd864d3e3b0c8938f7088cbc2ac83e89e05952b3e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xd8a3ed83a59d3e10d82a4b845d64b24ba0572baf",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xd953e4717c4aa75b08052645379cec64d539ea5a",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xd9eb8ddaed166d9ec9c8e46bbd4bff2d39ff1eb2",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xdac67ce88f012005233733a4bd2b1b32a4f484c8",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xddbe5633c49ebb4efa44d0a7009d0e98c11f5215",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xdddce28b1f7b0544eee9f8dd167ce6f72bc60403",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xe0cf244d013e2fd8aac4aeb95002e74fd0abaa6c",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xe22ad79ac9eac9b8258f02188a9d444e47377292",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xe30752866cb320f17565a06def871d8447fa8268",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xe7c5e276b2434743f6c79365d967cbe4291477bc",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xe8c3f674bbf27674243c46e27b8340b2188d3811",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xec62bdea852d9404e20f53f0070853490c1e64bd",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xecbdebb62d636808a3e9418307c585b14127393d",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xed226a5c88ff01cf83450ae2310ec0681186c6ed",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xed55e0d547fd2fa53aa64f587b21a9caa9e2d90f",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xee7976324503d5bf5fa7a0daa94fa884f485ad07",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xef0737a3adc5da0735f37a7d634d3e529153ab2e",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xef841a37fd3b261bed24545788a696c46475ef78",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf117596518c7c4784bc092e1078325736cb349c6",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf1d885f9579e211db28fbc1df31859fe16137eee",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf1e7b58ccd200fcb9400ddbc30867c43b7dc9ee1",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf28143f7b282e59bd5f979012982e7cb9d9b95b0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf63a8073a3e3750c53eb052f6e91756773b33b54",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf7e12541dd9042ecead315d45ce3a0c86a69c1f3",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xf7f767ec932a506efce0b644a2344f628f804bfd",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xfbf4878f5223352f013221369052a12867beeba0",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xfedd0afcb68e97bbbe13c16848d6f592e828b651",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
+      "address": "0xffdfef455bebc6abb4b7db6b6432e91b4bf04fea",
+      "name": "OKX",
+      "category": "exchange",
+      "entity": "OKX",
+      "source": "https://static.okx.com/cdn/okx/por/chain/por_csv_2026110100_V1.zip",
+      "verifiedAt": "2026-11-19"
+    },
+    {
       "address": "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
       "name": "USDT0 (USD₮0) Token",
       "category": "token",
