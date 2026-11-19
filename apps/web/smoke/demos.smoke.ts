@@ -308,6 +308,50 @@ test("the screening result belongs to the screened chain and address", async ({ 
   await expect(binance).toBeHidden();
 });
 
+test("Fit all works even when no node size is ever measured", async ({ page }) => {
+  // Chrome can drop the size notifications of nodes drawn while a window shows no frames
+  // (minimized or in the background); React Flow measures nodes only through them.
+  await page.addInitScript(() => {
+    const observe = ResizeObserver.prototype.observe;
+    ResizeObserver.prototype.observe = function (target, options) {
+      if (target.classList.contains("react-flow__node")) return;
+      observe.call(this, target, options);
+    };
+  });
+  await runDemo(page, FAST_DEMO);
+  const graph = page.getByRole("region", { name: "Transfer graph" });
+  const summary = await graph.getByText(/^\d+ addresses · \d+ pairs$/).textContent();
+  const addresses = Number(summary?.split(" ")[0]);
+  // Nodes drawn entirely inside the graph pane.
+  const inView = () =>
+    graph.evaluate((region) => {
+      const pane = region.querySelector(".react-flow")?.getBoundingClientRect();
+      if (!pane) return 0;
+      return [...region.querySelectorAll(".react-flow__node")].filter((node) => {
+        const box = node.getBoundingClientRect();
+        return (
+          box.left >= pane.left - 1 &&
+          box.right <= pane.right + 1 &&
+          box.top >= pane.top - 1 &&
+          box.bottom <= pane.bottom + 1
+        );
+      }).length;
+    });
+
+  // Zoomed in and dragged aside, most nodes leave the view.
+  for (let i = 0; i < 3; i++) await graph.getByRole("button", { name: "Zoom in" }).click();
+  const pane = await graph.locator(".react-flow__pane").boundingBox();
+  if (!pane) throw new Error("No graph pane");
+  await page.mouse.move(pane.x + pane.width * 0.9, pane.y + 30);
+  await page.mouse.down();
+  await page.mouse.move(pane.x + pane.width * 0.05, pane.y + 30, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(inView).toBeLessThan(addresses);
+
+  await graph.getByRole("button", { name: "Fit all" }).click();
+  await expect.poll(inView).toBe(addresses);
+});
+
 test.describe("phone (390 px)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

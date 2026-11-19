@@ -468,6 +468,11 @@ function GraphCanvasInner({
         data: nodeData,
         width: layout.nodeWidth,
         height: layout.nodeHeight,
+        // The layout sets each box, so React Flow needs no DOM measurement before it can fit. A node
+        // object rebuilt during the stream is otherwise unmeasured again until it is drawn, which
+        // never happens off screen (`onlyRenderVisibleElements`) or in a tab without frames, and
+        // every `fitView` (Fit all too) then waits forever.
+        measured: { width: layout.nodeWidth, height: layout.nodeHeight },
         draggable: false,
         selectable: true,
         ariaLabel: `Address ${node.label?.name ?? shortAddress(chain, node.address)}`,
