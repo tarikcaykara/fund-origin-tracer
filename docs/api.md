@@ -368,7 +368,7 @@ event: done
 data: {"type":"done","status":"completed"}
 ```
 
-In a browser, `new EventSource("/api/runs/" + id + "/events")` and one listener per event name is enough; the web app does exactly this.
+In a browser, `new EventSource("/api/runs/" + id + "/events")` and one listener per event name is enough; the web app does exactly this. On a non-200 answer the browser closes the stream without exposing the status, so before reopening a closed stream the web app asks `HEAD /api/runs/:id` (same status as the GET, no body): a 4xx other than 408 or 429 (`404` for an unknown run) ends the stream; any other status, or no answer, reopens it after 1.5 s.
 
 The server keeps at most 10 open streams per run and 100 in total; more answer `429 too_many_streams` until one closes. A stream is exempt from the idle timeout that closes other quiet connections (Bun's 10 s); a `: keepalive` comment every 15 s keeps proxies from closing it.
 
