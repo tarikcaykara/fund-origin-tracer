@@ -246,6 +246,23 @@ test("a demo-only instance offers no rename, notes or delete", async ({ page }) 
   await expect(page.getByRole("button", { name: /^Delete / })).toHaveCount(0);
 });
 
+test("the demo buttons line up and a short History fits the viewport", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("DEMO-ONLY INSTANCE")).toBeVisible();
+  const bottoms = await page
+    .locator('[data-slot="card"]')
+    .getByRole("button", { name: "Run demo" })
+    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().bottom));
+  expect(bottoms).toHaveLength(DEMOS.length);
+  expect(new Set(bottoms.map(Math.round)).size, `Run demo bottoms ${bottoms}`).toBe(1);
+
+  // A filter that matches nothing leaves a short page whatever other tests have stored.
+  await page.goto("/runs?q=no-such-investigation");
+  await expect(page.getByText("No investigations match these filters")).toBeVisible();
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  expect(height, "History page height").toBeLessThanOrEqual(page.viewportSize()?.height ?? 0);
+});
+
 test("the screening result belongs to the screened chain and address", async ({ page }) => {
   const binance14 = "0x28c6c06298d514db089934071355e5743bf21d60";
   const unlabeled = "0x1234567890abcdef1234567890abcdef12345678";

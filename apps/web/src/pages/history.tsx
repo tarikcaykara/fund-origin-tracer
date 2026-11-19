@@ -286,7 +286,7 @@ export function HistoryPage() {
   const to = Math.min(total, (page + 1) * PAGE_SIZE);
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] bg-background px-4 py-5 md:px-4 md:py-5 xl:px-8 xl:py-7">
+    <div className="bg-background px-4 py-5 md:px-4 md:py-5 xl:px-8 xl:py-7">
       <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-3.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h1 className="type-title">History</h1>

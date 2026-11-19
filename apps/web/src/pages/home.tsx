@@ -131,7 +131,7 @@ function DemoCards({
           const size = demoSize(demo);
           return (
             <Card key={demo.id} className="min-w-0 border-border-strong">
-              <CardContent className="min-w-0 gap-3 p-4">
+              <CardContent className="min-w-0 flex-1 gap-3 p-4">
                 <div className="flex min-w-0 flex-wrap justify-between gap-x-2 gap-y-1 type-mono-node text-muted-foreground">
                   <span>{demoMeta(demo)}</span>
                   {size !== null ? <span>{size}</span> : null}
