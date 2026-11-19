@@ -833,6 +833,38 @@ describe("malformed quantities", () => {
     expect(pages).toBe(2);
   });
 
+  test("a listing row timestamp no date can hold is a provider_error and is not cached", async () => {
+    let pages = 0;
+    const t = explorer((p) => {
+      if (p.get("action") !== "tokentx") return undefined;
+      pages++;
+      const row = pages === 1 ? { ...tokenRow, timeStamp: "8640000000001" } : tokenRow;
+      return json({ status: "1", message: "OK", result: [row] });
+    });
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    expect((await failure(list(make(t.transport, { cache })))).code).toBe("provider_error");
+    const res = await list(make(t.transport, { cache }));
+    expect(res.rows.map((r) => r.timestamp)).toEqual([4096]);
+    expect(pages).toBe(2);
+  });
+
+  test("a block timestamp no date can hold is a provider_error and is not cached", async () => {
+    let blocks = 0;
+    const t = explorer((p) => {
+      if (p.get("action") !== "eth_getBlockByNumber") return undefined;
+      blocks++;
+      // 8.64e12 + 1 seconds, one past the latest instant a Date holds.
+      return blocks === 1 ? json({ result: { timestamp: "0x7dba8218001" } }) : undefined;
+    });
+    const cache = new MemoryCacheStore(() => NOW_MS);
+    const e = await failure(make(t.transport, { cache }).getTransaction(SWAP_TX, signal));
+    expect(e.code).toBe("provider_error");
+    expect(e.fatal).toBe(false);
+    const tx = await make(t.transport, { cache }).getTransaction(SWAP_TX, signal);
+    expect(tx.timestamp).toBe(4096);
+    expect(blocks).toBe(2);
+  });
+
   test("a run with one malformed seed completes on the other and reports seed_failed", async () => {
     const t = explorer((p) =>
       p.get("action") === "eth_getTransactionByHash" && p.get("txhash") === BAD_TX

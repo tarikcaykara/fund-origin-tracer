@@ -245,6 +245,17 @@ describe("TronscanProvider.getTransaction", () => {
     expect(calls).toHaveLength(2);
   });
 
+  test("a timestamp no date can hold is a provider_error, and is not cached", async () => {
+    const { provider, calls } = setup(["k1"], () =>
+      ok({ ...txInfoTrc20, timestamp: 8_640_000_000_001_000 }),
+    );
+    for (let i = 0; i < 2; i++) {
+      const err = await provider.getTransaction(txInfoTrc20.hash, signal).catch((e: unknown) => e);
+      expect((err as FotError).code).toBe("provider_error");
+    }
+    expect(calls).toHaveLength(2);
+  });
+
   test("a successful response is cached (second read is a cache hit)", async () => {
     const { provider, calls } = setup(["k1"], () => ok(txInfoTrc20));
     await provider.getTransaction(txInfoTrc20.hash, signal);
@@ -640,5 +651,20 @@ describe("TronscanProvider.listTransfers", () => {
       expect((err as FotError).code).toBe("provider_error");
     }
     expect(calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("a row timestamp no date can hold is a provider_error", async () => {
+    const usdt = trc20Page.token_transfers[2];
+    const { provider } = setup(["k1"], (c) =>
+      ok(
+        c.endpoint === "transaction"
+          ? emptyPage(c.endpoint)
+          : { rangeTotal: 1, token_transfers: [{ ...usdt, block_ts: 8_640_000_000_001_000 }] },
+      ),
+    );
+    const err = await provider
+      .listTransfers({ address: ADDR, direction: "in", window: {}, signal })
+      .catch((e: unknown) => e);
+    expect((err as FotError).code).toBe("provider_error");
   });
 });

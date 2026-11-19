@@ -5,6 +5,7 @@ import {
   type ChainId,
   findCanonicalToken,
   MAX_TOKEN_DECIMALS,
+  MAX_UNIX_SEC,
   normalizeAddress,
   normalizeTx,
 } from "../chains.ts";
@@ -61,6 +62,14 @@ type Params = Record<string, string | number>;
 const HexString = z.string().regex(/^0x[0-9a-fA-F]*$/);
 /** A JSON-RPC quantity: at least one hex digit, so `BigInt` never sees a bare `"0x"`. */
 const Quantity = z.string().regex(/^0x[0-9a-fA-F]+$/);
+/**
+ * A unix-second timestamp a `Date` can hold. Zod runs a refinement even after the regex failed,
+ * so it compares with `Number` (NaN for junk), never `BigInt` (which throws).
+ */
+const UnixSeconds = z
+  .string()
+  .regex(/^\d+$/)
+  .refine((s) => Number(s) <= MAX_UNIX_SEC, "timestamp out of range");
 
 const RpcTx = z.object({
   hash: z.string(),
@@ -80,7 +89,9 @@ const RpcReceipt = z.object({
   contractAddress: z.string().nullish(),
   logs: z.array(RpcLog),
 });
-const RpcBlock = z.object({ timestamp: Quantity });
+const RpcBlock = z.object({
+  timestamp: Quantity.refine((h) => Number(h) <= MAX_UNIX_SEC, "timestamp out of range"),
+});
 
 function parseRpc<T>(schema: z.ZodType<T>, raw: unknown, method: string): T {
   const parsed = schema.safeParse(raw);
@@ -106,7 +117,7 @@ const NormalRow = z.object({
   isError: z.string(),
   contractAddress: z.string().optional(),
   blockNumber: z.string().regex(/^\d+$/),
-  timeStamp: z.string().regex(/^\d+$/),
+  timeStamp: UnixSeconds,
 });
 const TokenRow = z.object({
   hash: z.string(),
@@ -118,7 +129,7 @@ const TokenRow = z.object({
   tokenName: z.string(),
   tokenDecimal: z.string(),
   blockNumber: z.string().regex(/^\d+$/),
-  timeStamp: z.string().regex(/^\d+$/),
+  timeStamp: UnixSeconds,
 });
 
 function providerError(message: string, extra: { retryable?: boolean } = {}): FotError {

@@ -107,6 +107,9 @@ export function listingCalls(
 /** Largest token decimals accepted from an explorer or a contract; `decimals()` returns a uint8. */
 export const MAX_TOKEN_DECIMALS = 255;
 
+/** Latest unix second a `Date` holds (8.64e15 ms); an explorer timestamp past it is malformed. */
+export const MAX_UNIX_SEC = 8_640_000_000_000;
+
 export interface CanonicalToken {
   symbol: string;
   contract: string;

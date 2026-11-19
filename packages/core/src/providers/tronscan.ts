@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { findCanonicalToken, MAX_TOKEN_DECIMALS, normalizeTx } from "../chains.ts";
+import { findCanonicalToken, MAX_TOKEN_DECIMALS, MAX_UNIX_SEC, normalizeTx } from "../chains.ts";
 import { FotError } from "../errors.ts";
 import { cachedRequest, ttlForTimestamp } from "../infra/http.ts";
 import {
@@ -57,6 +57,8 @@ class KeyExhaustedError extends FotError {
 
 const num = z.number();
 const amountField = z.union([z.string(), z.number()]).transform((v) => String(v));
+/** Unix milliseconds a `Date` can hold; anything else makes the answer malformed. */
+const msTimestamp = num.min(0).max(MAX_UNIX_SEC * 1000);
 
 const TokenInfoSchema = z.looseObject({
   tokenId: z.string().optional(),
@@ -67,7 +69,7 @@ const TokenInfoSchema = z.looseObject({
 
 const Trc20RowSchema = z.looseObject({
   transaction_id: z.string(),
-  block_ts: num,
+  block_ts: msTimestamp,
   block: num,
   from_address: z.string(),
   to_address: z.string(),
@@ -84,7 +86,7 @@ const Trc20PageSchema = z.looseObject({
 
 const TxRowSchema = z.looseObject({
   hash: z.string(),
-  timestamp: num,
+  timestamp: msTimestamp,
   block: num,
   ownerAddress: z.string(),
   toAddress: z.string().optional(),
@@ -110,7 +112,7 @@ const Trc20InfoSchema = z.looseObject({
 const TxInfoSchema = z.looseObject({
   hash: z.string(),
   block: num,
-  timestamp: num,
+  timestamp: msTimestamp,
   ownerAddress: z.string(),
   toAddress: z.string().optional(),
   contractType: num.optional(),
