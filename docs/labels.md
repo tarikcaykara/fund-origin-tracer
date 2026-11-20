@@ -107,23 +107,23 @@ Open a pull request that edits the relevant `packages/core/labels/<chain>.json` 
 
 ## Coverage
 
-Counts as of 2026-11-19 (entries per category):
+Counts as of 2026-11-20 (entries per category):
 
 | Chain | exchange | dex | bridge | mixer | token | Total |
 |---|---:|---:|---:|---:|---:|---:|
 | Ethereum | 61 | 15 | 15 | 26 | 5 | 122 |
 | Polygon | 102 | 10 | 8 | 4 | 6 | 130 |
 | Arbitrum | 119 | 8 | 6 | 4 | 5 | 142 |
-| TRON | 53 | 8 | 0 | 0 | 4 | 65 |
+| TRON | 53 | 8 | 14 | 0 | 4 | 79 |
 
 Known gaps (these are gaps in verified coverage, not statements that the entities are absent):
 
 - **Arbitrum exchanges: OKX and Okcoin only**, from OKX's signed reserves list (see [OKX proof of reserves](#okx-proof-of-reserves)). Arbiscan blocks automated access, so address tags there could not be opened, and no other exchange discloses Arbitrum addresses in a source we could check.
-- **TRON bridges and mixers: none**, and TRON exchange coverage is Binance, OKX (1), Bybit, Kraken, KuCoin, Gate (1), HTX, Bitget and MEXC (1, tagged `MXC`, the exchange's name before its 2021 rebrand to MEXC). Crypto.com has no tagged TRON addresses that could be verified.
+- **TRON mixers: none.** TRON exchange coverage is Binance, OKX (1), Bybit, Kraken, KuCoin, Gate (1), HTX, Bitget and MEXC (1, tagged `MXC`, the exchange's name before its 2021 rebrand to MEXC). Crypto.com has no tagged TRON addresses that could be verified.
 - **Coinbase and Crypto.com**: Ethereum only (Coinbase has no verified Polygon/TRON entries).
 - **Gate on Ethereum** is listed through the explorer's `Gate Deposit` tags only (deposit-side addresses), not hot wallets.
 - **Mixers**: Tornado Cash pools only on Ethereum, Polygon and Arbitrum; Tornado Cash is the only mixer covered.
-- **Bridges** cover Stargate, Across, Hop, Celer cBridge, deBridge, the Polygon PoS bridge (Ethereum side), the THORChain router (Ethereum) and the Arbitrum gateways/inbox where a source was found. Other bridges are not covered.
+- **Bridges** cover Stargate, Across, Hop, Celer cBridge, deBridge, the Polygon PoS bridge (Ethereum side), the THORChain router (Ethereum) and the Arbitrum gateways/inbox where a source was found. On TRON they cover the BitTorrent Chain (BTTC) bridge proxies, deBridge DLN, Allbridge Core (the bridge and pools used until July 2026 and the current OFT interface) and the USDT0 Legacy Mesh, all from the protocols' own documentation. The BTTC bridge and the Allbridge Core pools are discontinued; their labels stay for older transfers. THORChain's TRON inbound address is a rotating vault without a router contract, so it is not labeled. Other bridges are not covered.
 - **DEX coverage** is routers only (Uniswap, 1inch, 0x, Velora/ParaSwap, SushiSwap, Curve, QuickSwap, PancakeSwap, CoW, OKX DEX, SunSwap); pools and aggregators not listed are unlabeled.
 - **Tokens**: canonical stablecoins and wrapped natives only. On Polygon and Arbitrum the Tether token is now the USDT0 deployment (symbol `USDT0` / `USD₮0`), and the TRON USDC contract is the deprecated "USD Coin Old".
 - The OFAC SDN list is a separate source (`origin: "ofac"`), loaded at runtime rather than bundled; see [OFAC SDN](#ofac-sdn).

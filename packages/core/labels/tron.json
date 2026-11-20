@@ -490,6 +490,118 @@
       "verifiedAt": "2026-10-20"
     },
     {
+      "address": "TDgrSuii9e7HLfY1DhEBxkcFa3vrLgS3Gx",
+      "name": "BTTC RootChainManagerProxy",
+      "category": "bridge",
+      "entity": "BitTorrent Chain",
+      "source": "https://doc.bt.io/docs/smartcontract/genesis-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TU1CmpmWbCrFXqLLqMaKL2Q1d34bJNYLJe",
+      "name": "BTTC ERC20PredicateProxy",
+      "category": "bridge",
+      "entity": "BitTorrent Chain",
+      "source": "https://doc.bt.io/docs/smartcontract/genesis-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TH6JAd7DNka8Q6oKqkQMWJ6TYdLG6fQ6Kv",
+      "name": "BTTC MintableERC20PredicateProxy",
+      "category": "bridge",
+      "entity": "BitTorrent Chain",
+      "source": "https://doc.bt.io/docs/smartcontract/genesis-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TRyQMRRoYhVfEbi4CLAMDWA76ae3djHoKj",
+      "name": "BTTC EtherPredicateProxy",
+      "category": "bridge",
+      "entity": "BitTorrent Chain",
+      "source": "https://doc.bt.io/docs/smartcontract/genesis-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TX2Ut1reF59i2WPzsYVoMfA25EkUkavnd5",
+      "name": "deBridge DlnSource",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://docs.debridge.com/dln-details/overview/deployed-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TXCbCdoHjg28g36X5jnWTP88mRzx54RqXp",
+      "name": "deBridge DlnDestination",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://docs.debridge.com/dln-details/overview/deployed-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TRsqznGXF7mSYhRxU49L3HY13QW1v9yBZa",
+      "name": "deBridge DeBridgeRouter",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://docs.debridge.com/dln-details/overview/deployed-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TE8ZZHE8QEbjQLZCZv1PFKqiz2rCd7oPBV",
+      "name": "deBridge DlnExternalCallAdapter",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://docs.debridge.com/dln-details/overview/deployed-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TJuJ19AsSBahPvg2j5AS3v37TtnmuMmeDL",
+      "name": "deBridge ExternalCallExecutor",
+      "category": "bridge",
+      "entity": "deBridge",
+      "source": "https://docs.debridge.com/dln-details/overview/deployed-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TAuErcuAtU6BPt6YwL51JZ4RpDCPQASCU2",
+      "name": "Allbridge Core Bridge",
+      "category": "bridge",
+      "entity": "Allbridge",
+      "source": "https://raw.githubusercontent.com/allbridge-io/allbridge-core-docs/master/README.md",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TAC21biCBL9agjuUyzd4gZr356zRgJq61b",
+      "name": "Allbridge Core USDT Pool",
+      "category": "bridge",
+      "entity": "Allbridge",
+      "source": "https://raw.githubusercontent.com/allbridge-io/allbridge-core-docs/master/README.md",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TP5bMjDTFzHq7wwNij1JvbNgt3TmBhswfS",
+      "name": "Allbridge Core USDC Pool",
+      "category": "bridge",
+      "entity": "Allbridge",
+      "source": "https://raw.githubusercontent.com/allbridge-io/allbridge-core-docs/master/README.md",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TWPziSAroSacAjDuL52ByQzU86s9mP2gPr",
+      "name": "Allbridge Core OFT Interface",
+      "category": "bridge",
+      "entity": "Allbridge",
+      "source": "https://docs-core.allbridge.io/product/allbridge-core-contracts",
+      "verifiedAt": "2026-11-20"
+    },
+    {
+      "address": "TFG4wBaDQ8sHWWP1ACeSGnoNR6RRzevLPt",
+      "name": "USDT0 Legacy Mesh OFT",
+      "category": "bridge",
+      "entity": "USDT0",
+      "source": "https://docs.usdt0.to/api/deployments",
+      "verifiedAt": "2026-11-20"
+    },
+    {
       "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
       "name": "Tether USD (USDT)",
       "category": "token",
