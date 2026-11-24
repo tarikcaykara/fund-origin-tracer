@@ -43,11 +43,13 @@ const DOT_LABEL_EXTENT_PX = 96;
 /**
  * Fit options for `fitView`. Node boxes exclude the labels that dots draw to their right, so in
  * dot density the right padding reserves that width and zoom is capped so it stays accurate.
+ * Padding is a percentage of the canvas: React Flow 13 reads a bare number as pixels. 5.4% and
+ * 8.3% are the fits React Flow 12's ratios 0.12 and 0.2 gave.
  */
-function fitOptions(density: "chips" | "dots" | "compact", ratio: number): FitViewOptions {
-  if (density !== "dots") return { padding: ratio };
+function fitOptions(density: "chips" | "dots" | "compact", padding: `${number}%`): FitViewOptions {
+  if (density !== "dots") return { padding };
   return {
-    padding: { top: ratio, bottom: ratio, left: ratio, right: `${DOT_LABEL_EXTENT_PX}px` },
+    padding: { top: padding, bottom: padding, left: padding, right: `${DOT_LABEL_EXTENT_PX}px` },
     maxZoom: 1,
   };
 }
@@ -279,7 +281,7 @@ function GraphCanvasInner({
   useEffect(() => {
     if (userMoved.current || !layout || layout.positions.size === 0) return;
     const frame = requestAnimationFrame(
-      () => void fitView({ ...fitOptions(density, 0.12), duration: 180 }),
+      () => void fitView({ ...fitOptions(density, "5.4%"), duration: 180 }),
     );
     return () => cancelAnimationFrame(frame);
   }, [density, fitView, layout]);
@@ -374,7 +376,7 @@ function GraphCanvasInner({
   const fitAll = useCallback(() => {
     userMoved.current = false;
     setFocusSelection(false);
-    void fitView({ ...fitOptions(density, 0.12), duration: 200 });
+    void fitView({ ...fitOptions(density, "5.4%"), duration: 200 });
   }, [density, fitView]);
   const focusSelected = useCallback(() => {
     setFocusSelection((current) => !current);
@@ -404,7 +406,7 @@ function GraphCanvasInner({
       const nodes = [...baseFocusNodes]
         .filter((address) => layout.positions.has(address))
         .map((id) => ({ id }));
-      if (nodes.length > 0) void fitView({ nodes, ...fitOptions(density, 0.2), duration: 220 });
+      if (nodes.length > 0) void fitView({ nodes, ...fitOptions(density, "8.3%"), duration: 220 });
     });
   }, [baseFocusNodes, effectiveFocus, density, fitView, layout, focusKey]);
 
@@ -653,9 +655,11 @@ function GraphCanvasInner({
           edges={flowEdges as Edge[]}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
-          colorMode={resolved}
+          forceColorMode={resolved}
           nodesDraggable={false}
           nodesConnectable={false}
+          // React Flow 13 turned this on by default; keep 12's edge stacking.
+          elevateEdgesOnSelect={false}
           onlyRenderVisibleElements
           minZoom={0.1}
           maxZoom={2}

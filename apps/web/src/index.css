@@ -1,6 +1,8 @@
 /* fund-origin-tracer · Casefile design system
    Tailwind v4 + shadcn/ui. Source of truth for every color, type, spacing, radius, shadow and motion value.
    Fonts: IBM Plex Sans + IBM Plex Mono (Google Fonts or @fontsource/ibm-plex-sans, @fontsource/ibm-plex-mono; SIL OFL). */
+/* React Flow 13 ships its styles in the `xyflow` layer: after Tailwind's preflight, before its utilities. */
+@layer theme, base, xyflow, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./vendor/shadcn-tailwind.css";
