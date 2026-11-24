@@ -10,7 +10,7 @@ import {
   txHash,
 } from "../../server/test/helpers/fake-etherscan.ts";
 import { runCli } from "../src/cli.ts";
-import { formatResult } from "../src/commands/shared.ts";
+import { exitCodeFor, formatResult } from "../src/commands/shared.ts";
 import type { CliIo } from "../src/io.ts";
 
 const LABELS_DIR = join(import.meta.dir, "../../../packages/core/labels");
@@ -338,5 +338,29 @@ describe("output formats", () => {
     expect(JSON.parse(formatResult(result, "json", "edges")).runId).toBe("run-1");
     expect(formatResult(result, "csv", "edges").startsWith("\uFEFFdepth,from,")).toBe(true);
     expect(formatResult(result, "csv", "exposure").startsWith("\uFEFFcategory,")).toBe(true);
+  });
+});
+
+describe("exitCodeFor", () => {
+  const sources = {
+    explorer: "etherscan-v2",
+    prices: "defillama",
+    labelsVersion: "2026-11-20",
+    localLabels: false,
+  } as const;
+  const fetched = { ...sources, ofacFetchedAt: "2026-11-24T00:00:00.000Z" };
+  const notLoaded = { ...sources, ofacFetchedAt: null };
+
+  test("a completed run screened against the OFAC list exits 0", () => {
+    expect(exitCodeFor({ status: "completed", dataSources: fetched })).toBe(0);
+  });
+
+  test("a completed run without the OFAC list is incomplete: exit 4", () => {
+    expect(exitCodeFor({ status: "completed", dataSources: notLoaded })).toBe(4);
+  });
+
+  test("a cancelled run exits 4, a failed one 3", () => {
+    expect(exitCodeFor({ status: "cancelled", dataSources: fetched })).toBe(4);
+    expect(exitCodeFor({ status: "failed", dataSources: notLoaded })).toBe(3);
   });
 });

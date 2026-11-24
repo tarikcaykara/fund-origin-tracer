@@ -63,12 +63,11 @@ export async function fixturesCommand(
       cache: new MemoryCacheStore(Date.now),
       concurrency: 1,
       labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, runtime.ofacSet),
-      ofacFetchedAt: snapshot.fetchedAt,
     });
     await writeOutput(io, formatResult(result, format, csvKind), values.out);
     if (result.status !== "completed") {
       io.stderr(`error: run ended as ${result.status}; no fixtures written\n`);
-      return exitCodeFor(result.status);
+      return exitCodeFor(result);
     }
 
     const dir = values["fixtures-dir"] ?? DEFAULT_FIXTURES_DIR;
@@ -93,7 +92,7 @@ export async function fixturesCommand(
     if (bytes > MAX_FIXTURE_BYTES) {
       io.stderr("warning: http.json.gz exceeds 3 MB; re-record with a smaller --max-edges\n");
     }
-    return exitCodeFor(result.status);
+    return exitCodeFor(result);
   } finally {
     db.close();
   }

@@ -29,7 +29,6 @@ export interface AnalyzeDeps {
   /** ISO timestamps; the caller owns the clock. */
   startedAt: string;
   finishedAt: string;
-  ofacFetchedAt: string | null;
 }
 
 function sortEdges(
@@ -175,6 +174,7 @@ export async function analyze(
     touchpoints: exchangeTouchpoints,
     status: trace.status,
     maxDepthReached: trace.stats.maxDepthReached,
+    ofacLoaded: labels.ofacFetchedAt !== null,
   });
 
   const warnings: { code: string; message: string }[] = [];
@@ -205,7 +205,7 @@ export async function analyze(
       prices: "defillama",
       labelsVersion: labels.labelsVersion,
       localLabels: labels.hasLocal,
-      ofacFetchedAt: deps.ofacFetchedAt,
+      ofacFetchedAt: labels.ofacFetchedAt,
     },
     policy: { version: policy.version, overridden: policy.overridden },
   };
@@ -214,7 +214,8 @@ export async function analyze(
 /**
  * `analyze` for a run still in flight: synchronous and network-free. No convergence follow-up
  * (`otherCounterparties` stays empty) and no run outcome (`incomplete_trace` only reflects
- * branches whose data could not be fetched). Pending edges count as transfers, not as stops.
+ * branches whose data could not be fetched and a missing OFAC list). Pending edges count as
+ * transfers, not as stops.
  */
 export function analyzeProvisional(
   edges: readonly TraceEdge[],
@@ -236,6 +237,7 @@ export function analyzeProvisional(
     status: null,
     // The engine's `maxDepthReached` is the depth of the deepest edge it created.
     maxDepthReached: edges.reduce((max, e) => Math.max(max, e.depth), 0),
+    ofacLoaded: labels.ofacFetchedAt !== null,
   });
   return {
     chain: params.chain,

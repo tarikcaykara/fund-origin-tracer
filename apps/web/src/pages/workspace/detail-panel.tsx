@@ -27,6 +27,7 @@ import {
 } from "../../format.ts";
 import { buildGraphModel, type GraphModel } from "../../graph-model.ts";
 import { CATEGORY_META, STOP_TAGS } from "../../meta.ts";
+import { sanctionStatus } from "../../sanction.ts";
 import { type Selection, selectionKey } from "../../selection.ts";
 
 const DROP_REASONS: DropReason[] = [
@@ -283,6 +284,7 @@ function AddressPanel({
   const sources = result?.dataSources;
   const localLabels = sources?.localLabels ? "loaded" : "none";
   const fetched = sources?.ofacFetchedAt ? formatUtcMinute(sources.ofacFetchedAt) : "not fetched";
+  const sanction = sanctionStatus(node, sources?.ofacFetchedAt);
 
   return (
     <>
@@ -301,14 +303,14 @@ function AddressPanel({
             </span>
           ) : null}
           {funnel ? <PanelBadge color="var(--risk-medium)">◆ funnel flag</PanelBadge> : null}
-          {node ? (
-            node.sanctioned ? (
-              <PanelBadge color="var(--risk-high)">⊘ sanctioned</PanelBadge>
-            ) : (
-              <PanelBadge color="var(--risk-low)">○ not sanctioned</PanelBadge>
-            )
-          ) : (
+          {sanction === "pending" ? (
             <PanelBadge>Sanction status pending</PanelBadge>
+          ) : sanction === "sanctioned" ? (
+            <PanelBadge color="var(--risk-high)">⊘ sanctioned</PanelBadge>
+          ) : sanction === "not_screened" ? (
+            <PanelBadge color="var(--risk-medium)">◌ not screened</PanelBadge>
+          ) : (
+            <PanelBadge color="var(--risk-low)">○ not sanctioned</PanelBadge>
           )}
         </div>
         <div className="space-y-1.5">
@@ -358,9 +360,9 @@ function AddressPanel({
             })
           ) : sources ? (
             <p className="rounded-sm border border-dashed border-border-strong p-2 text-xs leading-relaxed text-muted-foreground">
-              No label. Checked bundled labels ({sources.labelsVersion}), local labels (
-              {localLabels}) and OFAC SDN (
-              {sources.ofacFetchedAt ? `fetched ${fetched}` : "not fetched"}): no match.
+              {sources.ofacFetchedAt
+                ? `No label. Checked bundled labels (${sources.labelsVersion}), local labels (${localLabels}) and OFAC SDN (fetched ${fetched}): no match.`
+                : `No label. Checked bundled labels (${sources.labelsVersion}) and local labels (${localLabels}): no match. OFAC SDN not loaded: not screened.`}
             </p>
           ) : (
             <p className="rounded-sm border border-dashed border-border-strong p-2 text-xs leading-relaxed text-muted-foreground">

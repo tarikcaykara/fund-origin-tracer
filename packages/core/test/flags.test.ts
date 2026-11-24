@@ -370,6 +370,14 @@ describe("flag: incomplete_trace", () => {
     ).toContain("incomplete_trace");
     expect(await flags(one)).not.toContain("incomplete_trace");
   });
+  test("a run without the OFAC list raises it: nothing was screened", async () => {
+    const result = await runAnalysis(buildEdges(one, "backward"), { noOfac: true });
+    const flag = result.flags.find((f) => f.id === "incomplete_trace");
+    expect(flag?.detail).toBe(
+      "The result may be partial: the OFAC sanctions list was not loaded, so no address was screened against it.",
+    );
+    expect(result.riskLevel).toBe("low");
+  });
 });
 
 describe("policy", () => {

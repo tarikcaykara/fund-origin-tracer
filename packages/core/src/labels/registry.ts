@@ -28,6 +28,11 @@ const ZERO_LABEL: Label = {
 export class LabelRegistry {
   readonly labelsVersion: string;
   readonly hasLocal: boolean;
+  /**
+   * When the OFAC snapshot behind the SDN labels was fetched; null when no list was loaded, so no
+   * address was screened against it.
+   */
+  readonly ofacFetchedAt: string | null;
   readonly #entries = new Map<string, Label>();
   /** SDN labels by normalized address, one per entry listing it; built once per OFAC set. */
   readonly #sanctions: Record<"evm" | "tron", Map<string, readonly Label[]>>;
@@ -37,6 +42,7 @@ export class LabelRegistry {
     local: LocalLabelFile | null,
     ofac: OfacSet | null,
   ) {
+    this.ofacFetchedAt = ofac?.fetchedAt ?? null;
     const byUid = new Map<number, Label>();
     const sanctionLabels = (addresses: ReadonlyMap<string, readonly SdnEntry[]> | undefined) =>
       new Map(

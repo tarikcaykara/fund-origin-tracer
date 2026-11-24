@@ -32,8 +32,6 @@ export interface ExecuteRunOptions {
   runId: string;
   /** Defaults to `runtime.labels`. Demo runs pass bundled labels + the scenario's OFAC snapshot. */
   labels?: LabelRegistry;
-  /** Defaults to `runtime.ofacFetchedAt`. */
-  ofacFetchedAt?: string | null;
   /** Explorer and price traffic go through this transport (recording or fixture replay). */
   transport?: Transport;
   cache?: CacheStore;
@@ -152,7 +150,6 @@ export async function executeRun(opts: ExecuteRunOptions): Promise<AnalysisResul
       runId,
       startedAt,
       finishedAt: new Date().toISOString(),
-      ofacFetchedAt: opts.ofacFetchedAt === undefined ? runtime.ofacFetchedAt : opts.ofacFetchedAt,
     });
   } finally {
     clearTimeout(budgetTimer);

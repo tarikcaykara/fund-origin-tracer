@@ -97,7 +97,7 @@ bun apps/cli/src/main.ts labels validate my-labels.json
 bun apps/cli/src/main.ts serve --port 3000
 ```
 
-Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints|addresses`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 incomplete (trace cancelled or timed out; `fot screen` without the OFAC list). `bun apps/cli/src/main.ts --help` prints the full usage.
+Options: `--max-depth`, `--max-branches`, `--max-edges`, `--min-usd`, `--timeout`, `--through-entities`, `--follow-unpriced`, `--format summary|json|csv`, `--csv-kind edges|convergences|exposure|touchpoints|addresses`, `--out`, `--quiet`; global `--data-dir`, `--labels`, `--policy`. Exit codes: 0 completed, 2 usage error, 3 failed, 4 incomplete (trace cancelled, timed out or run without the OFAC list; `fot screen` without the OFAC list). `bun apps/cli/src/main.ts --help` prints the full usage.
 
 ## API
 
@@ -151,7 +151,7 @@ The risk level (`high`, `medium`, `low`) is the worst severity among raised flag
 | `unresolved_majority` | low | `share` 0.5 | Most of the terminal value ends at unresolved addresses |
 | `exchange_origin` | info | | Funds originate at an exchange |
 | `spoofed_tokens_ignored` | info | | Spoofed tokens were dropped |
-| `incomplete_trace` | info | | The run did not complete, or a fetch failed |
+| `incomplete_trace` | info | | The run did not complete, a fetch failed, or the OFAC list was not loaded |
 
 Override per flag and per setting with a JSON file at `FOT_POLICY_PATH` (or `--policy`); unknown ids and out-of-range values are rejected at boot:
 

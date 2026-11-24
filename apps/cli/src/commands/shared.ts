@@ -16,9 +16,16 @@ export const EXIT_USAGE = 2;
 export const EXIT_FAILED = 3;
 export const EXIT_INCOMPLETE = 4;
 
-export function exitCodeFor(status: AnalysisResult["status"]): number {
-  if (status === "completed") return EXIT_OK;
-  return status === "failed" ? EXIT_FAILED : EXIT_INCOMPLETE;
+/**
+ * Exit code for a finished run: 3 failed; 4 incomplete (cancelled, timed out, or no OFAC list was
+ * loaded, so nothing was screened against it); 0 otherwise.
+ */
+export function exitCodeFor(result: Pick<AnalysisResult, "status" | "dataSources">): number {
+  if (result.status === "failed") return EXIT_FAILED;
+  if (result.status !== "completed" || result.dataSources.ofacFetchedAt === null) {
+    return EXIT_INCOMPLETE;
+  }
+  return EXIT_OK;
 }
 
 function progressLine(e: RunEvent): string | null {

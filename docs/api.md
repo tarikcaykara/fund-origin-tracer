@@ -70,7 +70,7 @@ curl -s localhost:3000/api/health
 
 - `chains.<id>` is `ready` when the key for that chain is configured (`ETHERSCAN_API_KEY` covers ethereum, polygon and arbitrum; at least one `TRONSCAN_API_KEYS` entry for tron), else `missing_key`. The keys themselves are not validated here.
 - `explorerMaxPages` is `EXPLORER_MAX_PAGES`: pages fetched per explorer list. The web UI uses it to state the cost of one expansion.
-- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off until a retry succeeds, and `GET /api/screen` answers `ofac.available: false`; the server retries after 1, 2, 5, then every 15 minutes).
+- `ofacFetchedAt` is the time of the current OFAC snapshot, or `null` when the list could not be loaded (sanctions screening is then off until a retry succeeds, and `GET /api/screen` answers `ofac.available: false`; the server retries after 1, 2, 5, then every 15 minutes); a run analyzed without it carries `dataSources.ofacFetchedAt: null` and the `incomplete_trace` flag.
 - `labelsVersion` is the newest `verifiedAt` across the bundled label files.
 
 ### `GET /api/demo`
@@ -334,7 +334,7 @@ where `data` is the complete `RunEvent` JSON, including its `type` field. Event 
 Behavior:
 
 - **Snapshot on subscribe.** A client that connects mid-run first receives a `snapshot` with every edge so far, then the running `expansion` if there is one, then the latest `provisional` analysis if there is one, then live events. Rebuild state from the snapshot, then apply `edge_added`, `edge_linked`, `edge_expanded` and `edge_stopped`; `result` supersedes it.
-- **Provisional analysis.** While a run is live the server recomputes the analysis from the edges so far and sends it as `provisional`: at most once per second and only when edges changed, immediately when the run is paused, and at the start of an expand. It makes no explorer calls: convergences have empty `otherCounterparties` (the follow-up lookups run only for the final result), and `incomplete_trace` reflects only `fetch_failed` edges because the run has no outcome yet. It is never written to the database, never sent after `result`, and the final `result` replaces it. See [methodology](methodology.md#provisional-analysis).
+- **Provisional analysis.** While a run is live the server recomputes the analysis from the edges so far and sends it as `provisional`: at most once per second and only when edges changed, immediately when the run is paused, and at the start of an expand. It makes no explorer calls: convergences have empty `otherCounterparties` (the follow-up lookups run only for the final result), and `incomplete_trace` reflects only `fetch_failed` edges and a missing OFAC list because the run has no outcome yet. It is never written to the database, never sent after `result`, and the final `result` replaces it. See [methodology](methodology.md#provisional-analysis).
 - **Finished runs replay.** Subscribing to a finished run sends `snapshot`, `result` and `done` at once and closes. A run that has no result (interrupted by a restart, failed before analysis, or an expansion that threw or was interrupted) sends `snapshot`, an `error` (`interrupted` or `no_result`) and `done` with status `failed`.
 - **Keepalive.** While no event is pending, the server writes a `: keepalive` comment every 15 seconds so proxies keep the connection open.
 - **Closing.** The stream closes after `done`. Closing the client connection does not stop the run; use `/cancel` for that.

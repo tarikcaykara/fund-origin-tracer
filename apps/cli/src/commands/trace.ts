@@ -26,7 +26,7 @@ export async function traceCommand(
     }
     const result = await runWithProgress(io, runtime, params, values.quiet === true);
     await writeOutput(io, formatResult(result, format, csvKind), values.out);
-    return exitCodeFor(result.status);
+    return exitCodeFor(result);
   } finally {
     db.close();
   }

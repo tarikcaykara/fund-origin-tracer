@@ -139,7 +139,6 @@ export async function recordDemoScenario(
     cache: new MemoryCacheStore(Date.now),
     concurrency: 1,
     labels: new LabelRegistry(BUNDLED_LABEL_FILES, null, runtime.ofacSet),
-    ofacFetchedAt: snapshot.fetchedAt,
   });
   await writeScenario(fixturesDir, {
     scenario: {

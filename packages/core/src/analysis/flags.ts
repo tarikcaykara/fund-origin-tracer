@@ -22,6 +22,8 @@ export interface FlagInput {
   /** Null while the run is still in flight (provisional analysis): there is no outcome yet. */
   status: TraceStatus | null;
   maxDepthReached: number;
+  /** False when the run's labels had no OFAC list: nothing was screened against it. */
+  ofacLoaded: boolean;
 }
 
 const EVIDENCE_CAP = 50;
@@ -433,13 +435,16 @@ export function evaluateFlags(input: FlagInput): Flag[] {
   // incomplete_trace
   const failed = ctx.edges.filter((e) => e.stopReason === "fetch_failed");
   const ended = input.status !== null && input.status !== "completed";
-  if (ended || failed.length > 0) {
+  if (ended || failed.length > 0 || !input.ofacLoaded) {
     const parts: string[] = [];
     if (ended) parts.push(`the run ended as ${input.status}`);
     if (failed.length > 0) {
       parts.push(
         `${plural(failed.length, "branch", "branches")} stopped because data could not be fetched`,
       );
+    }
+    if (!input.ofacLoaded) {
+      parts.push("the OFAC sanctions list was not loaded, so no address was screened against it");
     }
     raise(
       "incomplete_trace",

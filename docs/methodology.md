@@ -199,7 +199,7 @@ Every edge whose `far` is labeled `exchange`:
 While a run is live, the server streams a **provisional** analysis of the edges found so far (`analyzeProvisional` in `analysis/analyze.ts`; cadence in `apps/server/src/runs.ts`): at most once per second when edges changed, immediately on pause, and at the start of an "Expand further". It applies every rule above to the current edges and differs from the final analysis in three ways:
 
 - **No follow-up lookups.** Convergences have empty `otherCounterparties`; the follow-up listings run only for the final result.
-- **No run outcome.** `incomplete_trace` is raised only for `fetch_failed` edges, never for the run's status, because the run has not ended.
+- **No run outcome.** `incomplete_trace` is raised only for `fetch_failed` edges and a missing OFAC list, never for the run's status, because the run has not ended.
 - **Pending edges are not stops.** Edges still queued count as transfers (for convergences and touchpoints) but not as unresolved ends, so exposure's unresolved and terminal values grow as the run proceeds.
 
 The provisional risk level can therefore still change in either direction. It is shown as provisional, never stored, and replaced by the final analysis when the run finishes.
@@ -235,7 +235,7 @@ Flags are listed by severity (high first), then by id. A flag set to `off` is no
 | `unresolved_majority` | low | `share` (0.5) | `terminalUsd > 0` and `unresolved.usd / terminalUsd > share`. |
 | `exchange_origin` | info | – | Any touchpoint of kind `origin` (backward traces; forward `arrival`s are reported as touchpoints but do not raise a flag). |
 | `spoofed_tokens_ignored` | info | – | Any retained dropped candidate with reason `spoofed_token`. |
-| `incomplete_trace` | info | – | Run status is not `completed`, or any edge stopped with `fetch_failed`. |
+| `incomplete_trace` | info | – | Run status is not `completed`, any edge stopped with `fetch_failed`, or the run's labels had no OFAC list (nothing was screened against it). |
 
 The `mixer_indirect` and `scam_indirect` flags have their own `directHops`; when changing the boundary, set it on both the direct and indirect flag of a category.
 

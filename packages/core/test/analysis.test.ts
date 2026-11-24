@@ -64,7 +64,7 @@ describe("analyze: envelope", () => {
       prices: "defillama",
       labelsVersion: "",
       localLabels: true,
-      ofacFetchedAt: null,
+      ofacFetchedAt: "2026-10-20T00:00:00.000Z",
     });
     expect(result.policy).toEqual({ version: 1, overridden: false });
     expect(result.stats.maxDepthReached).toBe(2);
@@ -82,6 +82,13 @@ describe("analyze: envelope", () => {
       expect(r.status).toBe(status);
       expect(r.warnings).toEqual([{ code: "prices_unavailable", message: "x" }]);
     }
+  });
+
+  test("a run without the OFAC list has no fetched time and raises incomplete_trace", async () => {
+    const clean = buildEdges([{ id: "a", near: addr(1), far: addr(2), seedId: "s1" }]);
+    const result = await runAnalysis(clean, { noOfac: true });
+    expect(result.dataSources.ofacFetchedAt).toBeNull();
+    expect(flagIds(result)).toContain("incomplete_trace");
   });
 
   test("does not mutate the trace edges", async () => {
@@ -530,12 +537,13 @@ describe("analyzeProvisional", () => {
     );
   });
 
-  test("raises incomplete_trace only for failed fetches: a run in flight has no outcome yet", async () => {
+  test("a run in flight has no outcome yet: incomplete_trace reflects failed fetches and a missing OFAC list", async () => {
     const clean = buildEdges([{ id: "a", near: addr(1), far: addr(2), seedId: "s1" }]);
     expect(flagIds(await runAnalysis(clean, { status: "cancelled" }))).toContain(
       "incomplete_trace",
     );
     expect(flagIds(provisionalAnalysis(clean))).not.toContain("incomplete_trace");
+    expect(flagIds(provisionalAnalysis(clean, { noOfac: true }))).toContain("incomplete_trace");
 
     const failed = buildEdges([
       { id: "a", near: addr(1), far: addr(2), seedId: "s1" },

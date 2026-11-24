@@ -147,6 +147,8 @@ export interface Scenario {
   ofac?: string[];
   /** Addresses on the OFAC list with the SDN entries that list them. */
   sdn?: Record<string, SdnEntry[]>;
+  /** Build the registry without an OFAC list, as when it could not be loaded. */
+  noOfac?: boolean;
   /** Bundled (not local) labels, so a local/ofac label can be stacked on the same address. */
   bundled?: LabelSpec[];
   policy?: unknown | null;
@@ -176,17 +178,16 @@ export function registryFor(s: Scenario): LabelRegistry {
   const local = s.labels?.length
     ? { entries: s.labels.map((l) => ({ chain: "ethereum" as const, ...l })) }
     : null;
-  const ofac =
-    s.ofac || s.sdn
-      ? {
-          fetchedAt: "2026-10-20T00:00:00.000Z",
-          evm: new Map<string, SdnEntry[]>([
-            ...(s.ofac ?? []).map((address): [string, SdnEntry[]] => [address, []]),
-            ...Object.entries(s.sdn ?? {}),
-          ]),
-          tron: new Map(),
-        }
-      : null;
+  const ofac = s.noOfac
+    ? null
+    : {
+        fetchedAt: "2026-10-20T00:00:00.000Z",
+        evm: new Map<string, SdnEntry[]>([
+          ...(s.ofac ?? []).map((address): [string, SdnEntry[]] => [address, []]),
+          ...Object.entries(s.sdn ?? {}),
+        ]),
+        tron: new Map(),
+      };
   return new LabelRegistry(bundled, local, ofac);
 }
 
@@ -281,7 +282,6 @@ export async function runAnalysis(edges: TraceEdge[], s: Scenario = {}): Promise
     runId: "run-1",
     startedAt: "2026-10-20T10:00:00.000Z",
     finishedAt: "2026-10-20T10:00:05.000Z",
-    ofacFetchedAt: s.ofac || s.sdn ? "2026-10-20T00:00:00.000Z" : null,
   };
   return analyze(trace, params, registryFor(s), loadPolicy(s.policy ?? null), deps);
 }

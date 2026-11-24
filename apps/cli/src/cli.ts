@@ -26,7 +26,7 @@ Global options:
   --data-dir <dir>  --labels <file>  --policy <file>
 
 Chains: ethereum, polygon, arbitrum, tron
-Exit codes: 0 completed, 2 usage error, 3 failed, 4 incomplete (trace cancelled or timed out; screen without the OFAC list)
+Exit codes: 0 completed, 2 usage error, 3 failed, 4 incomplete (trace cancelled, timed out or run without the OFAC list; screen without the OFAC list)
 `;
 
 export const defaultIo: CliIo = {

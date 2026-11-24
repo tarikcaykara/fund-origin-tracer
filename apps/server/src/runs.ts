@@ -201,7 +201,7 @@ export class RunManager {
     // Checked after the await, in the same synchronous block as `register`, so concurrent starts
     // cannot overshoot the cap.
     this.assertDemoCapacity();
-    const { scenario, http, ofac, labels } = loaded;
+    const { scenario, http, labels } = loaded;
     const runId = crypto.randomUUID();
     this.db.investigations.insert({
       id: runId,
@@ -224,7 +224,6 @@ export class RunManager {
         emit: (e) => this.handle(run, e),
         runId,
         labels,
-        ofacFetchedAt: ofac.fetchedAt,
         transport: FixtureTransport(http, { delayMs: this.replayDelayMs }),
         cache: new MemoryCacheStore(Date.now),
         replay: true,
