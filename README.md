@@ -72,7 +72,7 @@ cp .env.example .env          # optional: add API keys
 docker compose up -d --build  # http://localhost:3000 (override the host port with PORT=3100)
 ```
 
-The image runs the server only (the web UI is prebuilt into it). Results and the response cache live in the `data` named volume at `/app/data`. Inside the container `PORT` is fixed at 3000, `DATA_DIR` at `/app/data` and `HOST` at `0.0.0.0`; the compose file sets them after reading `.env`, and `PORT` in `.env` only changes the host port.
+The image runs the server only (the web UI is prebuilt into it). Results and the response cache live in the `data` named volume at `/app/data`. Inside the container `PORT` is fixed at 3000, `DATA_DIR` at `/app/data` and `HOST` at `0.0.0.0`; the compose file sets them after reading `.env`, and `PORT` in `.env` only changes the host port. Compose tags the image `fund-origin-tracer:${FOT_VERSION:-local}`; set `FOT_VERSION` in `.env` to keep several builds side by side and switch between them. Container logs are capped at three 10 MB files.
 
 **Upgrading from 1.2.x:** compose now publishes the port on `127.0.0.1` only, so other machines on your network can no longer reach it. For LAN access, change the mapping in `docker-compose.yml` (for example `"0.0.0.0:${PORT:-3000}:3000"`) or put a reverse proxy in front, and list the names or addresses clients use in `ALLOWED_HOSTS`.
 
